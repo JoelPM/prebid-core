@@ -1,0 +1,46 @@
+## build.sh
+ox_dom (cargo, opt-level=z, lto)                             raw=    7438 gz=   3472 br=   3101
+ox_dom + wasm-opt -Oz                                        raw=    6154 gz=   3225 br=   2881
+ox_dom + wasm-opt -Oz, base64                                raw=    8208 gz=   4143 br=   3890
+ox_imports (cargo, opt-level=z, lto)                         raw=    3981 gz=   1934 br=   1698
+ox_imports + wasm-opt -Oz                                    raw=    3058 gz=   1783 br=   1588
+ox_imports + wasm-opt -Oz, base64                            raw=    4080 gz=   2269 br=   2120
+ox_dom_floor (cargo, opt-level=z, lto)                       raw=    1771 gz=    969 br=    892
+ox_dom_floor + wasm-opt -Oz                                  raw=    1548 gz=    903 br=    841
+ox_dom_floor + wasm-opt -Oz, base64                          raw=    2064 gz=   1139 br=   1069
+dom: 47 pass, 0 fail
+imports: 47 pass, 0 fail
+js: 47 pass, 0 fail
+
+## miniserde floors (miniserde 0.1.46, std, default allocator)
+miniserde value floor + wasm-opt -Oz                         raw=   44884 gz=  23164 br=  20354
+miniserde derive floor + wasm-opt -Oz                        raw=   49618 gz=  25071 br=  22015
+
+## pbjs/measure.sh (Prebid.js 43a96fbe, gulp build --modules=openxBidAdapter,openxShared*BidAdapter)
+core                                                         raw=  169346 gz=  61813 br=  53453
+ortb                                                         raw=  175851 gz=  63910 br=  55264
+ortb+openx                                                   raw=  179080 gz=  65087 br=  56204
+ortb+rt                                                      raw=  176969 gz=  64270 br=  55507
+ortb+rt+openxJs                                              raw=  180406 gz=  65571 br=  56670
+ortb+rt+handles                                              raw=  178783 gz=  64885 br=  56059
+ortb+rt+handles+openxWasm                                    raw=  184188 gz=  68016 br=  58656
+ortb+rt+bytes                                                raw=  177862 gz=  64544 br=  55762
+ortb+rt+bytes+openxWasmDom                                   raw=  187396 gz=  69675 br=  60135
+chunk openxBidAdapter                                        raw=    3228 gz=   1530 br=   1347
+chunk sharedAdapter                                          raw=    1117 gz=    625 br=    528
+chunk wasmHandles                                            raw=    1813 gz=    855 br=    775
+chunk wasmBytes                                              raw=     892 gz=    500 br=    427
+chunk openxSharedJsBidAdapter                                raw=    3436 gz=   1711 br=   1521
+chunk openxSharedBidAdapter                                  raw=    5404 gz=   3097 br=   2831
+chunk openxSharedDomBidAdapter                               raw=    9533 gz=   5010 br=   4565
+
+## standalone esbuild --minify
+js/openx-logic.js (same logic as openx.rs)                   raw=    2154 gz=   1111 br=   1003
+openxShared module minus wasm (spec + getUserSyncs)          raw=    1157 gz=    683 br=    592
+modules/openxBidAdapter.js                                   raw=    3180 gz=   1475 br=   1310
+
+## js/bench.mjs (Node v26.11.1, Apple Silicon)
+dom      compile+instantiate 175 us | makeRequests 9.39 us | makeBids 8.50 us
+imports  compile+instantiate 163 us | makeRequests 5.86 us | makeBids 2.52 us
+js       compile+instantiate 5 us | makeRequests 1.85 us | makeBids 0.22 us
+dom core bytes->bytes (1889 B in, 1547 B out): makeRequests 3.99 us

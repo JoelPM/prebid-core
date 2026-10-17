@@ -1,0 +1,23 @@
+[package]
+name = "ox_lean"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+path = "src/lib.rs"
+
+[features]
+default = []
+# Exactly one backend:
+dom = []      # bytes in / bytes out: in-wasm JSON scanner + node arena + emitter, no allocator
+imports = []  # field-by-field: JS owns the objects, wasm reads/writes them through imported functions
+# Build only the JSON layer (parse + re-emit), no adapter, to measure the floor.
+floor = []
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
