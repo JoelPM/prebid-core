@@ -36,3 +36,4 @@ Prebid Core plus one Shared Adapter (OpenX) running in all four Hosts, alongside
 ## Flagged ambiguities
 
 - "Adapter" in Prebid.js also covers user syncs, event callbacks (`onBidWon`, `onTimeout`) and page side-effects. For now those are outside the **Adapter** as defined here.
+- In Trusted Server, "adapter" means a platform crate (Fastly, Cloudflare, Spin), not a bidder **Adapter**. Say "platform adapter" for those.
