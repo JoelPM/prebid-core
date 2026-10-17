@@ -1,0 +1,38 @@
+native Go OpenX adapter (MakeRequests+MakeBids)                 70.93 us/op     101026 B/op     971 allocs/op
+[wazero-compiler] Rust-wasm: module 122 KB, compile 22.124416ms
+[wazero-compiler] Rust-wasm: first instantiate 19.709µs
+[wazero-compiler] Rust-wasm noop export call                     0.02 us/op         16 B/op       2 allocs/op
+[wazero-compiler] Rust-wasm adapter, reused instance           103.81 us/op      59552 B/op      19 allocs/op
+[wazero-compiler] Rust-wasm: linear memory after runs 1280 KB
+[wazero-compiler] Rust-wasm adapter, fresh instance per call     233.48 us/op    2585150 B/op     199 allocs/op
+[wazero-compiler] Go-wasm: module 8406 KB, compile 1.169980417s
+[wazero-compiler] Go-wasm: first instantiate 6.051958ms
+[wazero-compiler] Go-wasm noop export call                       0.02 us/op         16 B/op       2 allocs/op
+[wazero-compiler] Go-wasm adapter, reused instance             742.84 us/op     194223 B/op      20 allocs/op
+[wazero-compiler] Go-wasm: linear memory after runs 37376 KB
+[wazero-compiler] Go-wasm adapter, fresh instance per call   12942.22 us/op   24196147 B/op   97133 allocs/op
+[wazero-compiler] js-empty.wasm: module 1326 KB, compile 232.398541ms
+[wazero-compiler] Javy js-empty.wasm, fresh instance per call     237.66 us/op    1769880 B/op   10284 allocs/op
+[wazero-compiler] js-static.wasm: module 1330 KB, compile 236.538417ms
+[wazero-compiler] Javy js-static.wasm, fresh instance per call     527.07 us/op    3677209 B/op   10288 allocs/op
+[wazero-compiler] js-static-simd.wasm: module 1330 KB, compile 234.893667ms
+[wazero-compiler] Javy js-static-simd.wasm, fresh instance per call     531.15 us/op    3677210 B/op   10288 allocs/op
+[wazero-interp] Rust-wasm: module 122 KB, compile 1.978458ms
+[wazero-interp] Rust-wasm: first instantiate 19.542µs
+[wazero-interp] Rust-wasm noop export call                       0.04 us/op         40 B/op       3 allocs/op
+[wazero-interp] Rust-wasm adapter, reused instance            6250.54 us/op     603882 B/op   24411 allocs/op
+[wazero-interp] Rust-wasm: linear memory after runs 1280 KB
+[wazero-interp] Rust-wasm adapter, fresh instance per call    6340.12 us/op    3132147 B/op   24473 allocs/op
+[wazero-interp] Go-wasm: module 8406 KB, compile 102.413292ms
+[wazero-interp] Go-wasm: first instantiate 37.332ms
+[wazero-interp] Go-wasm noop export call                         0.18 us/op         64 B/op       4 allocs/op
+[wazero-interp] Go-wasm adapter, reused instance             31323.29 us/op    1496478 B/op   49008 allocs/op
+[wazero-interp] Go-wasm: linear memory after runs 11520 KB
+[wazero-interp] Go-wasm adapter, fresh instance per call    365911.97 us/op   37653285 B/op  721551 allocs/op
+[wazero-interp] js-empty.wasm: module 1326 KB, compile 24.802834ms
+[wazero-interp] Javy js-empty.wasm, fresh instance per call     304.70 us/op    1780408 B/op    9734 allocs/op
+[wazero-interp] js-static.wasm: module 1330 KB, compile 21.316916ms
+[wazero-interp] Javy js-static.wasm, fresh instance per call   20666.13 us/op    4457072 B/op   44856 allocs/op
+[wazero-interp] js-static-simd.wasm: module 1330 KB, compile 21.459916ms
+[wazero-interp] Javy js-static-simd.wasm, fresh instance per call   20828.90 us/op    4457072 B/op   44856 allocs/op
+host Sys memory at end: 555 MB

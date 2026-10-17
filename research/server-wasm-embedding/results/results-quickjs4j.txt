@@ -1,0 +1,5 @@
+quickjs4j engine create: 152.11 ms
+[quickjs4j/endive-AOT] noop JS fn (same engine)                    107.06 us/op (n=46705)
+[quickjs4j/endive-AOT] OpenX JS port (same engine)                1262.24 us/op (n=3962)
+[quickjs4j/endive-AOT] OpenX JS port (fresh engine per call)      2637.51 us/op (n=1896)
+JVM heap used at end: 1089 MB

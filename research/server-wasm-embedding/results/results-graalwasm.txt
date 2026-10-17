@@ -1,0 +1,4 @@
+GraalWasm context+instantiate: 107.4 ms
+[graalwasm] Rust-wasm noop export call                               0.03 us/op (n=302013097)
+[graalwasm] Rust-wasm adapter, reused instance                     121.07 us/op (n=66076)
+[graalwasm] Rust-wasm adapter, fresh instance per call (shared engine)     183.97 us/op (n=43486)

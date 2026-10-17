@@ -1,0 +1,3 @@
+Exception in thread "main" org.graalvm.polyglot.PolyglotException: java.lang.AssertionError: Compiler initialization failed cannot continue.
+	at org.graalvm.truffle.runtime/com.oracle.truffle.runtime.hotspot.HotSpotTruffleRuntime.bypassedReservedOop(HotSpotTruffleRuntime.java:459)
+	at org.graalvm.truffle.runtime/com.oracle.truffle.runtime.hotspot.HotSpotFastThreadLocal.setJVMCIReservedReference(HotSpotFastThreadLocal.java:112)

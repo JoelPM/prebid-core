@@ -1,0 +1,10 @@
+[To redirect Truffle log output to a file use one of the following options:
+* '--log.file=<path>' if the option is passed using a guest language launcher.
+* '-Dpolyglot.log.file=<path>' if the option is passed using the host Java launcher.
+* Configure logging using the polyglot embedding API.]
+To resolve this, enable method scoping using HostAccess.Builder.methodScoping(true).
+To disable this warning use the '--engine.WarnMethodScoping=false' option or the '-Dpolyglot.engine.WarnMethodScoping=false' system property.
+GraalWasm context+instantiate: 65.4 ms
+[graalwasm-isolate] Rust-wasm noop export call                       0.28 us/op (n=28087851)
+[graalwasm-isolate] Rust-wasm adapter, reused instance             561.72 us/op (n=14242)
+[graalwasm-isolate] Rust-wasm adapter, fresh instance per call (shared engine)     957.24 us/op (n=8358)

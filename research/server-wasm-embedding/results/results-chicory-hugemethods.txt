@@ -1,0 +1,19 @@
+Chicory runtime-compile Rust guest: 142.0 ms
+[chicory-compiler] Rust-wasm noop export call                        0.01 us/op (n=277326080)
+[chicory-compiler] Rust-wasm adapter, reused instance              360.80 us/op (n=11087)
+[chicory-compiler] Rust linear memory: 1280 KB
+[chicory-compiler] Rust-wasm adapter, fresh instance per call      366.13 us/op (n=10926)
+Exception in thread "main" com.dylibso.chicory.wasm.ChicoryException: Unhandled opcode: V128_LOAD
+	at com.dylibso.chicory.compiler.internal.WasmAnalyzer.analyzeSimple(WasmAnalyzer.java:1474)
+	at com.dylibso.chicory.compiler.internal.WasmAnalyzer.analyze(WasmAnalyzer.java:648)
+	at com.dylibso.chicory.compiler.internal.Compiler.compileFunction(Compiler.java:1264)
+	at com.dylibso.chicory.compiler.internal.Compiler.lambda$emitFunctionGroup$6(Compiler.java:464)
+	at com.dylibso.chicory.compiler.internal.Compiler.emitFunction(Compiler.java:628)
+	at com.dylibso.chicory.compiler.internal.Compiler.lambda$emitFunctionGroup$8(Compiler.java:458)
+	at com.dylibso.chicory.compiler.internal.Compiler.compileExtraClass(Compiler.java:817)
+	at com.dylibso.chicory.compiler.internal.Compiler.lambda$compileExtraClasses$0(Compiler.java:295)
+	at com.dylibso.chicory.compiler.internal.Compiler.loadChunkedClass(Compiler.java:416)
+	at com.dylibso.chicory.compiler.internal.Compiler.compileExtraClasses(Compiler.java:289)
+	at com.dylibso.chicory.compiler.internal.Compiler.compile(Compiler.java:240)
+	at com.dylibso.chicory.compiler.MachineFactoryCompiler$Builder.compile(MachineFactoryCompiler.java:138)
+	at Bench.main(Bench.java:77)

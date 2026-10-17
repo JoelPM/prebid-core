@@ -1,0 +1,8 @@
+Chicory runtime-compile Rust guest: 142.5 ms
+compiler failed: Unhandled opcode: V128_LOAD
+Chicory runtime-compile js-empty.wasm: 51.8 ms
+[endive-simd-interpreter] Javy js-empty.wasm, fresh instance per call     366.35 us/op (n=13649)
+compiler failed: Unhandled opcode: V128_LOAD
+Chicory runtime-compile js-static-nosimdjson.wasm: 37.7 ms
+[endive-simd-interpreter] Javy js-static-nosimdjson.wasm, fresh instance per call   61132.86 us/op (n=82)
+JVM heap used at end: 1277 MB
