@@ -1,0 +1,15 @@
+# java -cp <jclasses:PBS-Java classes+deps:java/pom.xml deps> JBench ../payload guest.wasm native 1 4   (Temurin 25.0.4.1; Apple M5 Max, macOS arm64; PBS-Java master a1f9ddb2f)
+native on OpenJDK 64-Bit Server VM 25.0.4.1+1-LTS
+
+== payload lt (request 1592 B as PBS-Java serializes it, response 5995 B)
+  native PBS-Java OpenxBidder (makeHttpRequests + makeBids)             15.94 us/op  (min 15.82 max 16.81)
+  Host: mapper.encodeToBytes(request)                                    3.27 us/op  (min 3.26 max 3.42)
+  Host: mapper.decodeValue(response, BidResponse.class)                  5.57 us/op  (min 5.55 max 5.63)
+
+== payload heavy (request 3110 B as PBS-Java serializes it, response 11294 B)
+  native PBS-Java OpenxBidder (makeHttpRequests + makeBids)             20.77 us/op  (min 20.65 max 20.85)
+  Host: mapper.encodeToBytes(request)                                    6.57 us/op  (min 6.47 max 6.65)
+  Host: mapper.decodeValue(response, BidResponse.class)                  8.50 us/op  (min 8.46 max 8.65)
+
+ one thread per core-ish, process CPU per call (incl. GC/JIT), payload lt:
+  native PBS-Java OpenxBidder                                        p=4     19.67 us CPU/op  (runs 19.67 19.65 19.68)

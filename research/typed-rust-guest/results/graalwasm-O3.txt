@@ -1,0 +1,41 @@
+# java -cp <jclasses:PBS-Java classes+deps:java/pom.xml deps> JBench ../payload guest.wasm graal 1 4   (GraalVM CE 25.0.2 JDK; Apple M5 Max, macOS arm64; PBS-Java master a1f9ddb2f)
+graal on OpenJDK 64-Bit Server VM 25.0.2+10-jvmci-b01
+
+
+== payload lt (request 1592 B as PBS-Java serializes it, response 5995 B)
+  correctness: B, C, D and E match OpenxBidder's body and bids
+  native PBS-Java OpenxBidder (same JVM)                                16.07 us/op  (min 16.00 max 16.26)
+  B lean ABI, Value guest, JSON bids out                                76.48 us/op  (min 76.29 max 88.42)
+  C lean ABI, typed guest, JSON bids out                                30.72 us/op  (min 30.58 max 30.89)
+  D lean ABI, typed guest, Host parses bids + binary annotations        28.64 us/op  (min 28.57 max 28.67)
+  E as D, but guest gets a projection of the parsed response            18.81 us/op  (min 18.67 max 18.81)
+ breakdown of D and E (guest pieces include writing input and reading output):
+  guest: mr_typed                                                        5.47 us/op  (min 5.46 max 5.48)
+  guest: mb_typed_annot                                                 11.60 us/op  (min 11.57 max 11.61)
+  guest: write request bytes only                                        1.96 us/op  (min 1.95 max 1.96)
+  E Host: project parsed response                                        0.57 us/op  (min 0.57 max 0.57)
+  E guest: mb_typed_annot on 461 B projection                            1.90 us/op  (min 1.89 max 1.94)
+  guest: mr_value                                                       26.92 us/op  (min 26.89 max 27.00)
+  guest: mb_value                                                       38.13 us/op  (min 38.10 max 38.23)
+  noop export call                                                       0.03 us/op  (min 0.03 max 0.03)
+ one guest per thread, process CPU per call (incl. GC/JIT):
+  native PBS-Java OpenxBidder                                        p=4     19.90 us CPU/op  (runs 19.90 19.90 19.95)
+  D, one instance per thread                                         p=4     32.09 us CPU/op  (runs 32.09 31.97 32.10)
+  E, one instance per thread                                         p=4     21.89 us CPU/op  (runs 21.89 21.77 21.90)
+
+== payload heavy (request 3110 B as PBS-Java serializes it, response 11294 B)
+  correctness: B, C, D and E match OpenxBidder's body and bids
+  native PBS-Java OpenxBidder (same JVM)                                22.24 us/op  (min 22.17 max 22.26)
+  B lean ABI, Value guest, JSON bids out                               134.44 us/op  (min 133.67 max 136.19)
+  C lean ABI, typed guest, JSON bids out                                62.50 us/op  (min 62.42 max 62.65)
+  D lean ABI, typed guest, Host parses bids + binary annotations        56.32 us/op  (min 56.28 max 56.47)
+  E as D, but guest gets a projection of the parsed response            34.86 us/op  (min 34.78 max 34.92)
+ breakdown of D and E (guest pieces include writing input and reading output):
+  guest: mr_typed                                                       10.97 us/op  (min 10.96 max 11.00)
+  guest: mb_typed_annot                                                 24.23 us/op  (min 24.22 max 24.27)
+  guest: write request bytes only                                        3.76 us/op  (min 3.76 max 3.78)
+  E Host: project parsed response                                        0.59 us/op  (min 0.59 max 0.60)
+  E guest: mb_typed_annot on 471 B projection                            2.81 us/op  (min 2.81 max 2.82)
+  guest: mr_value                                                       53.37 us/op  (min 53.29 max 53.40)
+  guest: mb_value                                                       63.95 us/op  (min 63.83 max 64.35)
+  noop export call                                                       0.03 us/op  (min 0.03 max 0.03)

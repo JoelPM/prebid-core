@@ -1,0 +1,13 @@
+# guest/src/native.rs: guest functions compiled natively (no WASM), aarch64-apple-darwin, rustc 1.99.1, opt-level=3 LTO
+[lt] native mr_value                             9.88 us/op
+[lt] native mr_typed                             1.75 us/op
+[lt] native mb_value                            13.27 us/op
+[lt] native mb_typed_json                        5.22 us/op
+[lt] native mb_typed_annot                       2.63 us/op
+[lt] native legacy adapt (value, #3 ABI)        24.93 us/op
+[heavy] native mr_value                         18.11 us/op
+[heavy] native mr_typed                          3.19 us/op
+[heavy] native mb_value                         23.67 us/op
+[heavy] native mb_typed_json                    15.16 us/op
+[heavy] native mb_typed_annot                    7.55 us/op
+[heavy] native legacy adapt (value, #3 ABI)     46.16 us/op
