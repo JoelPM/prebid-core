@@ -1,0 +1,10 @@
+# PBS-Go, GOMAXPROCS=4, http_client pool raised (config/pbs-go.yaml)
+pbs-go GOMAXPROCS=4 bidders=1	rps=999	ok=29998	bad=0	cpu_s=19.75	cores=0.66	cpu_us_per_req=658	p50=20.6ms	p99=22ms
+pbs-go GOMAXPROCS=4 bidders=3	rps=999	ok=30000	bad=0	cpu_s=30.48	cores=1.02	cpu_us_per_req=1016	p50=20.7ms	p99=21.8ms
+pbs-go GOMAXPROCS=4 bidders=5	rps=994	ok=29858	bad=0	cpu_s=34.60	cores=1.15	cpu_us_per_req=1159	p50=20.7ms	p99=21.9ms
+pbs-go GOMAXPROCS=4 bidders=10	rps=999	ok=29999	bad=0	cpu_s=62.71	cores=2.09	cpu_us_per_req=2090	p50=21.2ms	p99=24.8ms
+pbs-go GOMAXPROCS=4 rerun bidders=1	rps=998	ok=29967	bad=0	cpu_s=25.88	cores=0.86	cpu_us_per_req=864	p50=20.7ms	p99=21.4ms
+pbs-go GOMAXPROCS=4 rerun bidders=5	rps=999	ok=30000	bad=0	cpu_s=35.49	cores=1.18	cpu_us_per_req=1183	p50=20.7ms	p99=21.5ms
+pbs-go GOMAXPROCS=4 rerun bidders=10	rps=999	ok=30000	bad=0	cpu_s=61.99	cores=2.06	cpu_us_per_req=2066	p50=21.2ms	p99=22.4ms
+pbs-go GOMAXPROCS=4 bidders=5	rps=1499	ok=45001	bad=0	cpu_s=50.28	cores=1.67	cpu_us_per_req=1117	p50=20.7ms	p99=21.3ms
+pbs-go GOMAXPROCS=4 bidders=10	rps=1499	ok=45000	bad=0	cpu_s=90.52	cores=3.01	cpu_us_per_req=2012	p50=22.8ms	p99=30.3ms

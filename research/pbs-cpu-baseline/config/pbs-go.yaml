@@ -1,0 +1,43 @@
+# PBS-Go config for the CPU load test: every bidder points at the local stub.
+port: 8000
+admin_port: 6060
+gdpr:
+  default_value: "0"
+currency_converter:
+  fetch_interval_seconds: 0
+# All stub "bidders" share one host, so raise the per-host keep-alive pool;
+# otherwise every bidder call opens a new TCP connection (a test artifact).
+http_client:
+  max_idle_connections: 4000
+  max_idle_connections_per_host: 2000
+adapters:
+  appnexus:
+    disabled: false
+    endpoint: "http://127.0.0.1:9000/appnexus"
+  openx:
+    disabled: false
+    endpoint: "http://127.0.0.1:9000/openx"
+  pubmatic:
+    disabled: false
+    endpoint: "http://127.0.0.1:9000/pubmatic"
+  ix:
+    disabled: false
+    endpoint: "http://127.0.0.1:9000/ix"
+  triplelift:
+    disabled: false
+    endpoint: "http://127.0.0.1:9000/triplelift"
+  sovrn:
+    disabled: false
+    endpoint: "http://127.0.0.1:9000/sovrn"
+  sharethrough:
+    disabled: false
+    endpoint: "http://127.0.0.1:9000/sharethrough"
+  criteo:
+    disabled: false
+    endpoint: "http://127.0.0.1:9000/criteo"
+  medianet:
+    disabled: false
+    endpoint: "http://127.0.0.1:9000/medianet"
+  smartadserver:
+    disabled: false
+    endpoint: "http://127.0.0.1:9000/smartadserver"

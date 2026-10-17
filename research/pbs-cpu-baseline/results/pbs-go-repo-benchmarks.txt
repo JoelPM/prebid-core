@@ -1,0 +1,26 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/prebid/prebid-server/v4/endpoints/openrtb2
+cpu: Apple M5 Max
+BenchmarkOpenrtbEndpoint-18        	  182350	      6496 ns/op	    9517 B/op	      92 allocs/op
+BenchmarkOpenrtbEndpoint-18        	  185100	      6510 ns/op	    9517 B/op	      92 allocs/op
+BenchmarkOpenrtbEndpoint-18        	  184009	      6472 ns/op	    9516 B/op	      92 allocs/op
+BenchmarkValidWholeExemplary/input_file_sample-requests/valid-whole/exemplary/all-ext.json-18         	  376010	      3118 ns/op	    3527 B/op	      25 allocs/op
+BenchmarkValidWholeExemplary/input_file_sample-requests/valid-whole/exemplary/all-ext.json-18         	  356744	      3150 ns/op	    3532 B/op	      25 allocs/op
+BenchmarkValidWholeExemplary/input_file_sample-requests/valid-whole/exemplary/all-ext.json-18         	  356253	      3128 ns/op	    3532 B/op	      25 allocs/op
+BenchmarkValidWholeExemplary/input_file_sample-requests/valid-whole/exemplary/interstitial-no-size.json-18         	  371216	      3076 ns/op	    3527 B/op	      25 allocs/op
+BenchmarkValidWholeExemplary/input_file_sample-requests/valid-whole/exemplary/interstitial-no-size.json-18         	  352717	      3205 ns/op	    3532 B/op	      25 allocs/op
+BenchmarkValidWholeExemplary/input_file_sample-requests/valid-whole/exemplary/interstitial-no-size.json-18         	  312613	      3331 ns/op	    3545 B/op	      25 allocs/op
+BenchmarkValidWholeExemplary/input_file_sample-requests/valid-whole/exemplary/prebid-test-ad.json-18               	  350192	      3345 ns/op	    3533 B/op	      25 allocs/op
+BenchmarkValidWholeExemplary/input_file_sample-requests/valid-whole/exemplary/prebid-test-ad.json-18               	  341560	      3130 ns/op	    3535 B/op	      25 allocs/op
+BenchmarkValidWholeExemplary/input_file_sample-requests/valid-whole/exemplary/prebid-test-ad.json-18               	  353871	      3167 ns/op	    3532 B/op	      25 allocs/op
+BenchmarkValidWholeExemplary/input_file_sample-requests/valid-whole/exemplary/simple.json-18                       	  306416	      3799 ns/op	    3547 B/op	      25 allocs/op
+BenchmarkValidWholeExemplary/input_file_sample-requests/valid-whole/exemplary/simple.json-18                       	  318622	      3801 ns/op	    3543 B/op	      25 allocs/op
+BenchmarkValidWholeExemplary/input_file_sample-requests/valid-whole/exemplary/simple.json-18                       	  356440	      3805 ns/op	    3531 B/op	      25 allocs/op
+BenchmarkValidWholeExemplary/input_file_sample-requests/valid-whole/exemplary/skadn.json-18                        	  321606	      3328 ns/op	    3542 B/op	      25 allocs/op
+BenchmarkValidWholeExemplary/input_file_sample-requests/valid-whole/exemplary/skadn.json-18                        	  288852	      3497 ns/op	    3554 B/op	      25 allocs/op
+BenchmarkValidWholeExemplary/input_file_sample-requests/valid-whole/exemplary/skadn.json-18                        	  351128	      3333 ns/op	    3532 B/op	      25 allocs/op
+PASS
+ok  	github.com/prebid/prebid-server/v4/endpoints/openrtb2	280.710s
+
+# Note: with site.page added the same benchmark still returns 400 (unknown bidder 'appnexus'), 25 us wall / 45 us CPU

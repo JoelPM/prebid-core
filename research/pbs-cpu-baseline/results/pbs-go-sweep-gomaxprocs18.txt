@@ -1,0 +1,9 @@
+# PBS-Go, GOMAXPROCS unset (18), default http_client pool; first exploratory sweep
+pbs-go bidders=1	rps=200	ok=6000	bad=0	cpu_s=9.26	cores=0.31	cpu_us_per_req=1543	p50=21.2ms	p99=22.7ms
+pbs-go bidders=3	rps=200	ok=6000	bad=0	cpu_s=19.14	cores=0.64	cpu_us_per_req=3190	p50=21.8ms	p99=24.2ms
+pbs-go bidders=5	rps=200	ok=6000	bad=0	cpu_s=27.70	cores=0.92	cpu_us_per_req=4617	p50=22.5ms	p99=25.3ms
+pbs-go bidders=10	rps=200	ok=6000	bad=0	cpu_s=39.57	cores=1.32	cpu_us_per_req=6595	p50=23.2ms	p99=30.5ms
+pbs-go bidders=1	rps=999	ok=30000	bad=0	cpu_s=32.02	cores=1.07	cpu_us_per_req=1067	p50=20.7ms	p99=21.6ms
+pbs-go bidders=3	rps=999	ok=30000	bad=0	cpu_s=46.97	cores=1.56	cpu_us_per_req=1566	p50=20.7ms	p99=21.7ms
+pbs-go bidders=5	rps=999	ok=30000	bad=0	cpu_s=54.88	cores=1.83	cpu_us_per_req=1829	p50=20.8ms	p99=21.7ms
+pbs-go bidders=10	rps=221	ok=6701	bad=17630	cpu_s=60.37	cores=1.99	cpu_us_per_req=9009	p50=21.8ms	p99=3.747s

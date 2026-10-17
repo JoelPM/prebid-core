@@ -1,0 +1,15 @@
+# go tool pprof -top -focus=<regex> on a 20 s CPU profile, PBS-Go GOMAXPROCS=4, 10 bidders, 1000 rps (macOS; see caveat in findings)
+prebid-server/v4/adapters/                                             0.59s, 1.46% of 40.31s total
+syscall\.                                                              19.85s, 49.24% of 40.31s total
+runtime\.(schedule|findRunnable|wakep|startm|stopm|mPark|park_m|mcall)$ 10.11s, 25.08% of 40.31s total
+runtime\.(gcBgMarkWorker|bgsweep|bgscavenge)                           3.14s, 7.79% of 40.31s total
+jsonutil|json-iterator|encoding/json                                   6.88s, 17.07% of 40.31s total
+compress/                                                              0.13s, 0.32% of 40.31s total
+sendAuctionResponse                                                    5.48s, 13.59% of 40.31s total
+endpointDeps\)\.Auction$                                               6.99s, 17.34% of 40.31s total
+exchange\..*requestBid$                                                2.44s, 6.05% of 40.31s total
+
+# same, 200 rps, GOMAXPROCS=18 (go-10b.pprof)
+prebid-server/v4/adapters/                                             1.46s, 6.20% of 23.56s total
+syscall\.                                                              6.65s, 28.23% of 23.56s total
+runtime\.(schedule|findRunnable|wakep|startm|stopm|mPark)              7.11s, 30.18% of 23.56s total

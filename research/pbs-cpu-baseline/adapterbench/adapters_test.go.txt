@@ -1,0 +1,138 @@
+// Copy into a prebid-server checkout as cpubench/adapters_test.go and run:
+//   go test -run '^$' -bench . -benchmem ./cpubench/
+// Measures each Hand-written Adapter's MakeRequests+MakeBids on the load-test payload
+// (requests/auction-10.json, one bidder's params per imp, stub-shaped response).
+package cpubench
+
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"os"
+	"strings"
+	"testing"
+
+	"github.com/prebid/openrtb/v20/openrtb2"
+	"github.com/prebid/prebid-server/v4/adapters"
+	"github.com/prebid/prebid-server/v4/adapters/appnexus"
+	"github.com/prebid/prebid-server/v4/adapters/criteo"
+	"github.com/prebid/prebid-server/v4/adapters/ix"
+	"github.com/prebid/prebid-server/v4/adapters/medianet"
+	"github.com/prebid/prebid-server/v4/adapters/openx"
+	"github.com/prebid/prebid-server/v4/adapters/pubmatic"
+	"github.com/prebid/prebid-server/v4/adapters/sharethrough"
+	"github.com/prebid/prebid-server/v4/adapters/smartadserver"
+	"github.com/prebid/prebid-server/v4/adapters/sovrn"
+	"github.com/prebid/prebid-server/v4/adapters/triplelift"
+	"github.com/prebid/prebid-server/v4/config"
+	"github.com/prebid/prebid-server/v4/openrtb_ext"
+)
+
+type builder func(openrtb_ext.BidderName, config.Adapter, config.Server) (adapters.Bidder, error)
+
+var builders = []struct {
+	name string
+	b    builder
+}{
+	{"appnexus", appnexus.Builder}, {"openx", openx.Builder}, {"pubmatic", pubmatic.Builder},
+	{"ix", ix.Builder}, {"triplelift", triplelift.Builder}, {"sovrn", sovrn.Builder},
+	{"sharethrough", sharethrough.Builder}, {"criteo", criteo.Builder},
+	{"medianet", medianet.Builder}, {"smartadserver", smartadserver.Builder},
+}
+
+var adm = "<div>" + strings.Repeat("<script src=\"https://cdn.example.com/creative.js?x=0123456789\"></script>", 18) + "</div>"
+
+// stubResponse mirrors stub/main.go: one banner bid per imp in the outgoing request.
+func stubResponse(body []byte) []byte {
+	var q struct {
+		ID  string `json:"id"`
+		Imp []struct {
+			ID     string `json:"id"`
+			Banner *struct {
+				Format []struct{ W, H int } `json:"format"`
+			} `json:"banner"`
+		} `json:"imp"`
+	}
+	if err := json.Unmarshal(body, &q); err != nil {
+		panic(err)
+	}
+	bids := []map[string]any{}
+	for i, im := range q.Imp {
+		w, h := 300, 250
+		if im.Banner != nil && len(im.Banner.Format) > 0 {
+			w, h = im.Banner.Format[0].W, im.Banner.Format[0].H
+		}
+		bids = append(bids, map[string]any{"id": fmt.Sprintf("b%d", i), "impid": im.ID, "price": 0.5, "adm": adm,
+			"adid": "ad1", "adomain": []string{"advertiser.com"}, "crid": "cr1", "cid": "c1", "w": w, "h": h, "mtype": 1,
+			"ext": map[string]any{"appnexus": map[string]any{"bid_ad_type": 0}, "prebid": map[string]any{"type": "banner"},
+				"BidType": 0, "mediaType": "banner", "format": "banner"}})
+	}
+	out, _ := json.Marshal(map[string]any{"id": q.ID, "cur": "USD", "seatbid": []map[string]any{{"seat": "s", "bid": bids}}})
+	return out
+}
+
+// bidderRequest builds what the exchange hands one Adapter: imp.ext = {"bidder": params}.
+func bidderRequest(b *testing.B, raw []byte, name string) *openrtb2.BidRequest {
+	var req openrtb2.BidRequest
+	if err := json.Unmarshal(raw, &req); err != nil {
+		b.Fatal(err)
+	}
+	for i := range req.Imp {
+		var ext struct {
+			Prebid struct {
+				Bidder map[string]json.RawMessage `json:"bidder"`
+			} `json:"prebid"`
+		}
+		json.Unmarshal(req.Imp[i].Ext, &ext)
+		req.Imp[i].Ext, _ = json.Marshal(map[string]json.RawMessage{"bidder": ext.Prebid.Bidder[name]})
+	}
+	req.Ext = nil
+	return &req
+}
+
+func BenchmarkAdapters(b *testing.B) {
+	raw, err := os.ReadFile("../../research/pbs-cpu-baseline/requests/auction-10.json")
+	if err != nil {
+		raw, err = os.ReadFile(os.Getenv("AUCTION_JSON"))
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+	for _, ab := range builders {
+		bidder, err := ab.b(openrtb_ext.BidderName(ab.name), config.Adapter{Endpoint: "http://127.0.0.1:9000/" + ab.name}, config.Server{ExternalUrl: "http://pbs.example.com", GvlID: 1, DataCenter: "2"})
+		if err != nil {
+			b.Fatal(ab.name, err)
+		}
+		b.Run(ab.name, func(b *testing.B) {
+			// Pre-compute stub responses once (they are the bidder's work, not PBS's).
+			reqs, errs := bidder.MakeRequests(bidderRequest(b, raw, ab.name), &adapters.ExtraRequestInfo{})
+			if len(errs) > 0 || len(reqs) == 0 {
+				b.Fatalf("%s MakeRequests: %v", ab.name, errs)
+			}
+			resps := make([][]byte, len(reqs))
+			for i, r := range reqs {
+				resps[i] = stubResponse(r.Body)
+			}
+			nbids := 0
+			b.ResetTimer()
+			for n := 0; n < b.N; n++ {
+				b.StopTimer()
+				req := bidderRequest(b, raw, ab.name) // exchange gives each Adapter its own copy
+				b.StartTimer()
+				reqs, _ := bidder.MakeRequests(req, &adapters.ExtraRequestInfo{})
+				nbids = 0
+				for i, r := range reqs {
+					br, errs := bidder.MakeBids(req, r, &adapters.ResponseData{StatusCode: 200, Body: resps[i%len(resps)], Headers: http.Header{}})
+					if len(errs) > 0 {
+						b.Fatalf("%s MakeBids: %v", ab.name, errs)
+					}
+					if br != nil {
+						nbids += len(br.Bids)
+					}
+				}
+			}
+			b.ReportMetric(float64(len(reqs)), "http-reqs")
+			b.ReportMetric(float64(nbids), "bids")
+		})
+	}
+}

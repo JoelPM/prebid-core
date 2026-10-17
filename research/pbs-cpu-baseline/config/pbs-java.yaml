@@ -1,0 +1,65 @@
+# PBS-Java config for the CPU load test: every bidder points at the local stub.
+# Run from the prebid-server-java checkout root:
+#   java -jar target/prebid-server.jar --spring.config.additional-location=<this file>
+server:
+  http:
+    port: 8000
+    server-instances: 4
+status-response: "ok"
+currency-converter:
+  external-rates:
+    enabled: false
+settings:
+  enforce-valid-account: false
+  filesystem:
+    settings-filename: sample/configs/sample-app-settings.yaml
+    stored-requests-dir: sample
+    stored-imps-dir: sample
+    profiles-dir: sample
+    stored-responses-dir: sample
+    categories-dir:
+gdpr:
+  default-value: 0
+  vendorlist:
+    v2:
+      cache-dir: /tmp/pbs-java-vendor2
+    v3:
+      cache-dir: /tmp/pbs-java-vendor3
+    live:
+      startup-cache-dir: /tmp/pbs-java-vendor3
+cache:
+  scheme: http
+  host: localhost
+  path: /cache
+  query: uuid=
+adapters:
+  appnexus:
+    enabled: true
+    endpoint: http://127.0.0.1:9000/appnexus
+  openx:
+    enabled: true
+    endpoint: http://127.0.0.1:9000/openx
+  pubmatic:
+    enabled: true
+    endpoint: http://127.0.0.1:9000/pubmatic
+  ix:
+    enabled: true
+    endpoint: http://127.0.0.1:9000/ix
+  triplelift:
+    enabled: true
+    endpoint: http://127.0.0.1:9000/triplelift
+  sovrn:
+    enabled: true
+    endpoint: http://127.0.0.1:9000/sovrn
+  sharethrough:
+    enabled: true
+    endpoint: http://127.0.0.1:9000/sharethrough
+  criteo:
+    enabled: true
+    endpoint: http://127.0.0.1:9000/criteo
+  medianet:
+    enabled: true
+    endpoint: http://127.0.0.1:9000/medianet
+  smartadserver:
+    enabled: true
+    endpoint: http://127.0.0.1:9000/smartadserver

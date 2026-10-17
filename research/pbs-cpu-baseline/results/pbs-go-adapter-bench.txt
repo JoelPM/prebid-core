@@ -1,0 +1,14 @@
+# go test -run '^$' -bench . -benchmem -count 3 ./cpubench/  (PBS-Go master a916b19ef, Go 1.27.2, Apple M5 Max)
+# MakeRequests + MakeBids per call on requests/auction-10.json (3 banner imps), stub-shaped response (3 bids, ~1.4 KB adm each)
+# bidder          ns/op (3 runs)              B/op    allocs/op  http-reqs
+appnexus        29161 29405 29093             30271   207        1
+openx           30437 30389 30423             35460   383        1
+pubmatic        27487 27660 27630             27292   212        1
+ix              27745 27544 27424             27128   186        1
+triplelift      27134 27070 27091             26943   170        1
+sovrn           27553 27535 27673             24515   158        1
+sharethrough    46348 46206 50698             42830   523        3
+criteo          23814 21248 23028             21479   142        1
+medianet        24610 24193 24127             21950   132        1
+smartadserver   32917 33151 33039             33148   265        1
+# mean of medians: ~29.6 us/call; first five (5-bidder auction) mean ~28.4 us

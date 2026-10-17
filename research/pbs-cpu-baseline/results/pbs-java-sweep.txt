@@ -1,0 +1,10 @@
+# PBS-Java (Temurin 25.0.4.1, -XX:ActiveProcessorCount=4 -Xms2g -Xmx2g, server-instances 4)
+pbs-java 4cpu bidders=1	rps=999	ok=30000	bad=0	cpu_s=14.23	cores=0.47	cpu_us_per_req=474	p50=20.7ms	p99=21.2ms
+pbs-java 4cpu bidders=3	rps=999	ok=30000	bad=0	cpu_s=19.04	cores=0.63	cpu_us_per_req=635	p50=20.7ms	p99=21.4ms
+pbs-java 4cpu bidders=5	rps=999	ok=30000	bad=0	cpu_s=22.34	cores=0.74	cpu_us_per_req=745	p50=20.8ms	p99=21.6ms
+pbs-java 4cpu bidders=10	rps=999	ok=30000	bad=0	cpu_s=44.92	cores=1.50	cpu_us_per_req=1497	p50=21.4ms	p99=23.5ms
+pbs-java 4cpu bidders=5	rps=1990	ok=59743	bad=0	cpu_s=51.65	cores=1.72	cpu_us_per_req=865	p50=20.8ms	p99=25ms
+pbs-java 4cpu bidders=10	rps=1985	ok=59601	bad=1	cpu_s=99.46	cores=3.31	cpu_us_per_req=1669	p50=27.2ms	p99=146.3ms
+pbs-java 4cpu rerun bidders=1	rps=999	ok=29996	bad=0	cpu_s=14.52	cores=0.48	cpu_us_per_req=484	p50=20.7ms	p99=21.3ms
+pbs-java 4cpu rerun bidders=5	rps=997	ok=29929	bad=0	cpu_s=22.43	cores=0.75	cpu_us_per_req=749	p50=20.8ms	p99=21.8ms
+pbs-java 4cpu rerun bidders=10	rps=999	ok=30000	bad=0	cpu_s=45.72	cores=1.52	cpu_us_per_req=1524	p50=21.5ms	p99=23.8ms
