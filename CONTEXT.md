@@ -40,11 +40,19 @@ A separately maintained copy of Prebid Core logic in one language. The goal is a
 **Proof of Concept**:
 Prebid Core plus one Shared Adapter (OpenX) running in all four Hosts, alongside their Hand-written Adapters.
 
+**Adapter Definition**:
+The declarative description of a **Shared Adapter** that a bidder writes: its **Shared Adapter Core** and any **Extensions**, expressed as field mappings and rules, with small expressions only where mappings can't say it.
+_Avoid_: profile (collides with the avoided "client/server profile"), spec (Prebid.js's adapter object), manifest (the per-Adapter list of response fields a Host must parse)
+
+**Definition Compiler**:
+The part of **Prebid Core** that turns an **Adapter Definition** into the code each **Implementation** runs.
+
 ## Relationships
 
 - A **Host** runs many **Adapters**; during migration some are **Hand-written** and some **Shared**, side by side.
 - A **Shared Adapter** runs on **Prebid Core**, which has one or more **Implementations**.
 - A **Shared Adapter** is one **Shared Adapter Core** plus at most one **Client Extension** and one **Server Extension**.
+- A **Shared Adapter** is written as one **Adapter Definition**; the **Definition Compiler** produces what every **Host** runs from it.
 - Each **Host** is either client (Prebid.js) or server (PBS-Go, PBS-Java, Trusted Server), fixed for that Host. Trusted Server is server: its call to the bidder is server-to-server.
 - A bidder can use a **Shared Adapter** in some Hosts and a **Hand-written Adapter** in others, e.g. Shared on the servers but Hand-written in Prebid.js.
 
