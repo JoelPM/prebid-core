@@ -18,6 +18,18 @@ An Adapter implemented natively inside one Host's codebase, as all Adapters are 
 **Shared Adapter**:
 An Adapter authored, tested and reviewed in one place and run by every Host without hand-porting.
 
+**Shared Adapter Core**:
+The part of a **Shared Adapter** every **Host** runs: building requests from the OpenRTB request and turning the bidder's response into bids. The same bidder response always yields the same set of bids, in every Host.
+_Avoid_: base adapter
+
+**Client Extension**:
+Optional additions a **Shared Adapter** applies only in browser **Hosts** (Prebid.js), on top of its **Shared Adapter Core**: extra request fields and params, a different endpoint, extra fields on bids, or dropping bids. It never creates bids, re-reads the raw response or changes the shape of requests. Written by the bidder as part of its Shared Adapter.
+_Avoid_: client profile, client module, channel, mode
+
+**Server Extension**:
+The server-side counterpart of a **Client Extension**, applied in PBS-Go, PBS-Java and Trusted Server.
+_Avoid_: server profile, server module
+
 **Prebid Core**:
 Whatever lets a Host run Shared Adapters: a library, an interpreter, generated code, or a mix. Its form is an open question.
 _Avoid_: Prebid library (presumes the form)
@@ -32,8 +44,13 @@ Prebid Core plus one Shared Adapter (OpenX) running in all four Hosts, alongside
 
 - A **Host** runs many **Adapters**; during migration some are **Hand-written** and some **Shared**, side by side.
 - A **Shared Adapter** runs on **Prebid Core**, which has one or more **Implementations**.
+- A **Shared Adapter** is one **Shared Adapter Core** plus at most one **Client Extension** and one **Server Extension**.
+- Each **Host** is either client (Prebid.js) or server (PBS-Go, PBS-Java, Trusted Server), fixed for that Host. Trusted Server is server: its call to the bidder is server-to-server.
+- A bidder can use a **Shared Adapter** in some Hosts and a **Hand-written Adapter** in others, e.g. Shared on the servers but Hand-written in Prebid.js.
 
 ## Flagged ambiguities
 
 - "Adapter" in Prebid.js also covers user syncs, event callbacks (`onBidWon`, `onTimeout`) and page side-effects. For now those are outside the **Adapter** as defined here.
 - In Trusted Server, "adapter" means a platform crate (Fastly, Cloudflare, Spin), not a bidder **Adapter**. Say "platform adapter" for those.
+- "Extension" here is unrelated to OpenRTB `ext` objects; say **Client Extension** / **Server Extension** in full.
+- "Module" means a build unit in Prebid.js (`modules/*BidAdapter.js`) and a hook-based plugin in PBS. Don't use it for Extensions.
