@@ -1,0 +1,26 @@
+redline:bench.G_O3 on OpenJDK 64-Bit Server VM 25.0.4.1+1-LTS
+Redline native code in use: true
+
+== payload lt
+  correctness: D and E match OpenxBidder's body and bids
+  native PBS-Java OpenxBidder (same JVM)                                16.25 us/op  (min 16.20 max 16.30)
+  D typed guest, Host parses bids + binary annotations                  63.88 us/op  (min 63.78 max 64.75)
+  E as D + response projection                                          58.19 us/op  (min 57.90 max 58.27)
+  guest: mr_typed (incl. write/read)                                    23.87 us/op  (min 23.79 max 23.92)
+  guest: mb_typed_annot on raw response                                 23.99 us/op  (min 23.96 max 24.04)
+  guest: mb_typed_annot on 461 B projection                             22.45 us/op  (min 22.43 max 22.59)
+  guest: write request bytes only                                        0.02 us/op  (min 0.02 max 0.02)
+  noop export call                                                      21.53 us/op  (min 21.47 max 22.24)
+  native PBS-Java OpenxBidder                                        p=4     19.79 us CPU/op  (runs 19.79 19.79 19.85)
+  E, one instance per thread                                         p=4    121.19 us CPU/op  (runs 121.45 121.19 121.03)
+
+== payload heavy
+  correctness: D and E match OpenxBidder's body and bids
+  native PBS-Java OpenxBidder (same JVM)                                22.02 us/op  (min 21.98 max 22.27)
+  D typed guest, Host parses bids + binary annotations                  84.47 us/op  (min 84.29 max 84.52)
+  E as D + response projection                                          72.01 us/op  (min 69.15 max 72.40)
+  guest: mr_typed (incl. write/read)                                    24.56 us/op  (min 24.37 max 25.28)
+  guest: mb_typed_annot on raw response                                 30.29 us/op  (min 30.18 max 30.35)
+  guest: mb_typed_annot on 471 B projection                             22.86 us/op  (min 22.79 max 22.93)
+  guest: write request bytes only                                        0.03 us/op  (min 0.03 max 0.03)
+  noop export call                                                      21.35 us/op  (min 21.32 max 21.37)

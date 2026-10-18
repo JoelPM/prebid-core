@@ -1,0 +1,8 @@
+native on OpenJDK 64-Bit Server VM 25.0.4.1+1-LTS
+
+== payload lt
+  native PBS-Java OpenxBidder                                           16.45 us/op  (min 16.37 max 16.48)
+  native PBS-Java OpenxBidder                                        p=4     19.78 us CPU/op  (runs 19.80 19.77 19.78)
+
+== payload heavy
+  native PBS-Java OpenxBidder                                           22.53 us/op  (min 22.48 max 22.59)

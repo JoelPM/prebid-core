@@ -1,0 +1,8 @@
+O3                 wasm  242440 B  methods  757  over 8000 B: _RNvNtCs9Psjw6KH2td_5guest5typed13make_requests_97(15990) _RNvNtCs9Psjw6KH2td_5guest5value12make_request_104(11285) _RNvNtCs9Psjw6KH2td_5guest5typed14make_bids_json_100(10243) 
+Os                 wasm  213833 B  methods 1201  over 8000 B: 
+O2                 wasm  238887 B  methods  757  over 8000 B: _RNvNtCs6rmhPq7oeqa_5guest5typed13make_requests_96(15046) _RNvNtCs6rmhPq7oeqa_5guest5typed14make_bids_json_99(10604) _RNvNtCs6rmhPq7oeqa_5guest5value12make_request_103(8497) 
+O3-inl50           wasm  235713 B  methods  819  over 8000 B: _RNvNtCs9Psjw6KH2td_5guest5typed13make_requests_123(16536) _RNvNtCs9Psjw6KH2td_5guest5typed14make_bids_json_127(10273) _RINvXNtNtCslNRLmHQCKwN_10serde_json5value3serNtB5_5ValueNtNtCs8wL5bZ6nWDi_10serde_core3ser9Serialize9serializeQINtNtB7_3ser10SerializerQNtNvXs_B5_BH_NtNtCs4NIexwV1FGX_4core3fmt7Display3fmt15WriterFormatterNtB1O_15PrettyFormatterEEB7__206(8028) 
+O3-split           wasm  241558 B  methods  773  over 8000 B: _RNvNtCse96Syx1qYct_5guest5value12make_request_112(11285) _RNvNtCse96Syx1qYct_5guest5typed14make_bids_json_107(10243) 
+O2-split           wasm  238954 B  methods  773  over 8000 B: _RNvNtCs15TACEdHIQ3_5guest5typed14make_bids_json_106(10604) _RNvNtCs15TACEdHIQ3_5guest5value12make_request_111(8497) 
+O3-split-wasmopt   wasm  233171 B  methods  773  over 8000 B: _RNvNtCse96Syx1qYct_5guest5value12make_request_112(11074) _RNvNtCse96Syx1qYct_5guest5typed14make_bids_json_107(10127) 
+O3-outlined        wasm  235415 B  methods 1755  over 8000 B: _RNvNtCs9Psjw6KH2td_5guest5typed13make_requests_596(16429) _RNvNtCs9Psjw6KH2td_5guest5value12make_request_603(11183) _RNvNtCs9Psjw6KH2td_5guest5typed14make_bids_json_599(10487) 

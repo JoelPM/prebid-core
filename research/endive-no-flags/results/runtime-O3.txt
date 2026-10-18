@@ -1,0 +1,25 @@
+runtime:/private/tmp/claude-501/-Users-joel-meyer-Developer-prebid/3c6e4805-9456-4f9c-817d-dd7ee3a35659/scratchpad/out/O3.wasm on OpenJDK 64-Bit Server VM 25.0.4.1+1-LTS
+
+== payload lt
+  correctness: D and E match OpenxBidder's body and bids
+  native PBS-Java OpenxBidder (same JVM)                                16.33 us/op  (min 16.31 max 16.39)
+  D typed guest, Host parses bids + binary annotations                  60.44 us/op  (min 60.17 max 61.48)
+  E as D + response projection                                          50.66 us/op  (min 50.12 max 50.84)
+  guest: mr_typed (incl. write/read)                                    31.87 us/op  (min 31.84 max 32.16)
+  guest: mb_typed_annot on raw response                                 15.89 us/op  (min 15.78 max 16.07)
+  guest: mb_typed_annot on 461 B projection                              4.85 us/op  (min 4.84 max 4.88)
+  guest: write request bytes only                                        0.02 us/op  (min 0.02 max 0.02)
+  noop export call                                                       0.01 us/op  (min 0.01 max 0.01)
+  native PBS-Java OpenxBidder                                        p=4     19.61 us CPU/op  (runs 19.58 19.61 19.67)
+  E, one instance per thread                                         p=4     56.85 us CPU/op  (runs 56.85 56.53 57.30)
+
+== payload heavy
+  correctness: D and E match OpenxBidder's body and bids
+  native PBS-Java OpenxBidder (same JVM)                                22.59 us/op  (min 22.46 max 22.76)
+  D typed guest, Host parses bids + binary annotations                 130.45 us/op  (min 130.26 max 130.76)
+  E as D + response projection                                         104.08 us/op  (min 103.68 max 104.80)
+  guest: mr_typed (incl. write/read)                                    68.31 us/op  (min 68.12 max 68.56)
+  guest: mb_typed_annot on raw response                                 35.17 us/op  (min 35.01 max 35.77)
+  guest: mb_typed_annot on 471 B projection                              7.42 us/op  (min 7.36 max 7.44)
+  guest: write request bytes only                                        0.03 us/op  (min 0.03 max 0.03)
+  noop export call                                                       0.01 us/op  (min 0.01 max 0.01)

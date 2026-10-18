@@ -62,6 +62,7 @@ impl<'de> Deserialize<'de> for RawObj<'de> {
         impl<'de> Visitor<'de> for V {
             type Value = RawObj<'de>;
             fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result { f.write_str("object") }
+            #[cfg_attr(feature = "split", inline(never))]
             fn visit_map<A: MapAccess<'de>>(self, mut m: A) -> Result<Self::Value, A::Error> {
                 let mut v = Vec::with_capacity(8);
                 while let Some(k) = m.next_key::<&'de str>()? {
@@ -80,6 +81,7 @@ impl<'de> Deserialize<'de> for Req<'de> {
         impl<'de> Visitor<'de> for V {
             type Value = Req<'de>;
             fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result { f.write_str("BidRequest") }
+            #[cfg_attr(feature = "split", inline(never))]
             fn visit_map<A: MapAccess<'de>>(self, mut m: A) -> Result<Self::Value, A::Error> {
                 let mut r = Req { rest: Vec::with_capacity(16), imp: Vec::new() };
                 while let Some(k) = m.next_key::<&'de str>()? {
@@ -102,6 +104,7 @@ impl<'de> Deserialize<'de> for Imp<'de> {
         impl<'de> Visitor<'de> for V {
             type Value = Imp<'de>;
             fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result { f.write_str("Imp") }
+            #[cfg_attr(feature = "split", inline(never))]
             fn visit_map<A: MapAccess<'de>>(self, mut m: A) -> Result<Self::Value, A::Error> {
                 let mut imp = Imp { rest: Vec::with_capacity(12), ..Default::default() };
                 while let Some(k) = m.next_key::<&'de str>()? {
@@ -130,6 +133,7 @@ impl<'de> Deserialize<'de> for ImpExt<'de> {
         impl<'de> Visitor<'de> for V {
             type Value = ImpExt<'de>;
             fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result { f.write_str("imp.ext") }
+            #[cfg_attr(feature = "split", inline(never))]
             fn visit_map<A: MapAccess<'de>>(self, mut m: A) -> Result<Self::Value, A::Error> {
                 let mut e = ImpExt::default();
                 while let Some(k) = m.next_key::<&'de str>()? {
@@ -160,8 +164,52 @@ fn num(raw: Raw) -> f64 {
     raw.get().trim_matches('"').parse().unwrap_or(0.0)
 }
 
+/// `split` keeps the parse and the per-imp writer out of line so no compiled WASM function exceeds
+/// HotSpot's 8,000-bytecode JIT limit on Endive (see ../../endive-no-flags.md).
+#[cfg_attr(feature = "split", inline(never))]
+fn parse_req(input: &[u8]) -> Req<'_> { serde_json::from_slice(input).unwrap() }
+
+/// One rewritten imp object.
+#[cfg_attr(feature = "split", inline(never))]
+fn write_imp(out: &mut Vec<u8>, imp: &Imp, ox: &OxParams) {
+    out.push(b'{');
+    let mut f = true;
+    for (k, v) in &imp.rest { put(out, &mut f, k, v.get().as_bytes()); }
+    // tagid = unit as a string (json.Number.String()).
+    match ox.unit {
+        Some(u) if u.get().starts_with('"') => put(out, &mut f, "tagid", u.get().as_bytes()),
+        Some(u) => { put(out, &mut f, "tagid", b"\""); out.extend_from_slice(u.get().as_bytes()); out.push(b'"'); }
+        None => put(out, &mut f, "tagid", b"\"\""),
+    }
+    let floor = imp.bidfloor.map_or(0.0, num);
+    let custom = ox.custom_floor.map_or(0.0, num);
+    if floor == 0.0 && custom > 0.0 {
+        put(out, &mut f, "bidfloor", b"");
+        serde_json::to_writer(&mut *out, &custom).unwrap();
+    } else if let Some(b) = imp.bidfloor.filter(|_| floor != 0.0) {
+        put(out, &mut f, "bidfloor", b.get().as_bytes());
+    }
+    if !imp.ext.rest.is_empty() || ox.custom_params.is_some() {
+        put(out, &mut f, "ext", b"{");
+        let mut fe = true;
+        for (k, v) in &imp.ext.rest {
+            if *k != "customParams" || ox.custom_params.is_none() { put(out, &mut fe, k, v.get().as_bytes()); }
+        }
+        if let Some(cp) = ox.custom_params { put(out, &mut fe, "customParams", cp.get().as_bytes()); }
+        out.push(b'}');
+    }
+    if let Some(video) = &imp.video {
+        put(out, &mut f, "video", b"{");
+        let mut fv = true;
+        for (k, v) in video { if *k != "ext" { put(out, &mut fv, k, v.get().as_bytes()); } }
+        if imp.rwdd == 1 { put(out, &mut fv, "ext", br#"{"rewarded":1}"#); }
+        out.push(b'}');
+    }
+    out.push(b'}');
+}
+
 pub fn make_requests(input: &[u8], out: &mut Vec<u8>) {
-    let req: Req = serde_json::from_slice(input).unwrap();
+    let req = parse_req(input);
     let (mut del_domain, mut platform): (Option<Cow<str>>, Option<Cow<str>>) = (None, None);
     out.push(b'{');
     let mut first = true;
@@ -175,40 +223,7 @@ pub fn make_requests(input: &[u8], out: &mut Vec<u8>) {
         platform = ox.platform.clone();
         if !first_imp { out.push(b','); }
         first_imp = false;
-        out.push(b'{');
-        let mut f = true;
-        for (k, v) in &imp.rest { put(out, &mut f, k, v.get().as_bytes()); }
-        // tagid = unit as a string (json.Number.String()).
-        match ox.unit {
-            Some(u) if u.get().starts_with('"') => put(out, &mut f, "tagid", u.get().as_bytes()),
-            Some(u) => { put(out, &mut f, "tagid", b"\""); out.extend_from_slice(u.get().as_bytes()); out.push(b'"'); }
-            None => put(out, &mut f, "tagid", b"\"\""),
-        }
-        let floor = imp.bidfloor.map_or(0.0, num);
-        let custom = ox.custom_floor.map_or(0.0, num);
-        if floor == 0.0 && custom > 0.0 {
-            put(out, &mut f, "bidfloor", b"");
-            serde_json::to_writer(&mut *out, &custom).unwrap();
-        } else if let Some(b) = imp.bidfloor.filter(|_| floor != 0.0) {
-            put(out, &mut f, "bidfloor", b.get().as_bytes());
-        }
-        if !imp.ext.rest.is_empty() || ox.custom_params.is_some() {
-            put(out, &mut f, "ext", b"{");
-            let mut fe = true;
-            for (k, v) in &imp.ext.rest {
-                if *k != "customParams" || ox.custom_params.is_none() { put(out, &mut fe, k, v.get().as_bytes()); }
-            }
-            if let Some(cp) = ox.custom_params { put(out, &mut fe, "customParams", cp.get().as_bytes()); }
-            out.push(b'}');
-        }
-        if let Some(video) = &imp.video {
-            put(out, &mut f, "video", b"{");
-            let mut fv = true;
-            for (k, v) in video { if *k != "ext" { put(out, &mut fv, k, v.get().as_bytes()); } }
-            if imp.rwdd == 1 { put(out, &mut fv, "ext", br#"{"rewarded":1}"#); }
-            out.push(b'}');
-        }
-        out.push(b'}');
+        write_imp(out, imp, ox);
     }
     out.push(b']');
     put(out, &mut first, "ext", b"{");
@@ -270,6 +285,7 @@ impl<'de: 'a, 'a> Deserialize<'de> for FirstStr<'a> {
         impl<'de: 'a, 'a> Visitor<'de> for V<'a> {
             type Value = FirstStr<'a>;
             fn expecting(&self, f: &mut fmt::Formatter) -> fmt::Result { f.write_str("array") }
+            #[cfg_attr(feature = "split", inline(never))]
             fn visit_seq<A: de::SeqAccess<'de>>(self, mut s: A) -> Result<Self::Value, A::Error> {
                 let first = s.next_element()?;
                 while s.next_element::<IgnoredAny>()?.is_some() {}

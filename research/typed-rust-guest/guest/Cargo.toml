@@ -20,3 +20,6 @@ strip = true
 [[bin]]
 name = "native"
 path = "src/native.rs"
+
+[features]
+split = []
