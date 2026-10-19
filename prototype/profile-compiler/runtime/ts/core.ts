@@ -27,7 +27,7 @@ export function get(o: J, path: string[]): J {
 
 // numbers only; NaN makes every comparison false
 export const n = (x: J) => (typeof x === 'number' ? x : NaN);
-export const lk = (t: J, k: J) => (typeof k === 'string' || typeof k === 'number') && Object.hasOwn(t, k) ? t[k] : undefined;
+export const lk = (t: J, k: J) => (typeof k === 'string' || typeof k === 'number') && Object.prototype.hasOwnProperty.call(t, k) ? t[k] : undefined;
 // template interpolation: absent and non-scalars render as ''
 export const s = (x: J) => (x == null || typeof x === 'object' ? '' : String(x));
 

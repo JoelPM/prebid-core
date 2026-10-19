@@ -3,6 +3,7 @@ import * as r from '../../runtime/ts/core.ts';
 
 export const bidder = "openx";
 export const endpoint = "https://rtb.openx.net/prebid";
+export const isValid = (p: any): boolean => p != null && ["unit"].every((k) => p[k] != null) && [["delDomain"],["platform"]].some((g) => g.every((k) => p[k] != null));
 
 export function makeRequests(req: any): any {
   const errs: string[] = [], imps: any[] = [], params: any[] = [];

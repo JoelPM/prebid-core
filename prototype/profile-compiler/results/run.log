@@ -1,0 +1,117 @@
+== compile Definitions
+compiled defs/openx.yaml
+compiled defs/pubmatic.yaml
+== Definition / escape-hatch size
+
+openx: 11 core rules, 3 escape hatch (27% of rules, 48% of expression nodes)
+  lenient (numeric comparisons with a literal are declarative): 1 escape hatch (9% of rules, 8% of nodes)
+  Extensions: client +7 set rules, server +1
+  escape-hatch rules: imp.set.bidfloor, bid.meta, response.paapi
+  escape-hatch functions: entries int nonempty num; macros: map
+  non-blank, non-comment lines: Definition 48 | PBS-Go 256 | Prebid.js 193 | PBS-Java 238
+
+pubmatic: 44 core rules, 21 escape hatch (48% of rules, 64% of expression nodes)
+  lenient (numeric comparisons with a literal are declarative): 20 escape hatch (45% of rules, 62% of nodes)
+  Extensions: client +0 set rules, server +0
+  escape-hatch rules: imp.let.slot, imp.let.at, imp.let.sz, imp.let.w, imp.let.h, imp.let.hasSize, imp.let.kad, imp.let.kw, imp.let.pairs, imp.check, imp.check, imp.set.tagid, imp.set.bidfloor, imp.set.ext, request.let.pub, request.set.ext, bid.let.nat, bid.set.cat, bid.set.adm, bid.dealPriority, response.paapi
+  escape-hatch functions: contains entries first fromEntries int join json keys len lower max merge nonempty num split str stringify trim type; macros: map filter map filter map filter map map map map map
+  non-blank, non-comment lines: Definition 83 | PBS-Go 571 | Prebid.js 772 | PBS-Java 559
+== wasm guests (one per Adapter, plus one with both for the parity runs)
+== parity: golden (Hand-written PBS-Go output), TS, Rust/wasm, TS vs Rust
+ts: 33/33 fixtures at parity (3 via Known Differences)
+rust: 33/33 fixtures at parity (3 via Known Differences)
+TS vs Rust: identical output on every fixture
+== PBS-Go's own adapterstest against the wasm Shared Adapters (expect exactly the Known Difference fixtures to fail)
+    --- FAIL: TestAdapterstest/pubmatic/exemplary/fledge.json (0.00s)
+    --- FAIL: TestAdapterstest/pubmatic/exemplary/native.json (0.00s)
+    --- FAIL: TestAdapterstest/pubmatic/supplemental/app.json (0.00s)
+== native guest timing
+openx / lt
+  parse+skim request only                     0.93 us
+  make_requests (incl. parse, emit)           2.25 us
+  make_bids (incl. parse)                     3.21 us
+openx / heavy
+  parse+skim request only                     1.73 us
+  make_requests (incl. parse, emit)           4.51 us
+  make_bids (incl. parse)                     7.76 us
+pubmatic / lt
+  parse+skim request only                     1.17 us
+  make_requests (incl. parse, emit)           6.73 us
+  make_bids (incl. parse)                     3.71 us
+pubmatic / heavy
+  parse+skim request only                     1.83 us
+  make_requests (incl. parse, emit)           9.95 us
+  make_bids (incl. parse)                     5.43 us
+== PBS-Go / wazero vs Hand-written
+go1.27.2, GOMAXPROCS 18, wazero v1.12.0 compiler
+
+== openx / lt (request 1641 B marshalled, response 5995 B; guest 108 KB)
+  correctness: body and every TypedBid (incl. meta, video, seat) equal the Hand-written Adapter's
+  native PBS-Go Adapter                                 22.46 us/op (min 22.45 max 22.70)  36522 B/op  385 allocs/op
+  Shared Adapter (generated Rust, wasm)                 31.56 us/op (min 31.34 max 31.59)  35456 B/op  346 allocs/op
+  overhead, one goroutine                               +9.09 us (1.40x)
+    of which: guest calls only (write, run, read)       11.84 us/op (min 11.73 max 11.85)     25 B/op    0 allocs/op
+    of which: Host marshal request                       5.51 us/op (min 5.50 max 5.52)  12048 B/op  203 allocs/op
+    of which: Host unmarshal response                   11.83 us/op (min 11.78 max 11.88)  18864 B/op  116 allocs/op
+  native, process CPU                                p=1     20.82 us CPU/op (runs 20.96 20.79 20.82)
+  shared (sync.Pool), process CPU                    p=1     32.01 us CPU/op (runs 32.01 32.06 31.88)
+  overhead under concurrency                         p=1    +11.19 us CPU
+  native, process CPU                                p=4     23.74 us CPU/op (runs 23.74 23.80 23.66)
+  shared (sync.Pool), process CPU                    p=4     35.21 us CPU/op (runs 35.36 35.21 34.98)
+  overhead under concurrency                         p=4    +11.47 us CPU
+  native, process CPU                                p=8     29.22 us CPU/op (runs 29.27 29.22 29.19)
+  shared (sync.Pool), process CPU                    p=8     40.27 us CPU/op (runs 40.25 40.27 40.36)
+  overhead under concurrency                         p=8    +11.06 us CPU
+
+== openx / heavy (request 3110 B marshalled, response 11294 B; guest 108 KB)
+  correctness: body and every TypedBid (incl. meta, video, seat) equal the Hand-written Adapter's
+  native PBS-Go Adapter                                 42.67 us/op (min 42.60 max 42.71)  73446 B/op  910 allocs/op
+  Shared Adapter (generated Rust, wasm)                 62.26 us/op (min 62.17 max 63.29)  62138 B/op  587 allocs/op
+  overhead, one goroutine                              +19.59 us (1.46x)
+    of which: guest calls only (write, run, read)       25.23 us/op (min 25.17 max 25.42)     54 B/op    0 allocs/op
+    of which: Host marshal request                      10.26 us/op (min 10.21 max 10.32)  21176 B/op  364 allocs/op
+    of which: Host unmarshal response                   22.89 us/op (min 22.36 max 23.05)  32304 B/op  140 allocs/op
+
+== pubmatic / lt (request 1989 B marshalled, response 5995 B; guest 151 KB)
+  correctness: body and every TypedBid (incl. meta, video, seat) equal the Hand-written Adapter's
+  native PBS-Go Adapter                                 24.29 us/op (min 24.12 max 24.40)  31114 B/op  303 allocs/op
+  Shared Adapter (generated Rust, wasm)                 45.22 us/op (min 44.95 max 45.85)  41270 B/op  472 allocs/op
+  overhead, one goroutine                              +20.93 us (1.86x)
+    of which: guest calls only (write, run, read)       22.78 us/op (min 22.75 max 22.90)      0 B/op    0 allocs/op
+    of which: Host marshal request                       7.05 us/op (min 7.02 max 7.07)  16032 B/op  311 allocs/op
+    of which: Host unmarshal response                   11.80 us/op (min 11.75 max 11.82)  18864 B/op  116 allocs/op
+  native, process CPU                                p=1     21.76 us CPU/op (runs 21.82 21.76 21.76)
+  shared (sync.Pool), process CPU                    p=1     46.10 us CPU/op (runs 46.08 46.21 46.10)
+  overhead under concurrency                         p=1    +24.35 us CPU
+  native, process CPU                                p=4     24.21 us CPU/op (runs 24.17 24.21 24.30)
+  shared (sync.Pool), process CPU                    p=4     50.28 us CPU/op (runs 50.07 50.28 50.82)
+  overhead under concurrency                         p=4    +26.07 us CPU
+  native, process CPU                                p=8     28.66 us CPU/op (runs 28.73 28.66 28.46)
+  shared (sync.Pool), process CPU                    p=8     56.65 us CPU/op (runs 56.65 56.67 56.41)
+  overhead under concurrency                         p=8    +27.99 us CPU
+
+== pubmatic / heavy (request 3310 B marshalled, response 11294 B; guest 151 KB)
+  correctness: body and every TypedBid (incl. meta, video, seat) equal the Hand-written Adapter's
+  native PBS-Go Adapter                                 37.89 us/op (min 37.71 max 37.99)  51690 B/op  461 allocs/op
+  Shared Adapter (generated Rust, wasm)                 72.30 us/op (min 72.21 max 72.48)  63857 B/op  623 allocs/op
+  overhead, one goroutine                              +34.41 us (1.91x)
+    of which: guest calls only (write, run, read)       34.47 us/op (min 34.37 max 34.89)     73 B/op    0 allocs/op
+    of which: Host marshal request                      11.11 us/op (min 11.05 max 11.11)  23640 B/op  428 allocs/op
+    of which: Host unmarshal response                   22.25 us/op (min 22.20 max 22.66)  32304 B/op  140 allocs/op
+== Prebid.js bundle
+wrote modules/openxSharedBidAdapter.ts
+wrote modules/pubmaticSharedBidAdapter.ts
+core (prebid-core + its chunks)              gz 61916
++ ortbConverter                              Δ 2096
+Prebid Core one-time runtime (prebidCore + sharedAdapter glue), in context:  Δ 1068   [of which TS runtime 703, glue 365]   budget ≤ 3072
+OpenX Hand-written Adapter, in context:      Δ 1167
+OpenX Shared Adapter module, in context:     Δ 1257   (107% of Hand-written; budget ≤ 125%)
+PubMatic Hand-written Adapter, in context:   Δ 5909 (+ its own libraries: 2037)
+PubMatic Shared Adapter module, in context:  Δ 1633   (27% of Hand-written; NOT like for like, see README)
+Second Shared Adapter on top of OpenX (PubMatic), marginal: Δ 1390
+  chunk prebidCore                   raw   2403 gz  1001
+  chunk sharedAdapter                raw   1167 gz   649
+  chunk openxBidAdapter              raw   3228 gz  1530
+  chunk openxSharedBidAdapter        raw   3443 gz  1615
+  chunk pubmaticBidAdapter           raw  15731 gz  6614
+  chunk pubmaticSharedBidAdapter     raw   4609 gz  1981

@@ -154,7 +154,8 @@ export const BUILTINS = {
 };
 
 // Classify an expression: 'map' if every node is a declarative-mapping construct, else 'hatch'.
-export function classify(e) {
+// lenient: a numeric comparison against a literal (`x > 0`) counts as a declarative condition.
+export function classify(e, { lenient = false } = {}) {
   let hatch = false;
   walk(e, (n) => {
     if (['tmpl', 'macro', 'index'].includes(n.k)) {
@@ -162,7 +163,9 @@ export function classify(e) {
       if (n.k === 'index' && n.e.k === 'obj') return;
       hatch = true;
     }
-    if (n.k === 'bin' && ['<', '>', '<=', '>=', '+', '-'].includes(n.op)) hatch = true;
+    if (n.k === 'bin' && ['<', '>', '<=', '>=', '+', '-'].includes(n.op)) {
+      if (!(lenient && ['<', '>', '<=', '>='].includes(n.op) && (n.l.k === 'lit' || n.r.k === 'lit'))) hatch = true;
+    }
     if (n.k === 'arr' && n.items.some((i) => i.spread)) hatch = true;
     if (n.k === 'call') {
       const b = BUILTINS[n.fn];

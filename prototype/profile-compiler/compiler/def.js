@@ -65,7 +65,8 @@ export function load(file) {
         m.bidFields[f] = expr(ext.bid[f]);
       }
     }
-    sides[side] = { bidder: def.bidder, endpoint: ext.endpoint || def.endpoint, ...m };
+    const paramsSchema = def.params ? JSON.parse(fs.readFileSync(path.join(path.dirname(file), def.params), 'utf8')) : null;
+    sides[side] = { bidder: def.bidder, endpoint: ext.endpoint || def.endpoint, paramsSchema, ...m };
   }
   return { def, core, sides };
 }

@@ -3,6 +3,7 @@ import * as r from '../../runtime/ts/core.ts';
 
 export const bidder = "pubmatic";
 export const endpoint = "https://hbopenbid.pubmatic.com/translator?source=prebid-server";
+export const isValid = (p: any): boolean => p != null && ["publisherId"].every((k) => p[k] != null);
 
 export function makeRequests(req: any): any {
   const errs: string[] = [], imps: any[] = [], params: any[] = [];
