@@ -39,11 +39,12 @@ func NewRuntime(wasm []byte) (*Runtime, error) {
 }
 
 type instance struct {
-	mem               api.Memory
-	inBuf, outPtr     api.Function
-	mr, mb            api.Function
-	stack             []uint64
-	inPtr, inCap      uint32
+	mem           api.Memory
+	inBuf, outPtr api.Function
+	mr, mb        api.Function
+	scan          api.Function // typed guests only (research hook)
+	stack         []uint64
+	inPtr, inCap  uint32
 }
 
 // Shared is one Shared Adapter, with a pool of guest instances (pooling is mandatory: a fresh
@@ -61,7 +62,7 @@ func (r *Runtime) Bidder(bidder, endpoint string) *Shared {
 			panic(err)
 		}
 		f := m.ExportedFunction
-		return &instance{mem: m.Memory(), inBuf: f("in_buf"), outPtr: f("out_ptr"), mr: f(bidder + "_mr"), mb: f(bidder + "_mb"), stack: make([]uint64, 2)}
+		return &instance{mem: m.Memory(), inBuf: f("in_buf"), outPtr: f("out_ptr"), mr: f(bidder + "_mr"), mb: f(bidder + "_mb"), scan: f("scan"), stack: make([]uint64, 2)}
 	}
 	return s
 }
@@ -294,4 +295,48 @@ func (s *Shared) GuestOnly(reqBody, outBody, resp []byte) {
 	g.call(g.mr, uint64(len(reqBody)))
 	g.write(outBody, resp)
 	g.call(g.mb, uint64(len(outBody)), uint64(len(resp)))
+}
+
+// GuestMR / GuestMB run one guest phase each (input write + call + output view), so a benchmark can
+// split guest time between MakeRequests and MakeBids (research/typed-codegen).
+func (s *Shared) GuestMR(reqBody []byte) {
+	g := s.pool.Get().(*instance)
+	defer s.pool.Put(g)
+	g.write(reqBody)
+	g.call(g.mr, uint64(len(reqBody)))
+}
+func (s *Shared) GuestMB(outBody, resp []byte) {
+	g := s.pool.Get().(*instance)
+	defer s.pool.Put(g)
+	g.write(outBody, resp)
+	g.call(g.mb, uint64(len(outBody)), uint64(len(resp)))
+}
+
+// GuestABI does a phase's ABI work without running the Adapter (input write, in_buf, out_ptr), the
+// floor under GuestMR/GuestMB (research/typed-codegen).
+func (s *Shared) GuestABI(in []byte) {
+	g := s.pool.Get().(*instance)
+	defer s.pool.Put(g)
+	g.write(in)
+	if err := g.outPtr.CallWithStack(ctx, g.stack); err != nil {
+		panic(err)
+	}
+}
+
+// GuestScan writes `in` and has the guest scan it once as JSON (typed guests' `scan` export), the
+// floor under any guest that reads its input (research/typed-codegen). False if not exported.
+func (s *Shared) GuestScan(in ...[]byte) bool {
+	g := s.pool.Get().(*instance)
+	defer s.pool.Put(g)
+	if g.scan == nil {
+		return false
+	}
+	for _, b := range in {
+		g.write(b)
+		g.stack[0] = uint64(len(b))
+		if err := g.scan.CallWithStack(ctx, g.stack); err != nil {
+			panic(err)
+		}
+	}
+	return true
 }

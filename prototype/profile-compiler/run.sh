@@ -29,8 +29,9 @@ node harness/parity.mjs "$PBS" --rs out/rs | tail -2
 echo "== PBS-Go's own adapterstest against the wasm Shared Adapters (expect exactly the Known Difference fixtures to fail)"
 (cd hostgo && GUEST_WASM=$here/out/wasm/both.wasm PBS=$PBS go test ./host -run Adapterstest -v 2>&1 | grep -E -- '--- FAIL: TestAdapterstest/' || true)
 
-echo "== native guest timing"; (cd guest && CARGO_TARGET_DIR=../out/target-native cargo run -q --release --bin native -- ../out/payload)
-echo "== PBS-Go / wazero vs Hand-written"; (cd hostgo && go run ./cmd/dumppayload payload ../out/payload && go run ./cmd/bench -wasm ../out/wasm -par ${PAR:-1,4,8} -dur ${DUR:-2s}) | tee results/wazero.txt
+echo "== native guest timing"; mkdir -p out/payload; (cd hostgo && go run ./cmd/dumppayload payload ../out/payload)
+(cd guest && CARGO_TARGET_DIR=../out/target-native cargo run -q --release --bin native -- ../out/payload)
+echo "== PBS-Go / wazero vs Hand-written"; (cd hostgo && go run ./cmd/bench -wasm ../out/wasm -par ${PAR:-1,4,8} -dur ${DUR:-2s}) | tee results/wazero.txt
 
 if [ -n "${PBJS:-}" ]; then
   echo "== Prebid.js bundle"
