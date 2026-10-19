@@ -47,6 +47,13 @@ _Avoid_: profile (collides with the avoided "client/server profile"), spec (Preb
 **Definition Compiler**:
 The part of **Prebid Core** that turns an **Adapter Definition** into the code each **Implementation** runs.
 
+**Parity**:
+A **Shared Adapter** behaves like a **Host**'s **Hand-written Adapter**: on that Host's existing fixtures it produces the same output, except where a **Known Difference** says otherwise. Parity is judged against the Shared Adapter's own intended behavior, not against any one Host's Hand-written Adapter.
+
+**Known Difference**:
+A written-down, justified place where a **Shared Adapter** deliberately differs from one Host's **Hand-written Adapter**. It is classified as one of three kinds: a bug in the Hand-written Adapter, drift between Hand-written Adapters settled in favor of one side, or a Host gap (output the Host has no place to carry). Each one is pinned by a fixture. A difference that isn't listed is a parity failure.
+_Avoid_: exception, whitelist entry
+
 ## Relationships
 
 - A **Host** runs many **Adapters**; during migration some are **Hand-written** and some **Shared**, side by side.
