@@ -128,7 +128,7 @@ export async function main(runner, label) {
     for (const file of files) {
       const golden = JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8'));
       const spec = JSON.parse(fs.readFileSync(path.join(pbs, 'adapters', bidder, `${bidder}test`, file), 'utf8'));
-      const res = await runner(bidder, golden.hostRequest, spec);
+      const res = await runner(bidder, golden.hostRequest, spec, file);
       const vsFixture = explain(bidder, file, 'fixture', checkFixture(spec, res), res);
       const vsNative = explain(bidder, file, 'native', diff(res, clean(golden.native)), res);
       const ok = !vsFixture.unexplained.length && !vsNative.unexplained.length && !vsFixture.badPins.length && !vsNative.badPins.length;
@@ -152,5 +152,20 @@ export async function main(runner, label) {
 if (import.meta.url === `file://${process.argv[1]}`) {
   const mods = {};
   for (const b of ['openx', 'pubmatic']) mods[b] = await import(path.join(root, `gen/ts/${b}.server.ts`));
-  process.exitCode = await main((bidder, req, spec) => runTs(mods[bidder], bidder, req, spec), 'ts') ? 1 : 0;
+  const ts = (bidder, req, spec) => runTs(mods[bidder], bidder, req, spec);
+  if (process.argv.includes('--rs')) {
+    // Rust results come from hostgo/cmd/sharedout (wasm under wazero, through the PBS-Go Host binding)
+    const dir = process.argv[process.argv.indexOf('--rs') + 1];
+    let tsVsRs = 0;
+    const rs = (bidder, req, spec, file) => {
+      const r = JSON.parse(fs.readFileSync(path.join(dir, bidder, file), 'utf8'));
+      const d = diff(clean(r), clean(ts(bidder, req, spec)));
+      if (d.length) { tsVsRs++; console.log(`  TS != Rust on ${bidder}/${file}: ${d.join(', ')}`); }
+      return r;
+    };
+    process.exitCode = (await main(rs, 'rust')) || tsVsRs ? 1 : 0;
+    console.log(`TS vs Rust: ${tsVsRs ? tsVsRs + ' fixtures differ' : 'identical output on every fixture'}`);
+  } else {
+    process.exitCode = (await main(ts, 'ts')) ? 1 : 0;
+  }
 }

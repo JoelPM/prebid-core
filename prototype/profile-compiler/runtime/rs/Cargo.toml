@@ -1,0 +1,8 @@
+[package]
+name = "prebid_core_rt"
+version = "0.1.0"
+edition = "2021"
+description = "PROTOTYPE Prebid Core runtime, Rust side: what generated Shared Adapters call"
+
+[dependencies]
+ryu-js = "1.0.2"
