@@ -1,0 +1,58 @@
+# PROTOTYPE Adapter Definition: OpenX. Intended behavior per map #1 "What is the parity target when
+# Go and Java Hand-written Adapters disagree?" (#8). Expressions read the *input*; `set` writes the
+# output in order; `~` deletes; `keep` leaves the output as it is. `p` is imp.ext.bidder.
+bidder: openx
+params: openx.params.json
+endpoint: https://rtb.openx.net/prebid
+
+core:
+  imp:
+    check:
+      - ["!(imp.banner || imp.video || imp.native)", "`OpenX only supports banner, video and native imps; ignoring imp ${imp.id}`"]
+    set:
+      tagid: str(p.unit)
+      bidfloor: "!imp.bidfloor && num(p.customFloor) > 0 ? num(p.customFloor) : keep"
+      ext: "nonempty(merge(without(imp.ext, 'prebid', 'bidder'), {customParams: p.customParams}))"
+      video?.ext: "imp.rwdd == 1 ? {rewarded: 1} : ~"
+
+  request:
+    set:
+      ext:
+        delDomain: params[0].delDomain
+        platform: params[0].platform
+
+  bid:
+    type: "{1: 'banner', 2: 'video', 4: 'native'}[bid.mtype] ?? (imp.banner ? 'banner' : imp.video ? 'video' : imp.native ? 'native' : 'banner')"
+    video:
+      primary_category: bid.cat[0]
+      duration: bid.dur
+    # reported only when one of the three ids is a positive integer
+    meta: >-
+      nonempty({
+        networkId: int(bid.ext.dsp_id) > 0 ? int(bid.ext.dsp_id) : ~,
+        advertiserId: int(bid.ext.buyer_id) > 0 ? int(bid.ext.buyer_id) : ~,
+        brandId: int(bid.ext.brand_id) > 0 ? int(bid.ext.brand_id) : ~
+      })
+
+  response:
+    currency: resp.cur
+    paapi: "entries(resp.ext.fledge_auction_configs).map(e, {impid: e.k, config: e.v})"
+
+server:
+  request:
+    set:
+      ext.bc: "'hb_pbs_1.0.0'"
+
+client:
+  endpoint: https://rtb.openx.net/openrtbb/prebidjs
+  imp:
+    set:
+      ext.divid: imp.ext.prebid.adunitcode
+  request:
+    set:
+      ext.bc: "'hb_pb_ortb_2.0'"
+      at: 1
+      device.dnt: 0
+      regs.coppa: "params[0].coppa ? 1 : ~"
+      test: "params[0].test ? 1 : ~"
+      ext.response_template_name: params[0].response_template_name

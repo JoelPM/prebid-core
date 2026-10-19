@@ -1,0 +1,74 @@
+{
+  "$comment": "PROTOTYPE shape of an Adapter Definition. A convenience for the prototype, not the final format.",
+  "type": "object",
+  "required": ["bidder", "core"],
+  "additionalProperties": false,
+  "properties": {
+    "bidder": { "type": "string" },
+    "params": { "type": "string" },
+    "endpoint": { "type": "string" },
+    "core": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "imp": { "$ref": "#/$defs/phase" },
+        "request": { "$ref": "#/$defs/phase" },
+        "bid": { "$ref": "#/$defs/bid" },
+        "response": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": { "currency": {}, "paapi": {} }
+        }
+      }
+    },
+    "client": { "$ref": "#/$defs/extension" },
+    "server": { "$ref": "#/$defs/extension" }
+  },
+  "$defs": {
+    "expr": { "type": ["string", "number", "boolean", "object", "null"] },
+    "lets": { "type": "object", "additionalProperties": { "$ref": "#/$defs/expr" } },
+    "rules": {
+      "type": "array",
+      "items": { "type": "array", "items": { "type": "string" }, "minItems": 2, "maxItems": 2 }
+    },
+    "phase": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "let": { "$ref": "#/$defs/lets" },
+        "check": { "$ref": "#/$defs/rules" },
+        "set": { "$ref": "#/$defs/lets" }
+      }
+    },
+    "bid": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "let": { "$ref": "#/$defs/lets" },
+        "check": { "$ref": "#/$defs/rules" },
+        "warn": { "$ref": "#/$defs/rules" },
+        "drop": { "type": "string" },
+        "set": { "$ref": "#/$defs/lets" },
+        "type": { "$ref": "#/$defs/expr" },
+        "seat": { "$ref": "#/$defs/expr" },
+        "dealPriority": { "$ref": "#/$defs/expr" },
+        "video": { "$ref": "#/$defs/expr" },
+        "meta": { "$ref": "#/$defs/expr" }
+      }
+    },
+    "extension": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "endpoint": { "type": "string" },
+        "imp": { "type": "object", "additionalProperties": false, "properties": { "let": { "$ref": "#/$defs/lets" }, "set": { "$ref": "#/$defs/lets" } } },
+        "request": { "type": "object", "additionalProperties": false, "properties": { "let": { "$ref": "#/$defs/lets" }, "set": { "$ref": "#/$defs/lets" } } },
+        "bid": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": { "let": { "$ref": "#/$defs/lets" }, "drop": { "type": "string" }, "set": { "$ref": "#/$defs/lets" }, "meta": {}, "seat": {}, "dealPriority": {} }
+        }
+      }
+    }
+  }
+}

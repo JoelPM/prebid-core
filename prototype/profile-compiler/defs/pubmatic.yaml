@@ -1,0 +1,91 @@
+# PROTOTYPE Adapter Definition: PubMatic. Intended behavior follows PBS-Go's Hand-written Adapter
+# except where defs/known-differences.yaml says otherwise. Expressions read the *input*; `set` writes
+# the output in order; `~` deletes; `keep` leaves the output as it is. `p` is imp.ext.bidder.
+bidder: pubmatic
+params: pubmatic.params.json
+endpoint: https://hbopenbid.pubmatic.com/translator?source=prebid-server
+
+core:
+  imp:
+    let:
+      slot: trim(str(p.adSlot))
+      at: split(slot, '@')
+      sz: split(lower(at[1]), 'x')
+      w: int(trim(sz[0]))
+      h: int(trim(split(sz[1], ':')[0]))
+      hasSize: contains(slot, '@')
+      dm: "(req.app.ext.prebid.source && req.app.ext.prebid.version) ? req.app.ext.prebid : (req.app.ext.source && req.app.ext.version) ? req.app.ext : ~"
+      kad: num(trim(str(p.kadfloor)))
+      kw: "fromEntries(p.keywords.filter(k, len(k.value) > 0).map(k, {k: k.key == 'pmZoneID' ? 'pmZoneId' : k.key, v: join(k.value, ',')}))"
+      data: imp.ext.data
+      pairs: "entries(data).filter(e, e.k != 'pbadslot' && e.k != 'adserver').map(e, `${trim(e.k)}=${type(e.v) == 'string' ? trim(e.v) : type(e.v) == 'array' ? join(e.v.map(s, trim(s)), ',') : e.v}`)"
+    check:
+      - ["!(imp.banner || imp.video || imp.native)", "`invalid MediaType. PubMatic only supports Banner, Video and Native. Ignoring ImpID=${imp.id}`"]
+      - ["hasSize && !(len(at) == 2 && at[0] != '' && at[1] != '')", "`Invalid adSlot ${slot}`"]
+      - ["hasSize && len(sz) != 2", "`Invalid size provided in adSlot ${slot}`"]
+      - ["hasSize && w == null", "`Invalid width provided in adSlot ${slot}`"]
+      - ["hasSize && h == null", "`Invalid height provided in adSlot ${slot}`"]
+    set:
+      audio: ~
+      displaymanager: "!imp.displaymanager && !imp.displaymanagerver && dm ? dm.source : keep"
+      displaymanagerver: "!imp.displaymanager && !imp.displaymanagerver && dm ? dm.version : keep"
+      tagid: "slot == '' ? keep : hasSize ? trim(at[0]) : slot"
+      banner?.w: "hasSize ? w : (imp.banner.w != null && imp.banner.h != null) ? keep : imp.banner.format[0].w"
+      banner?.h: "hasSize ? h : (imp.banner.w != null && imp.banner.h != null) ? keep : imp.banner.format[0].h"
+      bidfloor: "kad != null ? max(kad, imp.bidfloor ?? 0) : keep"
+      ext: >-
+        nonempty(merge(kw, {
+          key_val: nonempty(join([p.dctr || kw.key_val, ...pairs].filter(s, s), '|')),
+          pmZoneId: p.pmzoneid || kw.pmZoneId,
+          dfp_ad_unit_code: (data.adserver.name == 'gam' && data.adserver.adslot) || data.pbadslot,
+          ae: imp.ext.ae || ~,
+          gpid: imp.ext.gpid || ~,
+          skadn: imp.ext.skadn
+        }))
+
+  request:
+    let:
+      bp: req.ext.prebid.bidderparams
+      abc: req.ext.prebid.alternatebiddercodes
+      pm: abc.bidders.pubmatic
+      pub: first(params.map(x, trim(str(x.publisherId))))
+    set:
+      ext:
+        wrapper: >-
+          nonempty({
+            profile: bp.wrapper.profile || first(params.map(x, x.wrapper.profile)) || ~,
+            version: bp.wrapper.version || first(params.map(x, x.wrapper.version)) || ~,
+            biddercode: req.ext ? keys(req.ext.prebid.aliases)[0] ?? 'pubmatic' : ~
+          })
+        acat: nonempty(bp.acat.map(a, trim(a)))
+        marketplace: >-
+          abc == null ? ~ : {allowedbidders: !(abc.enabled && pm.enabled) ? ['pubmatic']
+            : (pm.allowedbiddercodes == null || (len(pm.allowedbiddercodes) == 1 && pm.allowedbiddercodes[0] == '*')) ? ['all']
+            : ['pubmatic', ...pm.allowedbiddercodes]}
+      site?.publisher.id: pub || ~
+      app?.publisher.id: "req.site ? keep : pub || ~"
+
+  bid:
+    let:
+      type: "{1: 'banner', 2: 'video', 3: 'audio', 4: 'native'}[bid.mtype]"
+      nat: "type == 'native' ? json(bid.adm) : ~"
+    check:
+      - ["type == null", "`failed to parse bid mtype (${bid.mtype ?? 0}) for impression id ${bid.impid}`"]
+    warn:
+      - ["type == 'native' && nat == null", "'unable to unmarshal native adm'"]
+    set:
+      cat: "len(bid.cat) > 1 ? [bid.cat[0]] : keep"
+      adm: "nat.native != null ? stringify(nat.native) : keep"
+    type: type
+    seat: bid.ext.marketplace
+    dealPriority: "bid.ext.prebiddealpriority > 0 ? bid.ext.prebiddealpriority : ~"
+    video:
+      duration: bid.ext.video.duration
+    meta: "bid.ext ? {mediaType: bid.ext.ibv ? 'video' : type} : ~"
+
+  response:
+    currency: resp.cur
+    paapi: "entries(resp.ext.fledge_auction_configs).map(e, {impid: e.k, config: e.v})"
+
+client:
+  endpoint: https://hbopenbid.pubmatic.com/translator?source=prebid-client

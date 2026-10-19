@@ -1,0 +1,83 @@
+{
+ "hostRequest": {
+  "id": "test-request-id",
+  "imp": [
+   {
+    "id": "test-imp-id",
+    "banner": {
+     "format": [
+      {
+       "w": 728,
+       "h": 90
+      }
+     ]
+    },
+    "ext": {
+     "bidder": {
+      "unit": "539439964",
+      "delDomain": "se-demo-d.openx.net"
+     }
+    }
+   }
+  ]
+ },
+ "native": {
+  "requests": [
+   {
+    "method": "POST",
+    "uri": "http://rtb.openx.net/prebid",
+    "body": {
+     "id": "test-request-id",
+     "imp": [
+      {
+       "id": "test-imp-id",
+       "banner": {
+        "format": [
+         {
+          "w": 728,
+          "h": 90
+         }
+        ]
+       },
+       "tagid": "539439964"
+      }
+     ],
+     "ext": {
+      "delDomain": "se-demo-d.openx.net",
+      "bc": "hb_pbs_1.0.0"
+     }
+    },
+    "impIDs": [
+     "test-imp-id"
+    ]
+   }
+  ],
+  "requestErrs": [],
+  "responses": [
+   {
+    "currency": "USD",
+    "bids": [
+     {
+      "bid": {
+       "id": "8ee514f1-b2b8-4abb-89fd-084437d1e800",
+       "impid": "test-imp-id",
+       "price": 0.5,
+       "adm": "{\"ver\": \"1.2\", \"assets\": [{\"id\": 1, \"required\": 1,\"title\": {\"text\": \"OpenX (Title)\"}}], \"link\": {\"url\": \"https://www.openx.com/\"}, \"eventtrackers\":[{\"event\":1,\"method\":1,\"url\":\"http://example.com/impression\"}]}",
+       "crid": "crid_10",
+       "w": 728,
+       "h": 90,
+       "mtype": 1
+      },
+      "type": "banner",
+      "video": {
+       "duration": 0,
+       "primary_category": ""
+      }
+     }
+    ],
+    "paapi": null,
+    "errs": []
+   }
+  ]
+ }
+}

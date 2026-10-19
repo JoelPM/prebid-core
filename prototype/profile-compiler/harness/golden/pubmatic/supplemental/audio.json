@@ -1,0 +1,31 @@
+{
+ "hostRequest": {
+  "id": "unsupported-audio-request",
+  "imp": [
+   {
+    "id": "unsupported-audio-imp",
+    "audio": {
+     "mimes": [
+      "video/mp4"
+     ]
+    },
+    "ext": {
+     "bidder": {
+      "adSlot": "AdTag_Div1@300x250",
+      "publisherId": "1234"
+     }
+    }
+   }
+  ],
+  "site": {
+   "id": "siteID"
+  }
+ },
+ "native": {
+  "requests": [],
+  "requestErrs": [
+   "invalid MediaType. PubMatic only supports Banner, Video and Native. Ignoring ImpID=unsupported-audio-imp"
+  ],
+  "responses": []
+ }
+}

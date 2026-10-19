@@ -1,0 +1,39 @@
+# PROTOTYPE Known Differences: where a Shared Adapter deliberately differs from PBS-Go's Hand-written
+# Adapter. kind: bug (Hand-written bug) | drift (Go/Java disagree; settled) | host-gap.
+# Each entry is pinned by a fixture: `path` is where outputs differ (harness Result paths), `shared` is
+# the Shared Adapter's value there, `against` limits it to the fixture or native comparison.
+openx:
+  # From map #1 "What is the parity target when Go and Java Hand-written Adapters disagree?" (#8).
+  # None of these shows up in PBS-Go's OpenX fixtures (every multi-imp fixture repeats one delDomain,
+  # none has an unsupported imp, none uses imp.ext.prebid.is_rewarded_inventory), so they are listed
+  # but not yet pinned. Pinning fixtures belong to the parity harness work in "Not yet specified".
+  # - first imp's delDomain/platform (Go: last imp's)          kind: drift
+  # - error on unsupported imps (Go: skips them silently)       kind: drift
+  # - rewarded from imp.rwdd only                               kind: drift
+pubmatic:
+  - fixture: exemplary/fledge.json
+    path: responses[0].paapi[0].bidder
+    shared: pubmatic
+    kind: drift
+    why: >-
+      The Host binding fills the PAAPI config's bidder for every Shared Adapter (Go OpenX does, Go
+      PubMatic doesn't; the exchange copies it to the response's "adapter" field).
+  - fixture: exemplary/native.json
+    path: responses[0].bids[0].bid.adm
+    shared: "{\"assets\":[{\"id\":2,\"img\":{\"h\":90,\"url\":\"//ads.pubmatic.com/AdTag/native/728x90.png\",\"w\":728}},{\"data\":{\"value\":\"Sponsored By PubMatic\"},\"id\":4},{\"id\":3,\"img\":{\"h\":90,\"url\":\"//ads.pubmatic.com/AdTag/native/728x90.png\",\"w\":728}},{\"id\":1,\"title\":{\"text\":\"Native Test Title\"}},{\"data\":{\"value\":\"Sponsored By PubMatic\"},\"id\":5}],\"imptrackers\":[\"http://clicktracker.com/AdTag/9bde02d0-6017-11e4-9df7-005056967c35\"],\"jstracker\":\"<script src='//ads.pubmatic.com/AdTag/native/tempReseponse.js'><script src='//ads.pubmatic.com/AdTag/native/tempReseponse.js'>\",\"link\":{\"clicktrackers\":[\"http://clicktracker.com/AdTag/9bde02d0-6017-11e4-9df7-005056967c35\"],\"fallback\":\"http://www.pubmatic.com\",\"url\":\"//www.pubmatic.com\"}}"
+    kind: drift
+    why: >-
+      Native adm is re-serialized canonically (no "\/" escapes), as PBS-Java's PubmaticBidder does
+      (Jackson readTree -> toString). PBS-Go copies the raw bytes. Same JSON, different string.
+  - fixture: supplemental/app.json
+    path: responses[0].errs
+    against: [native]
+    shared: []
+    kind: bug
+    why: A bid without ext is valid; PBS-Go reports a jsoniter error ("expect { or n, but found") for it.
+  - fixture: supplemental/app.json
+    path: responses[*].errs
+    against: [fixture]
+    shared: ~
+    kind: bug
+    why: same as above, as the fixture states it
