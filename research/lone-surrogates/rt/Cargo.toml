@@ -1,0 +1,11 @@
+[package]
+name = "surrogates_rt"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+# The prototypes' Rust runtime (E' / ts-transpiler, branch prototype/ts-transpiler @ 21d1d49).
+[dependencies]
+prebid_core_rt = { path = "../../../../prebid-core-wt-ts-transpiler/prototype/ts-transpiler/runtime/rs" }
+
+[workspace]

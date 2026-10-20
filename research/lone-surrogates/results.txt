@@ -1,0 +1,571 @@
+########## PBS-Go (encoding/json, jsonutil/jsoniter, jsonparser)
+== hi  {"s":"\ud800"}
+  json.Valid                  true
+  encoding/json string        [\xef\xbf\xbd] -> {"S":"\xef\xbf\xbd"}
+  encoding/json RawMessage    "\ud800" -> {"S":"\ud800"} <nil>
+  jsonutil.Unmarshal string   [\xef\xbf\xbd] -> jsonutil.Marshal {"S":"\xef\xbf\xbd"}
+  jsonutil.UnmarshalValid     [\xef\xbf\xbd]
+  jsonutil RawMessage         "\ud800" -> {"S":"\ud800"} <nil>
+  jsonparser.GetString        ERR Value looks like Number/Boolean/None, but can't find its end: ',' or '}' symbol
+  jsonparser.Get (raw)        \ud800
+== lo  {"s":"\udc00"}
+  json.Valid                  true
+  encoding/json string        [\xef\xbf\xbd] -> {"S":"\xef\xbf\xbd"}
+  encoding/json RawMessage    "\udc00" -> {"S":"\udc00"} <nil>
+  jsonutil.Unmarshal string   [\xef\xbf\xbd] -> jsonutil.Marshal {"S":"\xef\xbf\xbd"}
+  jsonutil.UnmarshalValid     [\xef\xbf\xbd]
+  jsonutil RawMessage         "\udc00" -> {"S":"\udc00"} <nil>
+  jsonparser.GetString        ERR Value looks like Number/Boolean/None, but can't find its end: ',' or '}' symbol
+  jsonparser.Get (raw)        \udc00
+== hiA  {"s":"\ud800A"}
+  json.Valid                  true
+  encoding/json string        [\xef\xbf\xbdA] -> {"S":"\xef\xbf\xbdA"}
+  encoding/json RawMessage    "\ud800A" -> {"S":"\ud800A"} <nil>
+  jsonutil.Unmarshal string   [\xef\xbf\xbdA] -> jsonutil.Marshal {"S":"\xef\xbf\xbdA"}
+  jsonutil.UnmarshalValid     [\xef\xbf\xbdA]
+  jsonutil RawMessage         "\ud800A" -> {"S":"\ud800A"} <nil>
+  jsonparser.GetString        ERR Value looks like Number/Boolean/None, but can't find its end: ',' or '}' symbol
+  jsonparser.Get (raw)        \ud800A
+== rev  {"s":"\ude00\ud83d"}
+  json.Valid                  true
+  encoding/json string        [\xef\xbf\xbd\xef\xbf\xbd] -> {"S":"\xef\xbf\xbd\xef\xbf\xbd"}
+  encoding/json RawMessage    "\ude00\ud83d" -> {"S":"\ude00\ud83d"} <nil>
+  jsonutil.Unmarshal string   [\xef\xbf\xbd\xef\xbf\xbd] -> jsonutil.Marshal {"S":"\xef\xbf\xbd\xef\xbf\xbd"}
+  jsonutil.UnmarshalValid     [\xef\xbf\xbd\xef\xbf\xbd]
+  jsonutil RawMessage         "\ude00\ud83d" -> {"S":"\ude00\ud83d"} <nil>
+  jsonparser.GetString        ERR Value looks like Number/Boolean/None, but can't find its end: ',' or '}' symbol
+  jsonparser.Get (raw)        \ude00\ud83d
+== pair_esc  {"s":"\ud83d\ude00"}
+  json.Valid                  true
+  encoding/json string        [\xf0\x9f\x98\x80] -> {"S":"\xf0\x9f\x98\x80"}
+  encoding/json RawMessage    "\ud83d\ude00" -> {"S":"\ud83d\ude00"} <nil>
+  jsonutil.Unmarshal string   [\xf0\x9f\x98\x80] -> jsonutil.Marshal {"S":"\xf0\x9f\x98\x80"}
+  jsonutil.UnmarshalValid     [\xf0\x9f\x98\x80]
+  jsonutil RawMessage         "\ud83d\ude00" -> {"S":"\ud83d\ude00"} <nil>
+  jsonparser.GetString        [\xf0\x9f\x98\x80]
+  jsonparser.Get (raw)        \ud83d\ude00
+== pair_lit  {"s":"\xf0\x9f\x98\x80"}
+  json.Valid                  true
+  encoding/json string        [\xf0\x9f\x98\x80] -> {"S":"\xf0\x9f\x98\x80"}
+  encoding/json RawMessage    "\xf0\x9f\x98\x80" -> {"S":"\xf0\x9f\x98\x80"} <nil>
+  jsonutil.Unmarshal string   [\xf0\x9f\x98\x80] -> jsonutil.Marshal {"S":"\xf0\x9f\x98\x80"}
+  jsonutil.UnmarshalValid     [\xf0\x9f\x98\x80]
+  jsonutil RawMessage         "\xf0\x9f\x98\x80" -> {"S":"\xf0\x9f\x98\x80"} <nil>
+  jsonparser.GetString        [\xf0\x9f\x98\x80]
+  jsonparser.Get (raw)        \xf0\x9f\x98\x80
+== hi_esc+lo_wtf8  {"s":"\ud83d\xed\xb8\x80"}
+  json.Valid                  true
+  encoding/json string        [\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd] -> {"S":"\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd"}
+  encoding/json RawMessage    "\ud83d\xed\xb8\x80" -> {"S":"\ud83d\xed\xb8\x80"} <nil>
+  jsonutil.Unmarshal string   [\xef\xbf\xbd\xed\xb8\x80] (invalid UTF-8) -> jsonutil.Marshal {"S":"\xef\xbf\xbd\ufffd\ufffd\ufffd"}
+  jsonutil.UnmarshalValid     [\xef\xbf\xbd\xed\xb8\x80] (invalid UTF-8)
+  jsonutil RawMessage         "\ud83d\xed\xb8\x80" -> {"S":"\ud83d\xed\xb8\x80"} <nil>
+  jsonparser.GetString        ERR Value looks like Number/Boolean/None, but can't find its end: ',' or '}' symbol
+  jsonparser.Get (raw)        \ud83d\xed\xb8\x80
+== hi_wtf8  {"s":"\xed\xa0\x80"}
+  json.Valid                  true
+  encoding/json string        [\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd] -> {"S":"\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd"}
+  encoding/json RawMessage    "\xed\xa0\x80" -> {"S":"\xed\xa0\x80"} <nil>
+  jsonutil.Unmarshal string   [\xed\xa0\x80] (invalid UTF-8) -> jsonutil.Marshal {"S":"\ufffd\ufffd\ufffd"}
+  jsonutil.UnmarshalValid     [\xed\xa0\x80] (invalid UTF-8)
+  jsonutil RawMessage         "\xed\xa0\x80" -> {"S":"\xed\xa0\x80"} <nil>
+  jsonparser.GetString        [\xed\xa0\x80] (invalid UTF-8)
+  jsonparser.Get (raw)        \xed\xa0\x80
+== pair_cesu8  {"s":"\xed\xa0\xbd\xed\xb8\x80"}
+  json.Valid                  true
+  encoding/json string        [\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd] -> {"S":"\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd"}
+  encoding/json RawMessage    "\xed\xa0\xbd\xed\xb8\x80" -> {"S":"\xed\xa0\xbd\xed\xb8\x80"} <nil>
+  jsonutil.Unmarshal string   [\xed\xa0\xbd\xed\xb8\x80] (invalid UTF-8) -> jsonutil.Marshal {"S":"\ufffd\ufffd\ufffd\ufffd\ufffd\ufffd"}
+  jsonutil.UnmarshalValid     [\xed\xa0\xbd\xed\xb8\x80] (invalid UTF-8)
+  jsonutil RawMessage         "\xed\xa0\xbd\xed\xb8\x80" -> {"S":"\xed\xa0\xbd\xed\xb8\x80"} <nil>
+  jsonparser.GetString        [\xed\xa0\xbd\xed\xb8\x80] (invalid UTF-8)
+  jsonparser.Get (raw)        \xed\xa0\xbd\xed\xb8\x80
+== byte_ff  {"s":"a\xffb"}
+  json.Valid                  true
+  encoding/json string        [a\xef\xbf\xbdb] -> {"S":"a\xef\xbf\xbdb"}
+  encoding/json RawMessage    "a\xffb" -> {"S":"a\xffb"} <nil>
+  jsonutil.Unmarshal string   [a\xffb] (invalid UTF-8) -> jsonutil.Marshal {"S":"a\ufffdb"}
+  jsonutil.UnmarshalValid     [a\xffb] (invalid UTF-8)
+  jsonutil RawMessage         "a\xffb" -> {"S":"a\xffb"} <nil>
+  jsonparser.GetString        [a\xffb] (invalid UTF-8)
+  jsonparser.Get (raw)        a\xffb
+== trunc_utf8  {"s":"\xf0\x9f\x98"}
+  json.Valid                  true
+  encoding/json string        [\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd] -> {"S":"\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd"}
+  encoding/json RawMessage    "\xf0\x9f\x98" -> {"S":"\xf0\x9f\x98"} <nil>
+  jsonutil.Unmarshal string   [\xf0\x9f\x98] (invalid UTF-8) -> jsonutil.Marshal {"S":"\ufffd\ufffd\ufffd"}
+  jsonutil.UnmarshalValid     [\xf0\x9f\x98] (invalid UTF-8)
+  jsonutil RawMessage         "\xf0\x9f\x98" -> {"S":"\xf0\x9f\x98"} <nil>
+  jsonparser.GetString        [\xf0\x9f\x98] (invalid UTF-8)
+  jsonparser.Get (raw)        \xf0\x9f\x98
+== fffd_esc  {"s":"\ufffd"}
+  json.Valid                  true
+  encoding/json string        [\xef\xbf\xbd] -> {"S":"\xef\xbf\xbd"}
+  encoding/json RawMessage    "\ufffd" -> {"S":"\ufffd"} <nil>
+  jsonutil.Unmarshal string   [\xef\xbf\xbd] -> jsonutil.Marshal {"S":"\xef\xbf\xbd"}
+  jsonutil.UnmarshalValid     [\xef\xbf\xbd]
+  jsonutil RawMessage         "\ufffd" -> {"S":"\ufffd"} <nil>
+  jsonparser.GetString        [\xef\xbf\xbd]
+  jsonparser.Get (raw)        \ufffd
+== adm outer_escape
+  in  {"adm":"{\"native\":{\"t\":\"\ud800\"}}"}
+  out {"adm":"{\"t\":\"\xef\xbf\xbd\"}"}
+== adm inner_escape
+  in  {"adm":"{\"native\":{\"t\":\"\\ud800\"}}"}
+  out {"adm":"{\"t\":\"\\ud800\"}"}
+########## PBS-Java (Jackson)
+== adm outer_escape
+  in  {"adm":"{\"native\":{\"t\":\"\ud800\"}}"}
+  native.toString() [{"t":"<d800>"}]
+  out {"adm":"{\"t\":\"\uD800\"}"}
+== adm inner_escape
+  in  {"adm":"{\"native\":{\"t\":\"\\ud800\"}}"}
+  native.toString() [{"t":"<d800>"}]
+  out {"adm":"{\"t\":\"\uD800\"}"}
+== hi  {"s":"\ud800"}
+  body as UTF-8 String         [{"s":"\ud800"}]
+  readTree(String) text        [<d800>]
+  writeValueAsBytes            {"s":"\uD800"}
+  writeValueAsString→UTF-8     {"s":"?"}
+  readTree(byte[]) text        [<d800>]
+== lo  {"s":"\udc00"}
+  body as UTF-8 String         [{"s":"\udc00"}]
+  readTree(String) text        [<dc00>]
+  writeValueAsBytes            {"s":"\uDC00"}
+  writeValueAsString→UTF-8     {"s":"?"}
+  readTree(byte[]) text        [<dc00>]
+== hiA  {"s":"\ud800A"}
+  body as UTF-8 String         [{"s":"\ud800A"}]
+  readTree(String) text        [<d800>A]
+  writeValueAsBytes            {"s":"\uD800A"}
+  writeValueAsString→UTF-8     {"s":"?A"}
+  readTree(byte[]) text        [<d800>A]
+== rev  {"s":"\ude00\ud83d"}
+  body as UTF-8 String         [{"s":"\ude00\ud83d"}]
+  readTree(String) text        [<de00><d83d>]
+  writeValueAsBytes            {"s":"\uDE00\uD83D"}
+  writeValueAsString→UTF-8     {"s":"??"}
+  readTree(byte[]) text        [<de00><d83d>]
+== pair_esc  {"s":"\ud83d\ude00"}
+  body as UTF-8 String         [{"s":"\ud83d\ude00"}]
+  readTree(String) text        [<d83d><de00>]
+  writeValueAsBytes            {"s":"\uD83D\uDE00"}
+  writeValueAsString→UTF-8     {"s":"\xf0\x9f\x98\x80"}
+  readTree(byte[]) text        [<d83d><de00>]
+== pair_lit  {"s":"\xf0\x9f\x98\x80"}
+  body as UTF-8 String         [{"s":"<d83d><de00>"}]
+  readTree(String) text        [<d83d><de00>]
+  writeValueAsBytes            {"s":"\uD83D\uDE00"}
+  writeValueAsString→UTF-8     {"s":"\xf0\x9f\x98\x80"}
+  readTree(byte[]) text        [<d83d><de00>]
+== hi_esc+lo_wtf8  {"s":"\ud83d\xed\xb8\x80"}
+  body as UTF-8 String         [{"s":"\ud83d<fffd>"}]
+  readTree(String) text        [<d83d><fffd>]
+  writeValueAsBytes            {"s":"\uD83D\xef\xbf\xbd"}
+  writeValueAsString→UTF-8     {"s":"?\xef\xbf\xbd"}
+  readTree(byte[]) text        [<d83d><de00>]
+== hi_wtf8  {"s":"\xed\xa0\x80"}
+  body as UTF-8 String         [{"s":"<fffd>"}]
+  readTree(String) text        [<fffd>]
+  writeValueAsBytes            {"s":"\xef\xbf\xbd"}
+  writeValueAsString→UTF-8     {"s":"\xef\xbf\xbd"}
+  readTree(byte[]) text        [<d800>]
+== pair_cesu8  {"s":"\xed\xa0\xbd\xed\xb8\x80"}
+  body as UTF-8 String         [{"s":"<fffd><fffd>"}]
+  readTree(String) text        [<fffd><fffd>]
+  writeValueAsBytes            {"s":"\xef\xbf\xbd\xef\xbf\xbd"}
+  writeValueAsString→UTF-8     {"s":"\xef\xbf\xbd\xef\xbf\xbd"}
+  readTree(byte[]) text        [<d83d><de00>]
+== byte_ff  {"s":"a\xffb"}
+  body as UTF-8 String         [{"s":"a<fffd>b"}]
+  readTree(String) text        [a<fffd>b]
+  writeValueAsBytes            {"s":"a\xef\xbf\xbdb"}
+  writeValueAsString→UTF-8     {"s":"a\xef\xbf\xbdb"}
+  readTree(byte[])             ERR Invalid UTF-8 start byte 0xff
+== trunc_utf8  {"s":"\xf0\x9f\x98"}
+  body as UTF-8 String         [{"s":"<fffd>"}]
+  readTree(String) text        [<fffd>]
+  writeValueAsBytes            {"s":"\xef\xbf\xbd"}
+  writeValueAsString→UTF-8     {"s":"\xef\xbf\xbd"}
+  readTree(byte[])             ERR Invalid UTF-8 middle byte 0x22
+== fffd_esc  {"s":"\ufffd"}
+  body as UTF-8 String         [{"s":"\ufffd"}]
+  readTree(String) text        [<fffd>]
+  writeValueAsBytes            {"s":"\xef\xbf\xbd"}
+  writeValueAsString→UTF-8     {"s":"\xef\xbf\xbd"}
+  readTree(byte[]) text        [<fffd>]
+########## Prebid.js (V8 JSON, TextDecoder/TextEncoder)
+== hi  {"s":"\ud800"}
+  text() (TextDecoder)        [{"s":"\ud800"}]
+  JSON.parse .s               [<d800>]  isWellFormed=false length=1 [...s].length=1
+  JSON.stringify              [{"s":"\ud800"}]
+  fetch body (TextEncoder)    {"s":"\ud800"}
+  raw string sent, no JSON    \xef\xbf\xbd
+  encodeURIComponent          ERR URIError: URI malformed
+  JSON.stringify(JSON.parse(adm).native) [{"s":"\ud800"}]
+== lo  {"s":"\udc00"}
+  text() (TextDecoder)        [{"s":"\udc00"}]
+  JSON.parse .s               [<dc00>]  isWellFormed=false length=1 [...s].length=1
+  JSON.stringify              [{"s":"\udc00"}]
+  fetch body (TextEncoder)    {"s":"\udc00"}
+  raw string sent, no JSON    \xef\xbf\xbd
+  encodeURIComponent          ERR URIError: URI malformed
+  JSON.stringify(JSON.parse(adm).native) [{"s":"\udc00"}]
+== hiA  {"s":"\ud800A"}
+  text() (TextDecoder)        [{"s":"\ud800A"}]
+  JSON.parse .s               [<d800>A]  isWellFormed=false length=2 [...s].length=2
+  JSON.stringify              [{"s":"\ud800A"}]
+  fetch body (TextEncoder)    {"s":"\ud800A"}
+  raw string sent, no JSON    \xef\xbf\xbdA
+  encodeURIComponent          ERR URIError: URI malformed
+  JSON.stringify(JSON.parse(adm).native) [{"s":"\ud800A"}]
+== rev  {"s":"\ude00\ud83d"}
+  text() (TextDecoder)        [{"s":"\ude00\ud83d"}]
+  JSON.parse .s               [<de00><d83d>]  isWellFormed=false length=2 [...s].length=2
+  JSON.stringify              [{"s":"\ude00\ud83d"}]
+  fetch body (TextEncoder)    {"s":"\ude00\ud83d"}
+  raw string sent, no JSON    \xef\xbf\xbd\xef\xbf\xbd
+  encodeURIComponent          ERR URIError: URI malformed
+  JSON.stringify(JSON.parse(adm).native) [{"s":"\ude00\ud83d"}]
+== pair_esc  {"s":"\ud83d\ude00"}
+  text() (TextDecoder)        [{"s":"\ud83d\ude00"}]
+  JSON.parse .s               [<d83d><de00>]  isWellFormed=true length=2 [...s].length=1
+  JSON.stringify              [{"s":"<d83d><de00>"}]
+  fetch body (TextEncoder)    {"s":"\xf0\x9f\x98\x80"}
+  raw string sent, no JSON    \xf0\x9f\x98\x80
+  encodeURIComponent          ok %F0%9F%98%80
+  JSON.stringify(JSON.parse(adm).native) [{"s":"<d83d><de00>"}]
+== pair_lit  {"s":"\xf0\x9f\x98\x80"}
+  text() (TextDecoder)        [{"s":"<d83d><de00>"}]
+  JSON.parse .s               [<d83d><de00>]  isWellFormed=true length=2 [...s].length=1
+  JSON.stringify              [{"s":"<d83d><de00>"}]
+  fetch body (TextEncoder)    {"s":"\xf0\x9f\x98\x80"}
+  raw string sent, no JSON    \xf0\x9f\x98\x80
+  encodeURIComponent          ok %F0%9F%98%80
+  JSON.stringify(JSON.parse(adm).native) [{"s":"<d83d><de00>"}]
+== hi_esc+lo_wtf8  {"s":"\ud83d\xed\xb8\x80"}
+  text() (TextDecoder)        [{"s":"\ud83d<fffd><fffd><fffd>"}]
+  JSON.parse .s               [<d83d><fffd><fffd><fffd>]  isWellFormed=false length=4 [...s].length=4
+  JSON.stringify              [{"s":"\ud83d<fffd><fffd><fffd>"}]
+  fetch body (TextEncoder)    {"s":"\ud83d\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd"}
+  raw string sent, no JSON    \xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd
+  encodeURIComponent          ERR URIError: URI malformed
+  JSON.stringify(JSON.parse(adm).native) [{"s":"\ud83d<fffd><fffd><fffd>"}]
+== hi_wtf8  {"s":"\xed\xa0\x80"}
+  text() (TextDecoder)        [{"s":"<fffd><fffd><fffd>"}]
+  JSON.parse .s               [<fffd><fffd><fffd>]  isWellFormed=true length=3 [...s].length=3
+  JSON.stringify              [{"s":"<fffd><fffd><fffd>"}]
+  fetch body (TextEncoder)    {"s":"\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd"}
+  raw string sent, no JSON    \xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd
+  encodeURIComponent          ok %EF%BF%BD%EF%BF%BD%EF%BF%BD
+  JSON.stringify(JSON.parse(adm).native) [{"s":"<fffd><fffd><fffd>"}]
+== pair_cesu8  {"s":"\xed\xa0\xbd\xed\xb8\x80"}
+  text() (TextDecoder)        [{"s":"<fffd><fffd><fffd><fffd><fffd><fffd>"}]
+  JSON.parse .s               [<fffd><fffd><fffd><fffd><fffd><fffd>]  isWellFormed=true length=6 [...s].length=6
+  JSON.stringify              [{"s":"<fffd><fffd><fffd><fffd><fffd><fffd>"}]
+  fetch body (TextEncoder)    {"s":"\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd"}
+  raw string sent, no JSON    \xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd
+  encodeURIComponent          ok %EF%BF%BD%EF%BF%BD%EF%BF%BD%EF%BF%BD%EF%BF%BD%EF%BF%BD
+  JSON.stringify(JSON.parse(adm).native) [{"s":"<fffd><fffd><fffd><fffd><fffd><fffd>"}]
+== byte_ff  {"s":"a\xffb"}
+  text() (TextDecoder)        [{"s":"a<fffd>b"}]
+  JSON.parse .s               [a<fffd>b]  isWellFormed=true length=3 [...s].length=3
+  JSON.stringify              [{"s":"a<fffd>b"}]
+  fetch body (TextEncoder)    {"s":"a\xef\xbf\xbdb"}
+  raw string sent, no JSON    a\xef\xbf\xbdb
+  encodeURIComponent          ok a%EF%BF%BDb
+  JSON.stringify(JSON.parse(adm).native) [{"s":"a<fffd>b"}]
+== trunc_utf8  {"s":"\xf0\x9f\x98"}
+  text() (TextDecoder)        [{"s":"<fffd>"}]
+  JSON.parse .s               [<fffd>]  isWellFormed=true length=1 [...s].length=1
+  JSON.stringify              [{"s":"<fffd>"}]
+  fetch body (TextEncoder)    {"s":"\xef\xbf\xbd"}
+  raw string sent, no JSON    \xef\xbf\xbd
+  encodeURIComponent          ok %EF%BF%BD
+  JSON.stringify(JSON.parse(adm).native) [{"s":"<fffd>"}]
+== fffd_esc  {"s":"\ufffd"}
+  text() (TextDecoder)        [{"s":"\ufffd"}]
+  JSON.parse .s               [<fffd>]  isWellFormed=true length=1 [...s].length=1
+  JSON.stringify              [{"s":"<fffd>"}]
+  fetch body (TextEncoder)    {"s":"\xef\xbf\xbd"}
+  raw string sent, no JSON    \xef\xbf\xbd
+  encodeURIComponent          ok %EF%BF%BD
+  JSON.stringify(JSON.parse(adm).native) [{"s":"<fffd>"}]
+== how lone surrogates arise in JS
+  substring(0,10)  [Big sale <d83d>]  wellFormed=false  stringify=["Big sale \ud83d"]
+  substring(0,11)  [Big sale <d83d><de00>]  wellFormed=true  stringify=["Big sale <d83d><de00>"]
+  slice(-1) of "a\u{1F600}"  [<de00>]
+  "\u{1F600}"[0]          [<d83d>]
+  toWellFormed()          [<fffd>A]
+== adm outer_escape
+  in  {"adm":"{\"native\":{\"t\":\"\ud800\"}}"}
+  out {"adm":"{\"t\":\"\\ud800\"}"}
+== adm inner_escape
+  in  {"adm":"{\"native\":{\"t\":\"\\ud800\"}}"}
+  out {"adm":"{\"t\":\"\\ud800\"}"}
+########## serde_json (Trusted Server; a serde typed back end)
+== adm outer_escape
+  in  {"adm":"{\"native\":{\"t\":\"\ud800\"}}"}
+  ERR unexpected end of hex escape at line 1 column 37
+== adm inner_escape
+  in  {"adm":"{\"native\":{\"t\":\"\\ud800\"}}"}
+  ERR unexpected end of hex escape at line 1 column 23
+== hi  {"s":"\ud800"}
+  from_slice::<Value>       ERR unexpected end of hex escape at line 1 column 13
+  from_slice::<struct>      ERR unexpected end of hex escape at line 1 column 13
+  str::from_utf8            ok (14 bytes)
+  &RawValue                 "\ud800"
+  bytes (serde_bytes)       \xed\xa0\x80 (not UTF-8: WTF-8/raw)
+  IgnoredAny (skip)         ok
+== lo  {"s":"\udc00"}
+  from_slice::<Value>       ERR lone leading surrogate in hex escape at line 1 column 12
+  from_slice::<struct>      ERR lone leading surrogate in hex escape at line 1 column 12
+  str::from_utf8            ok (14 bytes)
+  &RawValue                 "\udc00"
+  bytes (serde_bytes)       \xed\xb0\x80 (not UTF-8: WTF-8/raw)
+  IgnoredAny (skip)         ok
+== hiA  {"s":"\ud800A"}
+  from_slice::<Value>       ERR unexpected end of hex escape at line 1 column 13
+  from_slice::<struct>      ERR unexpected end of hex escape at line 1 column 13
+  str::from_utf8            ok (15 bytes)
+  &RawValue                 "\ud800A"
+  bytes (serde_bytes)       \xed\xa0\x80A (not UTF-8: WTF-8/raw)
+  IgnoredAny (skip)         ok
+== rev  {"s":"\ude00\ud83d"}
+  from_slice::<Value>       ERR lone leading surrogate in hex escape at line 1 column 12
+  from_slice::<struct>      ERR lone leading surrogate in hex escape at line 1 column 12
+  str::from_utf8            ok (20 bytes)
+  &RawValue                 "\ude00\ud83d"
+  bytes (serde_bytes)       \xed\xb8\x80\xed\xa0\xbd (not UTF-8: WTF-8/raw)
+  IgnoredAny (skip)         ok
+== pair_esc  {"s":"\ud83d\ude00"}
+  from_slice::<Value>       \xf0\x9f\x98\x80 -> to_vec {"s":"\xf0\x9f\x98\x80"}
+  from_slice::<struct>      \xf0\x9f\x98\x80
+  str::from_utf8            ok (20 bytes)
+  &RawValue                 "\ud83d\ude00"
+  bytes (serde_bytes)       \xf0\x9f\x98\x80 
+  IgnoredAny (skip)         ok
+== pair_lit  {"s":"\xf0\x9f\x98\x80"}
+  from_slice::<Value>       \xf0\x9f\x98\x80 -> to_vec {"s":"\xf0\x9f\x98\x80"}
+  from_slice::<struct>      \xf0\x9f\x98\x80
+  str::from_utf8            ok (12 bytes)
+  &RawValue                 "\xf0\x9f\x98\x80"
+  bytes (serde_bytes)       \xf0\x9f\x98\x80 
+  IgnoredAny (skip)         ok
+== hi_esc+lo_wtf8  {"s":"\ud83d\xed\xb8\x80"}
+  from_slice::<Value>       ERR unexpected end of hex escape at line 1 column 13
+  from_slice::<struct>      ERR unexpected end of hex escape at line 1 column 13
+  str::from_utf8            ERR invalid utf-8 sequence of 1 bytes from index 12
+  &RawValue                 ERR invalid unicode code point at line 1 column 16
+  bytes (serde_bytes)       \xed\xa0\xbd\xed\xb8\x80 (not UTF-8: WTF-8/raw)
+  IgnoredAny (skip)         ok
+== hi_wtf8  {"s":"\xed\xa0\x80"}
+  from_slice::<Value>       ERR invalid unicode code point at line 1 column 10
+  from_slice::<struct>      ERR invalid unicode code point at line 1 column 10
+  str::from_utf8            ERR invalid utf-8 sequence of 1 bytes from index 6
+  &RawValue                 ERR invalid unicode code point at line 1 column 10
+  bytes (serde_bytes)       \xed\xa0\x80 (not UTF-8: WTF-8/raw)
+  IgnoredAny (skip)         ok
+== pair_cesu8  {"s":"\xed\xa0\xbd\xed\xb8\x80"}
+  from_slice::<Value>       ERR invalid unicode code point at line 1 column 13
+  from_slice::<struct>      ERR invalid unicode code point at line 1 column 13
+  str::from_utf8            ERR invalid utf-8 sequence of 1 bytes from index 6
+  &RawValue                 ERR invalid unicode code point at line 1 column 13
+  bytes (serde_bytes)       \xed\xa0\xbd\xed\xb8\x80 (not UTF-8: WTF-8/raw)
+  IgnoredAny (skip)         ok
+== byte_ff  {"s":"a\xffb"}
+  from_slice::<Value>       ERR invalid unicode code point at line 1 column 10
+  from_slice::<struct>      ERR invalid unicode code point at line 1 column 10
+  str::from_utf8            ERR invalid utf-8 sequence of 1 bytes from index 7
+  &RawValue                 ERR invalid unicode code point at line 1 column 10
+  bytes (serde_bytes)       a\xffb (not UTF-8: WTF-8/raw)
+  IgnoredAny (skip)         ok
+== trunc_utf8  {"s":"\xf0\x9f\x98"}
+  from_slice::<Value>       ERR invalid unicode code point at line 1 column 10
+  from_slice::<struct>      ERR invalid unicode code point at line 1 column 10
+  str::from_utf8            ERR invalid utf-8 sequence of 3 bytes from index 6
+  &RawValue                 ERR invalid unicode code point at line 1 column 10
+  bytes (serde_bytes)       \xf0\x9f\x98 (not UTF-8: WTF-8/raw)
+  IgnoredAny (skip)         ok
+== fffd_esc  {"s":"\ufffd"}
+  from_slice::<Value>       \xef\xbf\xbd -> to_vec {"s":"\xef\xbf\xbd"}
+  from_slice::<struct>      \xef\xbf\xbd
+  str::from_utf8            ok (14 bytes)
+  &RawValue                 "\ufffd"
+  bytes (serde_bytes)       \xef\xbf\xbd 
+  IgnoredAny (skip)         ok
+########## prototype runtime (runtime/rs Doc)
+== hi  {"s":"\ud800"}
+  string()                 \xef\xbf\xbd
+  emit (raw copy)          {"s":"\ud800"}
+  stringify (canonical)    {"s":"\ud800"}
+  .length                  1
+  trim(" x ") emitted      {"t":"\xef\xbf\xbd"}
+  split("A") emitted       ["\xef\xbf\xbd"]
+== lo  {"s":"\udc00"}
+  string()                 \xef\xbf\xbd
+  emit (raw copy)          {"s":"\udc00"}
+  stringify (canonical)    {"s":"\udc00"}
+  .length                  1
+  trim(" x ") emitted      {"t":"\xef\xbf\xbd"}
+  split("A") emitted       ["\xef\xbf\xbd"]
+== hiA  {"s":"\ud800A"}
+  string()                 \xef\xbf\xbdA
+  emit (raw copy)          {"s":"\ud800A"}
+  stringify (canonical)    {"s":"\ud800A"}
+  .length                  2
+  trim(" x ") emitted      {"t":"\xef\xbf\xbdA"}
+  split("A") emitted       ["\xef\xbf\xbd",""]
+== rev  {"s":"\ude00\ud83d"}
+  string()                 \xef\xbf\xbd\xef\xbf\xbd
+  emit (raw copy)          {"s":"\ude00\ud83d"}
+  stringify (canonical)    {"s":"\ude00\ud83d"}
+  .length                  2
+  trim(" x ") emitted      {"t":"\xef\xbf\xbd\xef\xbf\xbd"}
+  split("A") emitted       ["\xef\xbf\xbd\xef\xbf\xbd"]
+== pair_esc  {"s":"\ud83d\ude00"}
+  string()                 \xf0\x9f\x98\x80
+  emit (raw copy)          {"s":"\ud83d\ude00"}
+  stringify (canonical)    {"s":"\xf0\x9f\x98\x80"}
+  .length                  2
+  trim(" x ") emitted      {"t":"\xf0\x9f\x98\x80"}
+  split("A") emitted       ["\xf0\x9f\x98\x80"]
+== pair_lit  {"s":"\xf0\x9f\x98\x80"}
+  string()                 \xf0\x9f\x98\x80
+  emit (raw copy)          {"s":"\xf0\x9f\x98\x80"}
+  stringify (canonical)    {"s":"\xf0\x9f\x98\x80"}
+  .length                  2
+  trim(" x ") emitted      {"t":"\xf0\x9f\x98\x80"}
+  split("A") emitted       ["\xf0\x9f\x98\x80"]
+== hi_esc+lo_wtf8  {"s":"\ud83d\xed\xb8\x80"}
+  string()                 
+  emit (raw copy)          {"s":"\ud83d\xed\xb8\x80"}
+  stringify (canonical)    {"s":""}
+  .length                  0
+  trim(" x ") emitted      {"t":" \ud83d\xed\xb8\x80 "}
+  split("A") emitted       [""]
+== hi_wtf8  {"s":"\xed\xa0\x80"}
+  string()                 \xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd
+  emit (raw copy)          {"s":"\xed\xa0\x80"}
+  stringify (canonical)    {"s":""}
+  .length                  3
+  trim(" x ") emitted      {"t":"\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd"}
+  split("A") emitted       ["\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd"]
+== pair_cesu8  {"s":"\xed\xa0\xbd\xed\xb8\x80"}
+  string()                 \xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd
+  emit (raw copy)          {"s":"\xed\xa0\xbd\xed\xb8\x80"}
+  stringify (canonical)    {"s":""}
+  .length                  6
+  trim(" x ") emitted      {"t":"\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd"}
+  split("A") emitted       ["\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd"]
+== byte_ff  {"s":"a\xffb"}
+  string()                 a\xef\xbf\xbdb
+  emit (raw copy)          {"s":"a\xffb"}
+  stringify (canonical)    {"s":""}
+  .length                  3
+  trim(" x ") emitted      {"t":"a\xef\xbf\xbdb"}
+  split("A") emitted       ["a\xef\xbf\xbdb"]
+== trunc_utf8  {"s":"\xf0\x9f\x98"}
+  string()                 \xef\xbf\xbd
+  emit (raw copy)          {"s":"\xf0\x9f\x98"}
+  stringify (canonical)    {"s":""}
+  .length                  1
+  trim(" x ") emitted      {"t":"\xef\xbf\xbd"}
+  split("A") emitted       ["\xef\xbf\xbd"]
+== fffd_esc  {"s":"\ufffd"}
+  string()                 \xef\xbf\xbd
+  emit (raw copy)          {"s":"\ufffd"}
+  stringify (canonical)    {"s":"\xef\xbf\xbd"}
+  .length                  1
+  trim(" x ") emitted      {"t":"\xef\xbf\xbd"}
+  split("A") emitted       ["\xef\xbf\xbd"]
+== comparisons (JS answer in brackets)
+  eq(hi, lo) = true [false]
+  eq(hi, fffd_esc) = true [false]
+  eq(lo, fffd_esc) = true [false]
+  eq(hi, hi) = true [true]
+  eq(pair_esc, pair_lit) = true [true]
+  eq(byte_ff, byte_ff) = true [true]
+  includes(hi, lo) = true [false]
+  includes(hiA, fffd_esc) = true [false]
+  includes(rev, hi) = true [false]
+== escape + invalid UTF-8 in one string
+  string() of "x\ny<ff>z"   []
+  stringify                [""]
+== native adm re-serialization (PubMatic: stringify(json(adm).native))
+== adm outer_escape
+  in  {"adm":"{\"native\":{\"t\":\"\ud800\"}}"}
+  out {"adm":"{\"t\":\"\xef\xbf\xbd\"}"}
+== adm inner_escape
+  in  {"adm":"{\"native\":{\"t\":\"\\ud800\"}}"}
+  out {"adm":"{\"t\":\"\\ud800\"}"}
+########## typed guest helpers (typed/src/j.rs)
+== hi  {"s":"\ud800"}
+  W::jstr (raw copy)        "\ud800"
+  JStr::cow                 \xef\xbf\xbd
+  trim -> W::str_           "\xef\xbf\xbd"
+  split('A').nth(0)         \xef\xbf\xbd
+== lo  {"s":"\udc00"}
+  W::jstr (raw copy)        "\udc00"
+  JStr::cow                 \xef\xbf\xbd
+  trim -> W::str_           "\xef\xbf\xbd"
+  split('A').nth(0)         \xef\xbf\xbd
+== hiA  {"s":"\ud800A"}
+  W::jstr (raw copy)        "\ud800A"
+  JStr::cow                 \xef\xbf\xbdA
+  trim -> W::str_           "\xef\xbf\xbdA"
+  split('A').nth(0)         \xef\xbf\xbd
+== rev  {"s":"\ude00\ud83d"}
+  W::jstr (raw copy)        "\ude00\ud83d"
+  JStr::cow                 \xef\xbf\xbd\xef\xbf\xbd
+  trim -> W::str_           "\xef\xbf\xbd\xef\xbf\xbd"
+  split('A').nth(0)         \xef\xbf\xbd\xef\xbf\xbd
+== pair_esc  {"s":"\ud83d\ude00"}
+  W::jstr (raw copy)        "\ud83d\ude00"
+  JStr::cow                 \xf0\x9f\x98\x80
+  trim -> W::str_           "\xf0\x9f\x98\x80"
+  split('A').nth(0)         \xf0\x9f\x98\x80
+== pair_lit  {"s":"\xf0\x9f\x98\x80"}
+  W::jstr (raw copy)        "\xf0\x9f\x98\x80"
+  JStr::cow                 \xf0\x9f\x98\x80
+  trim -> W::str_           "\xf0\x9f\x98\x80"
+  split('A').nth(0)         \xf0\x9f\x98\x80
+== hi_esc+lo_wtf8  {"s":"\ud83d\xed\xb8\x80"}
+  W::jstr (raw copy)        "\ud83d\xed\xb8\x80"
+  JStr::cow                 
+  trim -> W::str_           ""
+  split('A').nth(0)         
+== hi_wtf8  {"s":"\xed\xa0\x80"}
+  W::jstr (raw copy)        "\xed\xa0\x80"
+  JStr::cow                 \xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd
+  trim -> W::str_           "\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd"
+  split('A').nth(0)         \xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd
+== pair_cesu8  {"s":"\xed\xa0\xbd\xed\xb8\x80"}
+  W::jstr (raw copy)        "\xed\xa0\xbd\xed\xb8\x80"
+  JStr::cow                 \xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd
+  trim -> W::str_           "\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd"
+  split('A').nth(0)         \xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd\xef\xbf\xbd
+== byte_ff  {"s":"a\xffb"}
+  W::jstr (raw copy)        "a\xffb"
+  JStr::cow                 a\xef\xbf\xbdb
+  trim -> W::str_           "a\xef\xbf\xbdb"
+  split('A').nth(0)         a\xef\xbf\xbdb
+== trunc_utf8  {"s":"\xf0\x9f\x98"}
+  W::jstr (raw copy)        "\xf0\x9f\x98"
+  JStr::cow                 \xef\xbf\xbd
+  trim -> W::str_           "\xef\xbf\xbd"
+  split('A').nth(0)         \xef\xbf\xbd
+== fffd_esc  {"s":"\ufffd"}
+  W::jstr (raw copy)        "\ufffd"
+  JStr::cow                 \xef\xbf\xbd
+  trim -> W::str_           "\xef\xbf\xbd"
+  split('A').nth(0)         \xef\xbf\xbd
+########## boundary cost
+native  lt-req.json        1641 B  from_utf8    47.6 ns  surrogate-escape scan   405.6 ns
+native  lt-resp.json       5995 B  from_utf8    98.8 ns  surrogate-escape scan  1733.7 ns
+native  heavy-req.json     3110 B  from_utf8    57.8 ns  surrogate-escape scan   736.5 ns
+native  heavy-resp.json   11294 B  from_utf8   179.9 ns  surrogate-escape scan  3507.8 ns
+wasm/V8 lt-req.json        1641 B  from_utf8    60.3 ns  surrogate-escape scan   386.4 ns
+wasm/V8 lt-resp.json       5995 B  from_utf8   213.8 ns  surrogate-escape scan  1261.3 ns
+wasm/V8 heavy-req.json     3110 B  from_utf8   114.0 ns  surrogate-escape scan   707.2 ns
+wasm/V8 heavy-resp.json   11294 B  from_utf8   400.5 ns  surrogate-escape scan  2502.1 ns

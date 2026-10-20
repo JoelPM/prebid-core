@@ -1,0 +1,18 @@
+[package]
+name = "surrogates_cost"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+# What the contract adds per call at the guest boundary: one UTF-8 validation of each input, and
+# finding strings that hold a surrogate escape. Native bin + wasm cdylib (run by cost.mjs in V8).
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[workspace]

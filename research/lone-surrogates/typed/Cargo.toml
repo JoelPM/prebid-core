@@ -1,0 +1,11 @@
+[package]
+name = "surrogates_typed"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+# The hand-written typed guest's helpers (#16, branch research/typed-codegen @ 85b5156).
+[dependencies]
+typed_guest = { path = "../../../../prebid-core-wt-typed-codegen/prototype/profile-compiler/typed", default-features = false }
+
+[workspace]
