@@ -56,7 +56,7 @@ _Avoid_: hook (a PBS module term), step
 The part of **Prebid Core** that checks an **Adapter Definition** against **Restricted TypeScript** and turns it into the code the server **Hosts** run.
 
 **Parity**:
-A **Shared Adapter** behaves like a **Host**'s **Hand-written Adapter**: on that Host's existing fixtures it produces the same output, except where a **Known Difference** says otherwise. Parity is judged against the Shared Adapter's own intended behavior, not against any one Host's Hand-written Adapter.
+A **Shared Adapter** behaves like a **Host**'s **Hand-written Adapter**: on that Host's existing fixtures it produces the same output, except where a **Known Difference** says otherwise. Parity is judged against the Shared Adapter's own intended behavior, not against any one Host's Hand-written Adapter. "Same output" means equal as JSON values: numbers by exact value, strings exactly; key order, whitespace and escaping don't count.
 
 **Known Difference**:
 A written-down, justified place where a **Shared Adapter** deliberately differs from one Host's **Hand-written Adapter**. It is classified as one of three kinds: a bug in the Hand-written Adapter, drift between Hand-written Adapters settled in favor of one side, or a Host gap (output the Host has no place to carry). Each one is pinned by a fixture. A difference that isn't listed is a parity failure.
