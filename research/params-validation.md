@@ -174,8 +174,8 @@ The catalogue sweep (`sweep.py`) counts files using each keyword anywhere in the
 
 | feature | Go | Java | captured by a generated TS type + `required`/`anyOf`? |
 |---|---|---|---|
-| top-level `required` | 270 | 258 | ✅ |
-| nested `required` (e.g. PubMatic `wrapper.profile`, `keywords[].key`) | 7 | 6 | ✅ as non-optional nested fields; the prototype's flat `required` list misses them |
+| top-level `required` | 225 | 216 | ✅ |
+| nested `required` (incl. inside `anyOf`/`oneOf` branches; e.g. PubMatic `wrapper.profile`, `keywords[].key`) | 53 | 50 | ✅ as non-optional nested fields; the prototype's flat `required` list misses them |
 | `type: integer` | 50 | 47 | ⚠️ TS has only `number`, and validators disagree on `5.0` (§3) |
 | type unions (`["integer","string"]` ×16, `["number","string"]` ×1 (OpenX), `["null",…]`) | 22 | 22 | ✅ as `number \| string`, but the Phase must narrow it, and Rust needs an enum |
 | `enum` | 13 | 11 | ✅ as literal unions |
@@ -188,6 +188,20 @@ The catalogue sweep (`sweep.py`) counts files using each keyword anywhere in the
 | `anyOf` | 13 | 12 | ✅ when it's `anyOf` of `required` groups (OpenX); ❌ otherwise |
 | `not` / `allOf` / `if` / `dependencies` | 2 / 1 / 1 / 2 | 1 / 0 / 0 / 2 | ❌ |
 | `additionalProperties: false` / schema | 4 / 3 | 2 / 2 | ❌ for `false` (TS types are open); the schema form is `Record<string, T>` |
+
+Almost every `oneOf`/`anyOf` branch is just `{required:[…]}` (38 of 39 Go `oneOf` files, 11 of 13 `anyOf`). But `oneOf` means "exactly one", which the prototype's `anyOf` check doesn't enforce.
+
+If each file is put in the highest tier it needs (`tier.py`):
+
+| tier | Go | Java |
+|---|---|---|
+| A: types, top-level `required`, required-only `anyOf` | 94 | 105 |
+| B: A plus required-only `oneOf` | 11 | 11 |
+| C: B plus `enum` / nested `required` | 5 | 5 |
+| D: value constraints (`minLength`, `pattern`, `format`, min/max, item counts, `additionalProperties: false`) | 161 | 145 |
+| E: other combinators (`not`, `if`, `dependencies`, type-level unions) | 8 | 5 |
+
+A generated type plus lists covers at most tiers A–C: about 110 of 279 Go files. OpenX and PubMatic are both in tier D. Java's `pangle.json` is malformed: `appid` and `placementid` sit at the schema root, outside `properties`, so they go unchecked, while its `dependencies` still apply.
 
 **OpenX** uses `["number","string"]` unions with `pattern` and `minimum` per branch, `format: hostname` and `uuid`, and a top-level `anyOf` of `required`. **PubMatic** uses a nested object with nested `required` and `type: integer`, plus arrays of objects with `minItems`. Neither fits in "type + `required`/`anyOf`" without losing checks.
 
