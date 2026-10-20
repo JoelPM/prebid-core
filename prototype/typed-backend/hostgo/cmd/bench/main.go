@@ -7,6 +7,7 @@
 // ext.bidder is swapped for PubMatic params and the response gets wrapper/keyword-free bids.
 //
 // Usage: go run ./cmd/bench -wasm <dir with openx.wasm, pubmatic.wasm> [-par 1,4,8] [-dur 2s]
+// (research/typed-codegen: the same bench runs the typed guests; -par "" skips concurrency)
 package main
 
 import (
@@ -103,7 +104,8 @@ func check(native, shared adapters.Bidder, p *payload) {
 func main() {
 	dir := flag.String("wasm", "../out/wasm", "dir with <bidder>.wasm")
 	pdir := flag.String("payload", "payload", "payload dir")
-	pars := flag.String("par", "1,4,8", "goroutine counts")
+	pars := flag.String("par", "1,4,8", "goroutine counts (empty: skip the concurrency runs)")
+	only := flag.String("bidders", "openx,pubmatic", "bidders to run")
 	dur := flag.Duration("dur", 2*time.Second, "duration per concurrency window")
 	flag.Parse()
 	fmt.Printf("%s, GOMAXPROCS %d, wazero v1.12.0 compiler\n", runtime.Version(), runtime.GOMAXPROCS(0))
@@ -111,7 +113,7 @@ func main() {
 	natives := map[string]adapters.Bidder{}
 	natives["openx"] = must(openx.Builder(openrtb_ext.BidderOpenx, config.Adapter{Endpoint: "http://rtb.openx.net/prebid"}, config.Server{}))
 	natives["pubmatic"] = must(pubmatic.Builder(openrtb_ext.BidderPubmatic, config.Adapter{Endpoint: "https://hbopenbid.pubmatic.com/translator?source=prebid-server"}, config.Server{}))
-	for _, bidder := range []string{"openx", "pubmatic"} {
+	for _, bidder := range strings.Split(*only, ",") {
 		wasm := must(os.ReadFile(filepath.Join(*dir, bidder+".wasm")))
 		rt := must(host.NewRuntime(wasm))
 		shared := rt.Bidder(bidder, "http://example.com")
@@ -126,9 +128,16 @@ func main() {
 			body := must(jsonutil.Marshal(&p.req))
 			rds, _ := shared.MakeRequests(&p.req, nil)
 			single("  of which: guest calls only (write, run, read)", func() { shared.GuestOnly(body, rds[0].Body, p.resp) })
+			single("    guest MakeRequests", func() { shared.GuestMR(body) })
+			single("    guest MakeBids", func() { shared.GuestMB(rds[0].Body, p.resp) })
+			mbIn := append(append([]byte(nil), rds[0].Body...), p.resp...)
+			single("    ABI floor, both phases (write, in_buf, out_ptr; no Adapter)", func() { shared.GuestABI(body); shared.GuestABI(mbIn) })
+			if shared.GuestScan(body) {
+				single("    scan floor: ABI + one JSON scan of request and response", func() { shared.GuestScan(body, p.resp) })
+			}
 			single("  of which: Host marshal request", func() { jsonutil.Marshal(&p.req) })
 			single("  of which: Host unmarshal response", func() { var br openrtb2.BidResponse; jsonutil.Unmarshal(p.resp, &br) })
-			if name != "lt" {
+			if name != "lt" || *pars == "" {
 				continue
 			}
 			for _, ps := range strings.Split(*pars, ",") {

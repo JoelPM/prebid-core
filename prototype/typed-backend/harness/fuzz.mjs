@@ -18,7 +18,8 @@ const pick = (a) => a[Math.floor(rnd() * a.length)];
 const chance = (p) => rnd() < p;
 
 // ---------- value pools ----------
-const STRS = ['', ' ', 'a', ' a ', 'A@1x2', ' x﻿', '\u0085y', 'é', '😀', 'gam', '*', 'pubmatic', 'appnexus', 'pmZoneID', '123', ' 12 ', '1.5', '-3', '1e3', 'x\ty', '\\/', '"q"', 'null', '0'];
+// lone surrogates, a broken pair and emoji (#23: strings are UTF-16 code units, kept as they are)
+const STRS = ['\ud800', 'a\udc00b', '\ud83d', '😀x', '', ' ', 'a', ' a ', 'A@1x2', ' x﻿', '\u0085y', 'é', '😀', 'gam', '*', 'pubmatic', 'appnexus', 'pmZoneID', '123', ' 12 ', '1.5', '-3', '1e3', 'x\ty', '\\/', '"q"', 'null', '0'];
 const SLOTS = ['', ' ', 'slot', ' slot ', 'slot@300x250', 'slot@300X250:1', 'slot@300x250 ', '@300x250', 'slot@', 'slot@300', 'slot@x250', 'slot@ax250', 'slot@300x250x1', 'a@b@c', 'slot@ 300 x 250 ', 'slot@300x250:abc', 'é@1x2'];
 const NUMS = [0, -0, 1, 2, 3, 4, 5, 1.5, -1, 100, 0.1, 1e21, 123456789, 2 ** 31];
 const json = (depth = 0) => {
@@ -117,8 +118,11 @@ const MUT = {
 
 // ---------- normalized comparison ----------
 const clean = (x) => (x === undefined ? null : JSON.parse(JSON.stringify(x)));
+// what a Host-native string slot can carry (lone surrogates become U+FFFD; see the ABI question in the map)
+const slot = (s) => (typeof s === 'string' ? s.toWellFormed() : s);
 const emptyish = (x) => x == null || x === '' || x === 0 || (typeof x === 'object' && !Object.keys(x).length);
 const norm = (x) => (emptyish(clean(x)) ? null : clean(x));
+const normSlot = (x) => { const c = norm(x); if (!c || typeof c !== 'object') return c; for (const k of Object.keys(c)) if (typeof c[k] === 'string') c[k] = slot(c[k]); return c; };
 function applyOverrides(bid, ov) {
   const b = clean(bid);
   for (const [k, v] of Object.entries(ov ?? {})) v === null ? delete b[k] : (b[k] = v);
@@ -153,7 +157,7 @@ for (const bidder of ['openx', 'pubmatic']) {
     }
   }
   const input = cases.map((c) => [bidder, c.op, JSON.stringify(c.req), ...(c.resp ? [JSON.stringify(c.resp)] : [])].join('\t')).join('\n') + '\n';
-  const rs = spawnSync(path.join(root, 'out/target-native/release/fuzz'), { input, maxBuffer: 1 << 30 });
+  const rs = spawnSync(process.env.FUZZ_BIN || path.join(root, 'out/target-native/release/fuzz'), { input, maxBuffer: 1 << 30 });
   if (rs.status !== 0) throw new Error(rs.stderr.toString());
   const rsOut = rs.stdout.toString().trim().split('\n').map((l) => JSON.parse(l));
   const r = (results[bidder] = { cases: cases.length, tsThrew: 0, differ: 0, cover: { body: 0, impRejected: 0, bidsKept: 0, bidsRejected: 0, warnings: 0, paapi: 0, meta: 0 }, examples: [] });
@@ -170,12 +174,12 @@ for (const bidder of ['openx', 'pubmatic']) {
     if (c.op === 'mr') { cv.body += !!ts.body; cv.impRejected += ts.errs.length; }
     else { cv.bidsKept += ts.bids.length; cv.bidsRejected += x.bids.filter((b) => !b.keep).length; cv.warnings += ts.errs.length - x.bids.filter((b) => !b.keep).length; cv.paapi += !!ts.paapi?.length; cv.meta += ts.bids.filter((b) => !emptyish(clean(b.meta))).length; }
     let d;
-    if (c.op === 'mr') d = diff({ body: clean(ts.body), impIDs: ts.impIDs ?? [], errs: ts.errs }, { body: x.body, impIDs: x.impIDs, errs: x.errs });
+    if (c.op === 'mr') d = diff({ body: clean(ts.body), impIDs: (ts.impIDs ?? []).map(slot), errs: ts.errs.map(slot) }, { body: x.body, impIDs: x.impIDs, errs: x.errs });
     else {
       const bids = c.resp.seatbid?.flatMap((sb) => sb.bid ?? []) ?? [];
       const kept = x.bids.map((b, j) => [b, bids[j]]).filter(([b]) => b.keep);
       d = diff(
-        { bids: ts.bids.map((b) => ({ bid: clean(b.bid), type: b.type, seat: b.seat || null, dp: b.dealPriority || 0, video: norm(b.video), meta: norm(b.meta) })), cur: ts.currency || null, paapi: norm(ts.paapi), errs: ts.errs },
+        { bids: ts.bids.map((b) => ({ bid: clean(b.bid), type: b.type, seat: slot(b.seat) || null, dp: Math.max(-2147483648, Math.min(2147483647, Math.trunc(b.dealPriority || 0))), video: normSlot(b.video), meta: normSlot(b.meta) })), cur: slot(ts.currency) || null, paapi: norm(ts.paapi), errs: ts.errs.map(slot) },
         { bids: kept.map(([b, orig]) => ({ bid: applyOverrides(orig, b.overrides), type: b.type, seat: b.seat || null, dp: b.dealPriority, video: norm(b.video), meta: norm(b.meta) })), cur: x.currency || null, paapi: norm(x.paapi), errs: x.errs },
       );
     }

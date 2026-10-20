@@ -861,7 +861,7 @@ impl Default for Doc {
 
 // ---------- string helpers ----------
 /// JS String.prototype.trim's whitespace: WhiteSpace + LineTerminator (includes U+FEFF, not U+0085).
-fn js_ws(c: char) -> bool {
+pub fn js_ws(c: char) -> bool {
     matches!(c, '\t' | '\n' | '\u{b}' | '\u{c}' | '\r' | ' ' | '\u{a0}' | '\u{1680}' | '\u{2000}'..='\u{200a}' | '\u{2028}' | '\u{2029}' | '\u{202f}' | '\u{205f}' | '\u{3000}' | '\u{feff}')
 }
 fn is_decimal(s: &str) -> bool {
@@ -973,12 +973,12 @@ pub fn js_num(f: f64) -> String {
     b.format(f).to_owned()
 }
 /// JSON.stringify of a number: non-finite becomes null.
-fn js_json_num(f: f64) -> String {
+pub fn js_json_num(f: f64) -> String {
     if f.is_finite() { js_num(f) } else { "null".into() }
 }
 
 // ---------- strict JSON validation (for json()) ----------
-fn valid_json(b: &[u8]) -> bool {
+pub fn valid_json(b: &[u8]) -> bool {
     let mut p = 0;
     let ws = |p: &mut usize| {
         while *p < b.len() && matches!(b[*p], b' ' | b'\n' | b'\r' | b'\t') {

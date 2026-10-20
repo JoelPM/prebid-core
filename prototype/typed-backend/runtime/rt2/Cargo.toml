@@ -1,0 +1,8 @@
+[package]
+name = "prebid_core_rt2"
+version = "0.1.0"
+edition = "2021"
+description = "PROTOTYPE: runtime for the typed Rust back end (spans, shapes, spread-plus-overrides, JS strings)"
+
+[dependencies]
+prebid_core_rt = { path = "../rs" }

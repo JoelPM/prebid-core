@@ -1,0 +1,36 @@
+[package]
+name = "typed_ref"
+version = "0.1.0"
+edition = "2021"
+description = "RESEARCH: hand-written Rust in the shape a typed E' back end would emit, behind the same Host ABI as guest/"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["openx", "pubmatic"]
+openx = []
+pubmatic = []
+# Ablations: each one reverts a single codegen pattern (README "Ablation").
+abl_owned = []     # string expressions as owned Strings (every trim/split/lower/unescape allocates)
+abl_unfused = []   # filter/map/fromEntries/entries pipelines materialize each intermediate list
+abl_nointern = []  # output keys quoted/escaped and literals allocated at run time, every call
+abl_nohoist = []   # loop-invariant request reads (displaymanager source) recomputed per imp
+abl_rescan = []    # decode from held spans with a second scan (raw-then-reparse) instead of in place
+abl_twopass = []   # PubMatic: imps held as a span until req.app is known, then re-parsed (no speculation)
+abl_passthru = []  # untouched subtrees decoded into a generic value and re-serialized, not copied
+abl_eager = []     # documents nothing reads (the request in PubMatic MakeBids) are still scanned
+abl_freshout = []  # a fresh output Vec per call instead of reusing the guest's buffer
+# Runtime option, not a codegen pattern: per-call bump allocator instead of Rust's wasm dlmalloc.
+bump = []
+
+[dependencies]
+prebid_core_rt = { path = "../runtime/rs" }
+ryu-js = "1.0.2"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
