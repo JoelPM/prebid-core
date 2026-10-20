@@ -1,0 +1,94 @@
+{
+ "hostRequest": {
+  "id": "test-request-id",
+  "imp": [
+   {
+    "id": "test-imp-id",
+    "banner": {
+     "format": [
+      {
+       "w": 728,
+       "h": 90
+      }
+     ]
+    },
+    "ext": {
+     "ae": 1,
+     "bidder": {
+      "unit": "539439964",
+      "delDomain": "se-demo-d.openx.net",
+      "customParams": {
+       "foo": "bar"
+      }
+     },
+     "data": {
+      "pbadslot": "adslotvalue"
+     },
+     "gpid": "gpidvalue",
+     "otherfields": "othervalues",
+     "prebid": {
+      "foo": "bar"
+     },
+     "skadn": {
+      "version": "2.0"
+     }
+    }
+   }
+  ]
+ },
+ "native": {
+  "requests": [
+   {
+    "method": "POST",
+    "uri": "http://rtb.openx.net/prebid",
+    "body": {
+     "id": "test-request-id",
+     "imp": [
+      {
+       "id": "test-imp-id",
+       "banner": {
+        "format": [
+         {
+          "w": 728,
+          "h": 90
+         }
+        ]
+       },
+       "tagid": "539439964",
+       "ext": {
+        "ae": 1,
+        "customParams": {
+         "foo": "bar"
+        },
+        "data": {
+         "pbadslot": "adslotvalue"
+        },
+        "gpid": "gpidvalue",
+        "otherfields": "othervalues",
+        "skadn": {
+         "version": "2.0"
+        }
+       }
+      }
+     ],
+     "ext": {
+      "delDomain": "se-demo-d.openx.net",
+      "bc": "hb_pbs_1.0.0"
+     }
+    },
+    "impIDs": [
+     "test-imp-id"
+    ]
+   }
+  ],
+  "requestErrs": [],
+  "responses": [
+   {
+    "currency": "USD",
+    "bids": [],
+    "paapi": null,
+    "errs": []
+   }
+  ]
+ }
+}

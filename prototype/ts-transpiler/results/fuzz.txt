@@ -1,0 +1,2 @@
+openx: 38740 calls, TS vs Rust differ on 0, TS threw on 0; reached {"body":19721,"impRejected":1250,"bidsKept":39279,"bidsRejected":0,"warnings":0,"paapi":7488,"meta":3466}
+pubmatic: 38323 calls, TS vs Rust differ on 0, TS threw on 0; reached {"body":14613,"impRejected":8498,"bidsKept":12695,"bidsRejected":6944,"warnings":720,"paapi":4551,"meta":10897}

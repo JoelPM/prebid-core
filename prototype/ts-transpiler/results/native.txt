@@ -1,0 +1,16 @@
+openx / lt
+  parse+skim request only                     0.92 us
+  make_requests (incl. parse, emit)           2.47 us
+  make_bids (incl. parse)                     4.64 us
+openx / heavy
+  parse+skim request only                     1.73 us
+  make_requests (incl. parse, emit)           4.38 us
+  make_bids (incl. parse)                     9.72 us
+pubmatic / lt
+  parse+skim request only                     1.17 us
+  make_requests (incl. parse, emit)           6.16 us
+  make_bids (incl. parse)                     8.74 us
+pubmatic / heavy
+  parse+skim request only                     1.86 us
+  make_requests (incl. parse, emit)           8.95 us
+  make_bids (incl. parse)                    12.75 us

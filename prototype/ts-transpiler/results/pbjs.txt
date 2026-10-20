@@ -1,0 +1,14 @@
+core (prebid-core + its chunks)              gz 61916
++ ortbConverter                              Δ 2096
+Prebid Core one-time runtime (prebidCore + sharedAdapter glue), in context:  Δ 1103   [of which TS runtime 753, glue 350]   budget ≤ 3072
+OpenX Hand-written Adapter, in context:      Δ 1167
+OpenX Shared Adapter module, in context:     Δ 1079   (92% of Hand-written; budget ≤ 125%)
+PubMatic Hand-written Adapter, in context:   Δ 5909 (+ its own libraries: 2037)
+PubMatic Shared Adapter module, in context:  Δ 1513   (25% of Hand-written; NOT like for like, see README)
+Second Shared Adapter on top of OpenX (PubMatic), marginal: Δ 1299
+  chunk prebidCore                   raw   2286 gz  1043
+  chunk sharedAdapter                raw   1167 gz   649
+  chunk openxBidAdapter              raw   3228 gz  1530
+  chunk openxSharedBidAdapter        raw   2706 gz  1425
+  chunk pubmaticBidAdapter           raw  15731 gz  6614
+  chunk pubmaticSharedBidAdapter     raw   4228 gz  1931

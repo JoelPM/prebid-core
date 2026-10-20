@@ -1,0 +1,212 @@
+{
+ "hostRequest": {
+  "id": "test-video-request",
+  "imp": [
+   {
+    "id": "test-video-imp",
+    "video": {
+     "mimes": [
+      "video/mp4",
+      "video/x-flv"
+     ],
+     "minduration": 5,
+     "maxduration": 30,
+     "startdelay": 5,
+     "protocols": [
+      2,
+      3
+     ],
+     "w": 640,
+     "h": 480,
+     "placement": 2,
+     "linearity": 1,
+     "battr": [
+      13,
+      14
+     ],
+     "minbitrate": 10,
+     "maxbitrate": 10,
+     "playbackmethod": [
+      1,
+      3
+     ],
+     "api": [
+      1,
+      2
+     ]
+    },
+    "ext": {
+     "bidder": {
+      "adSlot": "AdTag_Div1@0x0",
+      "publisherId": "999",
+      "keywords": [
+       {
+        "key": "pmZoneID",
+        "value": [
+         "Zone1",
+         "Zone2"
+        ]
+       }
+      ],
+      "kadfloor": "0.12",
+      "wrapper": {
+       "version": 1,
+       "profile": 5123
+      }
+     }
+    }
+   }
+  ],
+  "site": {
+   "id": "siteID",
+   "publisher": {
+    "id": "1234"
+   }
+  },
+  "device": {
+   "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36"
+  },
+  "ext": {
+   "prebid": {
+    "bidderparams": {
+     "acat": [
+      "drg",
+      "dlu",
+      "ssr"
+     ]
+    }
+   }
+  }
+ },
+ "native": {
+  "requests": [
+   {
+    "method": "POST",
+    "uri": "https://hbopenbid.pubmatic.com/translator?source=prebid-server",
+    "body": {
+     "id": "test-video-request",
+     "imp": [
+      {
+       "id": "test-video-imp",
+       "video": {
+        "mimes": [
+         "video/mp4",
+         "video/x-flv"
+        ],
+        "minduration": 5,
+        "maxduration": 30,
+        "startdelay": 5,
+        "protocols": [
+         2,
+         3
+        ],
+        "w": 640,
+        "h": 480,
+        "placement": 2,
+        "linearity": 1,
+        "battr": [
+         13,
+         14
+        ],
+        "minbitrate": 10,
+        "maxbitrate": 10,
+        "playbackmethod": [
+         1,
+         3
+        ],
+        "api": [
+         1,
+         2
+        ]
+       },
+       "tagid": "AdTag_Div1",
+       "bidfloor": 0.12,
+       "ext": {
+        "pmZoneId": "Zone1,Zone2"
+       }
+      }
+     ],
+     "site": {
+      "id": "siteID",
+      "publisher": {
+       "id": "999"
+      }
+     },
+     "device": {
+      "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36"
+     },
+     "ext": {
+      "wrapper": {
+       "profile": 5123,
+       "version": 1,
+       "biddercode": "pubmatic"
+      },
+      "acat": [
+       "drg",
+       "dlu",
+       "ssr"
+      ]
+     }
+    },
+    "impIDs": [
+     "test-video-imp"
+    ]
+   }
+  ],
+  "requestErrs": [],
+  "responses": [
+   {
+    "currency": "USD",
+    "bids": [
+     {
+      "bid": {
+       "id": "7706636740145184841",
+       "impid": "test-video-imp",
+       "price": 0.5,
+       "adm": "some-test-ad",
+       "adid": "29681110",
+       "adomain": [
+        "pubmatic.com"
+       ],
+       "crid": "29681110",
+       "cat": [
+        "IAB-1"
+       ],
+       "dealid": "test deal",
+       "w": 300,
+       "h": 250,
+       "mtype": 1,
+       "ext": {
+        "dspid": 6,
+        "deal_channel": 1,
+        "BidType": 1,
+        "ibv": true,
+        "video": {
+         "duration": 5
+        },
+        "prebid": {
+         "bidid": "ab61bf03-f06a-477f-abc4-bc1f209804b7",
+         "meta": {
+          "adaptercode": "pubmatic",
+          "mediatype": "video"
+         },
+         "type": "banner"
+        }
+       }
+      },
+      "type": "banner",
+      "video": {
+       "duration": 5,
+       "primary_category": ""
+      },
+      "meta": {
+       "mediaType": "video"
+      }
+     }
+    ],
+    "paapi": null,
+    "errs": []
+   }
+  ]
+ }
+}

@@ -1,0 +1,152 @@
+{
+ "hostRequest": {
+  "id": "app-request",
+  "imp": [
+   {
+    "id": "app-imp",
+    "banner": {
+     "format": [
+      {
+       "w": 300,
+       "h": 250
+      }
+     ]
+    },
+    "ext": {
+     "bidder": {
+      "adSlot": "AdTag_Div1@300x250",
+      "publisherId": "999",
+      "keywords": [
+       {
+        "key": "pmZoneID",
+        "value": [
+         "Zone1",
+         "Zone2"
+        ]
+       },
+       {
+        "key": "preference",
+        "value": [
+         "sports",
+         "movies"
+        ]
+       }
+      ],
+      "kadfloor": "0.12",
+      "wrapper": {
+       "version": 1,
+       "profile": 5123
+      }
+     },
+     "skadn": {
+      "skadnetids": [
+       "k674qkevps.skadnetwork"
+      ],
+      "version": "2.0"
+     }
+    }
+   }
+  ],
+  "app": {
+   "id": "appID",
+   "publisher": {
+    "id": "1234"
+   },
+   "ext": {}
+  },
+  "device": {
+   "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36"
+  }
+ },
+ "native": {
+  "requests": [
+   {
+    "method": "POST",
+    "uri": "https://hbopenbid.pubmatic.com/translator?source=prebid-server",
+    "body": {
+     "id": "app-request",
+     "imp": [
+      {
+       "id": "app-imp",
+       "banner": {
+        "format": [
+         {
+          "w": 300,
+          "h": 250
+         }
+        ],
+        "w": 300,
+        "h": 250
+       },
+       "tagid": "AdTag_Div1",
+       "bidfloor": 0.12,
+       "ext": {
+        "pmZoneId": "Zone1,Zone2",
+        "preference": "sports,movies",
+        "skadn": {
+         "skadnetids": [
+          "k674qkevps.skadnetwork"
+         ],
+         "version": "2.0"
+        }
+       }
+      }
+     ],
+     "app": {
+      "id": "appID",
+      "publisher": {
+       "id": "999"
+      },
+      "ext": {}
+     },
+     "device": {
+      "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36"
+     },
+     "ext": {
+      "wrapper": {
+       "profile": 5123,
+       "version": 1
+      }
+     }
+    },
+    "impIDs": [
+     "app-imp"
+    ]
+   }
+  ],
+  "requestErrs": [],
+  "responses": [
+   {
+    "currency": "USD",
+    "bids": [
+     {
+      "bid": {
+       "id": "7706636740145184841",
+       "impid": "app-imp",
+       "price": 0.5,
+       "adm": "some-test-ad",
+       "adid": "29681110",
+       "adomain": [
+        "pubmatic.com"
+       ],
+       "crid": "29681110",
+       "dealid": "test deal",
+       "w": 300,
+       "h": 250,
+       "mtype": 1
+      },
+      "type": "banner",
+      "video": {
+       "duration": 0,
+       "primary_category": ""
+      }
+     }
+    ],
+    "paapi": null,
+    "errs": [
+     "expect { or n, but found \u0000"
+    ]
+   }
+  ]
+ }
+}

@@ -1,0 +1,103 @@
+{
+ "hostRequest": {
+  "id": "test-native-request",
+  "imp": [
+   {
+    "id": "test-native-imp",
+    "native": {
+     "request": "{\"assets\":[{\"id\":1,\"img\":{\"ext\":{\"image1\":\"image2\"},\"h\": 250,\"mimes\":[\"image/gif\",\"image/png\"],\"type\":3,\"w\":300},\"required\":1}]}"
+    },
+    "ext": {
+     "bidder": {
+      "publisherId": "999",
+      "wrapper": {
+       "version": 1,
+       "profile": 5123
+      }
+     }
+    }
+   }
+  ],
+  "site": {
+   "id": "siteID",
+   "publisher": {
+    "id": "1234"
+   }
+  },
+  "device": {
+   "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36"
+  },
+  "ext": {}
+ },
+ "native": {
+  "requests": [
+   {
+    "method": "POST",
+    "uri": "https://hbopenbid.pubmatic.com/translator?source=prebid-server",
+    "body": {
+     "id": "test-native-request",
+     "imp": [
+      {
+       "id": "test-native-imp",
+       "native": {
+        "request": "{\"assets\":[{\"id\":1,\"img\":{\"ext\":{\"image1\":\"image2\"},\"h\": 250,\"mimes\":[\"image/gif\",\"image/png\"],\"type\":3,\"w\":300},\"required\":1}]}"
+       }
+      }
+     ],
+     "site": {
+      "id": "siteID",
+      "publisher": {
+       "id": "999"
+      }
+     },
+     "device": {
+      "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36"
+     },
+     "ext": {
+      "wrapper": {
+       "profile": 5123,
+       "version": 1,
+       "biddercode": "pubmatic"
+      }
+     }
+    },
+    "impIDs": [
+     "test-native-imp"
+    ]
+   }
+  ],
+  "requestErrs": [],
+  "responses": [
+   {
+    "currency": "USD",
+    "bids": [
+     {
+      "bid": {
+       "id": "test-native-request",
+       "impid": "test-native-imp",
+       "price": 0.5,
+       "adm": "{\"assets\":[{\"id\":2,\"img\":{\"h\":90,\"url\":\"//ads.pubmatic.com/AdTag/native/728x90.png\",\"w\":728}},{\"data\":{\"value\":\"Sponsored By PubMatic\"},\"id\":4},{\"id\":3,\"img\":{\"h\":90,\"url\":\"//ads.pubmatic.com/AdTag/native/728x90.png\",\"w\":728}},{\"id\":1,\"title\":{\"text\":\"Native Test Title\"}},{\"data\":{\"value\":\"Sponsored By PubMatic\"},\"id\":5}],\"imptrackers\":[\"http://clicktracker.com/AdTag/9bde02d0-6017-11e4-9df7-005056967c35\"],\"jstracker\":\"\u003cscript src='\\/\\/ads.pubmatic.com\\/AdTag\\/native\\/tempReseponse.js'\u003e\u003cscript src='\\/\\/ads.pubmatic.com\\/AdTag\\/native\\/tempReseponse.js'\u003e\",\"link\":{\"clicktrackers\":[\"http://clicktracker.com/AdTag/9bde02d0-6017-11e4-9df7-005056967c35\"],\"fallback\":\"http://www.pubmatic.com\",\"url\":\"//www.pubmatic.com\"}}",
+       "adid": "some-test-id",
+       "crid": "29681110",
+       "mtype": 4,
+       "ext": {
+        "deal_channel": 1,
+        "bidtype": 2
+       }
+      },
+      "type": "native",
+      "video": {
+       "duration": 0,
+       "primary_category": ""
+      },
+      "meta": {
+       "mediaType": "native"
+      }
+     }
+    ],
+    "paapi": null,
+    "errs": []
+   }
+  ]
+ }
+}

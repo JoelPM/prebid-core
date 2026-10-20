@@ -1,0 +1,23 @@
+[package]
+name = "guest"
+version = "0.1.0"
+edition = "2021"
+description = "PROTOTYPE: generated Shared Adapters behind the Host ABI, one wasm per Adapter (features)"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["openx", "pubmatic"]
+openx = []
+pubmatic = []
+
+[dependencies]
+prebid_core_rt = { path = "../runtime/rs" }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
