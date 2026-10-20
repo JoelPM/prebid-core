@@ -41,11 +41,19 @@ A separately maintained copy of Prebid Core logic in one language. The goal is a
 Prebid Core plus one Shared Adapter (OpenX) running in all four Hosts, alongside their Hand-written Adapters.
 
 **Adapter Definition**:
-The declarative description of a **Shared Adapter** that a bidder writes: its **Shared Adapter Core** and any **Extensions**, expressed as field mappings and rules, with small expressions only where mappings can't say it.
+What a bidder writes for a **Shared Adapter**: its **Shared Adapter Core** and any **Extensions**, in **Restricted TypeScript**, as one function per **Phase**. Prebid.js runs it as written.
 _Avoid_: profile (collides with the avoided "client/server profile"), spec (Prebid.js's adapter object), manifest (the per-Adapter list of response fields a Host must parse)
 
+**Restricted TypeScript**:
+The subset of TypeScript an **Adapter Definition** may use: only what means the same in TypeScript and in the code the **Definition Compiler** produces. Anything else is rejected, not approximated.
+_Avoid_: DSL, expression language
+
+**Phase**:
+One of the four stages of a **Shared Adapter**'s work, each a function in its **Adapter Definition**: imp (once per imp), request (once per outgoing request), bid (once per bid), response (once per bidder response).
+_Avoid_: hook (a PBS module term), step
+
 **Definition Compiler**:
-The part of **Prebid Core** that turns an **Adapter Definition** into the code each **Implementation** runs.
+The part of **Prebid Core** that checks an **Adapter Definition** against **Restricted TypeScript** and turns it into the code the server **Hosts** run.
 
 **Parity**:
 A **Shared Adapter** behaves like a **Host**'s **Hand-written Adapter**: on that Host's existing fixtures it produces the same output, except where a **Known Difference** says otherwise. Parity is judged against the Shared Adapter's own intended behavior, not against any one Host's Hand-written Adapter.
@@ -59,7 +67,7 @@ _Avoid_: exception, whitelist entry
 - A **Host** runs many **Adapters**; during migration some are **Hand-written** and some **Shared**, side by side.
 - A **Shared Adapter** runs on **Prebid Core**, which has one or more **Implementations**.
 - A **Shared Adapter** is one **Shared Adapter Core** plus at most one **Client Extension** and one **Server Extension**.
-- A **Shared Adapter** is written as one **Adapter Definition**; the **Definition Compiler** produces what every **Host** runs from it.
+- A **Shared Adapter** is written as one **Adapter Definition**. Prebid.js runs it as written; the **Definition Compiler** produces what the server **Hosts** run from it.
 - Each **Host** is either client (Prebid.js) or server (PBS-Go, PBS-Java, Trusted Server), fixed for that Host. Trusted Server is server: its call to the bidder is server-to-server.
 - A bidder can use a **Shared Adapter** in some Hosts and a **Hand-written Adapter** in others, e.g. Shared on the servers but Hand-written in Prebid.js.
 
