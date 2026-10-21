@@ -3,3 +3,228 @@ go1.27.2, GOMAXPROCS 18, wazero v1.12.0 compiler
 
 == openx / lt (request 1641 B marshalled, response 5995 B; guest 107 KB)
   correctness: body and every TypedBid (incl. meta, video, seat) equal the Hand-written Adapter's
+  native PBS-Go Adapter                                 22.34 us/op (min 22.27 max 22.74)  36521 B/op  385 allocs/op
+  Shared Adapter (generated Rust, wasm)                 26.74 us/op (min 26.70 max 27.15)  35251 B/op  346 allocs/op
+  overhead, one goroutine                               +4.41 us (1.20x)
+    of which: guest calls only (write, run, read)        7.46 us/op (min 7.42 max 7.55)     16 B/op    0 allocs/op
+      guest MakeRequests                                 2.08 us/op (min 2.06 max 2.09)      4 B/op    0 allocs/op
+      guest MakeBids                                     5.12 us/op (min 5.11 max 5.12)     11 B/op    0 allocs/op
+      ABI floor, both phases (write, in_buf, out_ptr; no Adapter)     0.19 us/op (min 0.19 max 0.20)      0 B/op    0 allocs/op
+      scan floor: ABI + one JSON scan of request and response     5.33 us/op (min 5.32 max 5.34)     11 B/op    0 allocs/op
+    of which: Host marshal request                       5.53 us/op (min 5.53 max 5.53)  12048 B/op  203 allocs/op
+    of which: Host unmarshal response                   11.62 us/op (min 11.61 max 11.98)  18864 B/op  116 allocs/op
+  native, process CPU                                p=1     20.89 us CPU/op (runs 21.00 20.88 20.89)
+  shared (sync.Pool), process CPU                    p=1     27.21 us CPU/op (runs 27.39 27.21 27.19)
+  overhead under concurrency                         p=1     +6.32 us CPU
+  native, process CPU                                p=2     22.10 us CPU/op (runs 21.97 22.11 22.10)
+  shared (sync.Pool), process CPU                    p=2     28.54 us CPU/op (runs 28.57 28.54 28.51)
+  overhead under concurrency                         p=2     +6.44 us CPU
+  native, process CPU                                p=4     23.86 us CPU/op (runs 23.86 23.86 23.96)
+  shared (sync.Pool), process CPU                    p=4     30.20 us CPU/op (runs 30.20 30.28 30.10)
+  overhead under concurrency                         p=4     +6.34 us CPU
+  native, process CPU                                p=8     29.14 us CPU/op (runs 29.14 29.13 29.14)
+  shared (sync.Pool), process CPU                    p=8     35.06 us CPU/op (runs 34.93 35.15 35.06)
+  overhead under concurrency                         p=8     +5.92 us CPU
+
+== openx / heavy (request 3110 B marshalled, response 11294 B; guest 107 KB)
+  correctness: body and every TypedBid (incl. meta, video, seat) equal the Hand-written Adapter's
+  native PBS-Go Adapter                                 43.77 us/op (min 43.37 max 44.28)  73446 B/op  910 allocs/op
+  Shared Adapter (generated Rust, wasm)                 50.38 us/op (min 50.03 max 51.20)  62384 B/op  587 allocs/op
+  overhead, one goroutine                               +6.61 us (1.15x)
+    of which: guest calls only (write, run, read)       13.41 us/op (min 13.40 max 13.52)     28 B/op    0 allocs/op
+      guest MakeRequests                                 4.16 us/op (min 4.15 max 4.18)      9 B/op    0 allocs/op
+      guest MakeBids                                     9.02 us/op (min 9.00 max 9.02)     20 B/op    0 allocs/op
+      ABI floor, both phases (write, in_buf, out_ptr; no Adapter)     0.29 us/op (min 0.29 max 0.29)      0 B/op    0 allocs/op
+      scan floor: ABI + one JSON scan of request and response     9.15 us/op (min 9.14 max 9.16)     19 B/op    0 allocs/op
+    of which: Host marshal request                      10.43 us/op (min 10.39 max 10.47)  21176 B/op  364 allocs/op
+    of which: Host unmarshal response                   23.16 us/op (min 22.79 max 23.36)  32304 B/op  140 allocs/op
+
+== pubmatic / lt (request 1989 B marshalled, response 5995 B; guest 201 KB)
+  correctness: body and every TypedBid (incl. meta, video, seat) equal the Hand-written Adapter's
+  native PBS-Go Adapter                                 24.00 us/op (min 23.94 max 24.05)  31122 B/op  303 allocs/op
+  Shared Adapter (generated Rust, wasm)                 31.98 us/op (min 31.95 max 32.30)  40881 B/op  472 allocs/op
+  overhead, one goroutine                               +7.98 us (1.33x)
+    of which: guest calls only (write, run, read)       10.42 us/op (min 10.40 max 10.49)     22 B/op    0 allocs/op
+      guest MakeRequests                                 4.88 us/op (min 4.88 max 4.91)     10 B/op    0 allocs/op
+      guest MakeBids                                     5.18 us/op (min 5.15 max 5.21)     11 B/op    0 allocs/op
+      ABI floor, both phases (write, in_buf, out_ptr; no Adapter)     0.20 us/op (min 0.20 max 0.20)      0 B/op    0 allocs/op
+      scan floor: ABI + one JSON scan of request and response     5.30 us/op (min 5.30 max 5.32)     11 B/op    0 allocs/op
+    of which: Host marshal request                       7.04 us/op (min 7.00 max 7.06)  16032 B/op  311 allocs/op
+    of which: Host unmarshal response                   11.69 us/op (min 11.64 max 11.80)  18864 B/op  116 allocs/op
+  native, process CPU                                p=1     21.64 us CPU/op (runs 21.73 21.64 21.60)
+  shared (sync.Pool), process CPU                    p=1     33.25 us CPU/op (runs 33.09 33.46 33.25)
+  overhead under concurrency                         p=1    +11.61 us CPU
+  native, process CPU                                p=2     22.94 us CPU/op (runs 23.09 22.94 22.90)
+  shared (sync.Pool), process CPU                    p=2     34.88 us CPU/op (runs 34.88 34.83 34.92)
+  overhead under concurrency                         p=2    +11.95 us CPU
+  native, process CPU                                p=4     24.10 us CPU/op (runs 24.10 24.07 24.11)
+  shared (sync.Pool), process CPU                    p=4     36.94 us CPU/op (runs 36.78 37.37 36.94)
+  overhead under concurrency                         p=4    +12.84 us CPU
+  native, process CPU                                p=8     28.57 us CPU/op (runs 28.62 28.34 28.57)
+  shared (sync.Pool), process CPU                    p=8     42.85 us CPU/op (runs 42.85 42.91 42.36)
+  overhead under concurrency                         p=8    +14.28 us CPU
+
+== pubmatic / heavy (request 3310 B marshalled, response 11294 B; guest 201 KB)
+  correctness: body and every TypedBid (incl. meta, video, seat) equal the Hand-written Adapter's
+  native PBS-Go Adapter                                 38.83 us/op (min 38.36 max 38.94)  51689 B/op  461 allocs/op
+  Shared Adapter (generated Rust, wasm)                 55.30 us/op (min 54.65 max 55.76)  63898 B/op  623 allocs/op
+  overhead, one goroutine                              +16.47 us (1.42x)
+    of which: guest calls only (write, run, read)       17.00 us/op (min 16.94 max 17.31)     36 B/op    0 allocs/op
+      guest MakeRequests                                 8.08 us/op (min 8.03 max 8.12)      0 B/op    0 allocs/op
+      guest MakeBids                                     8.37 us/op (min 8.36 max 8.38)     18 B/op    0 allocs/op
+      ABI floor, both phases (write, in_buf, out_ptr; no Adapter)     0.30 us/op (min 0.30 max 0.31)      0 B/op    0 allocs/op
+      scan floor: ABI + one JSON scan of request and response     9.35 us/op (min 9.30 max 9.53)     20 B/op    0 allocs/op
+    of which: Host marshal request                      11.30 us/op (min 11.20 max 11.31)  23640 B/op  428 allocs/op
+    of which: Host unmarshal response                   22.85 us/op (min 22.69 max 22.87)  32304 B/op  140 allocs/op
+######## typed
+go1.27.2, GOMAXPROCS 18, wazero v1.12.0 compiler
+
+== openx / lt (request 1641 B marshalled, response 5995 B; guest 151 KB)
+  correctness: body and every TypedBid (incl. meta, video, seat) equal the Hand-written Adapter's
+  native PBS-Go Adapter                                 22.30 us/op (min 22.24 max 22.51)  36517 B/op  385 allocs/op
+  Shared Adapter (generated Rust, wasm)                 34.03 us/op (min 33.88 max 34.14)  35432 B/op  346 allocs/op
+  overhead, one goroutine                              +11.73 us (1.53x)
+    of which: guest calls only (write, run, read)       14.21 us/op (min 14.19 max 14.31)     30 B/op    0 allocs/op
+      guest MakeRequests                                 5.22 us/op (min 5.21 max 5.26)     11 B/op    0 allocs/op
+      guest MakeBids                                     8.53 us/op (min 8.53 max 8.56)     18 B/op    0 allocs/op
+      ABI floor, both phases (write, in_buf, out_ptr; no Adapter)     0.20 us/op (min 0.20 max 0.20)      0 B/op    0 allocs/op
+      scan floor: ABI + one JSON scan of request and response     5.02 us/op (min 4.99 max 5.04)      0 B/op    0 allocs/op
+    of which: Host marshal request                       5.57 us/op (min 5.54 max 5.74)  12048 B/op  203 allocs/op
+    of which: Host unmarshal response                   11.89 us/op (min 11.64 max 12.06)  18864 B/op  116 allocs/op
+  native, process CPU                                p=1     20.76 us CPU/op (runs 20.85 20.75 20.76)
+  shared (sync.Pool), process CPU                    p=1     34.62 us CPU/op (runs 34.61 34.62 34.66)
+  overhead under concurrency                         p=1    +13.85 us CPU
+  native, process CPU                                p=2     22.15 us CPU/op (runs 22.13 22.15 22.21)
+  shared (sync.Pool), process CPU                    p=2     36.60 us CPU/op (runs 36.72 36.60 36.55)
+  overhead under concurrency                         p=2    +14.45 us CPU
+  native, process CPU                                p=4     23.63 us CPU/op (runs 23.64 23.63 23.62)
+  shared (sync.Pool), process CPU                    p=4     38.46 us CPU/op (runs 38.60 38.36 38.46)
+  overhead under concurrency                         p=4    +14.83 us CPU
+  native, process CPU                                p=8     29.33 us CPU/op (runs 29.48 29.33 29.33)
+  shared (sync.Pool), process CPU                    p=8     43.09 us CPU/op (runs 43.17 43.01 43.09)
+  overhead under concurrency                         p=8    +13.76 us CPU
+
+== openx / heavy (request 3110 B marshalled, response 11294 B; guest 151 KB)
+  correctness: body and every TypedBid (incl. meta, video, seat) equal the Hand-written Adapter's
+  native PBS-Go Adapter                                 43.16 us/op (min 42.93 max 43.24)  73446 B/op  910 allocs/op
+  Shared Adapter (generated Rust, wasm)                 63.21 us/op (min 62.98 max 63.64)  62005 B/op  587 allocs/op
+  overhead, one goroutine                              +20.05 us (1.46x)
+    of which: guest calls only (write, run, read)       25.97 us/op (min 25.93 max 26.01)     56 B/op    0 allocs/op
+      guest MakeRequests                                 9.78 us/op (min 9.66 max 9.97)     23 B/op    0 allocs/op
+      guest MakeBids                                    15.56 us/op (min 15.54 max 15.57)     33 B/op    0 allocs/op
+      ABI floor, both phases (write, in_buf, out_ptr; no Adapter)     0.29 us/op (min 0.29 max 0.29)      0 B/op    0 allocs/op
+      scan floor: ABI + one JSON scan of request and response     9.14 us/op (min 9.13 max 9.22)      0 B/op    0 allocs/op
+    of which: Host marshal request                      10.37 us/op (min 10.34 max 10.44)  21176 B/op  364 allocs/op
+    of which: Host unmarshal response                   22.62 us/op (min 22.48 max 22.76)  32304 B/op  140 allocs/op
+
+== pubmatic / lt (request 1989 B marshalled, response 5995 B; guest 248 KB)
+  correctness: body and every TypedBid (incl. meta, video, seat) equal the Hand-written Adapter's
+  native PBS-Go Adapter                                 23.90 us/op (min 23.86 max 24.11)  31114 B/op  303 allocs/op
+  Shared Adapter (generated Rust, wasm)                 51.00 us/op (min 50.98 max 51.33)  41166 B/op  472 allocs/op
+  overhead, one goroutine                              +27.11 us (2.13x)
+    of which: guest calls only (write, run, read)       28.63 us/op (min 28.61 max 28.73)     62 B/op    0 allocs/op
+      guest MakeRequests                                15.54 us/op (min 15.43 max 15.59)     33 B/op    0 allocs/op
+      guest MakeBids                                    11.54 us/op (min 11.50 max 11.58)     24 B/op    0 allocs/op
+      ABI floor, both phases (write, in_buf, out_ptr; no Adapter)     0.19 us/op (min 0.19 max 0.20)      0 B/op    0 allocs/op
+      scan floor: ABI + one JSON scan of request and response     5.40 us/op (min 5.33 max 5.43)     11 B/op    0 allocs/op
+    of which: Host marshal request                       7.00 us/op (min 6.96 max 7.17)  16032 B/op  311 allocs/op
+    of which: Host unmarshal response                   11.64 us/op (min 11.63 max 11.68)  18864 B/op  116 allocs/op
+  native, process CPU                                p=1     22.03 us CPU/op (runs 21.97 22.03 22.08)
+  shared (sync.Pool), process CPU                    p=1     52.10 us CPU/op (runs 52.41 52.10 52.06)
+  overhead under concurrency                         p=1    +30.07 us CPU
+  native, process CPU                                p=2     23.02 us CPU/op (runs 22.97 23.24 23.02)
+  shared (sync.Pool), process CPU                    p=2     54.43 us CPU/op (runs 54.43 54.62 54.33)
+  overhead under concurrency                         p=2    +31.41 us CPU
+  native, process CPU                                p=4     24.43 us CPU/op (runs 24.43 24.46 24.34)
+  shared (sync.Pool), process CPU                    p=4     55.93 us CPU/op (runs 55.93 55.94 55.91)
+  overhead under concurrency                         p=4    +31.51 us CPU
+  native, process CPU                                p=8     28.69 us CPU/op (runs 28.44 28.69 28.82)
+  shared (sync.Pool), process CPU                    p=8     63.05 us CPU/op (runs 62.65 63.05 63.13)
+  overhead under concurrency                         p=8    +34.36 us CPU
+
+== pubmatic / heavy (request 3310 B marshalled, response 11294 B; guest 248 KB)
+  correctness: body and every TypedBid (incl. meta, video, seat) equal the Hand-written Adapter's
+  native PBS-Go Adapter                                 37.87 us/op (min 37.55 max 38.07)  51690 B/op  461 allocs/op
+  Shared Adapter (generated Rust, wasm)                 79.51 us/op (min 79.21 max 79.81)  63889 B/op  623 allocs/op
+  overhead, one goroutine                              +41.64 us (2.10x)
+    of which: guest calls only (write, run, read)       41.58 us/op (min 41.30 max 42.21)     90 B/op    0 allocs/op
+      guest MakeRequests                                22.15 us/op (min 21.96 max 22.26)     47 B/op    0 allocs/op
+      guest MakeBids                                    17.30 us/op (min 17.24 max 17.41)     37 B/op    0 allocs/op
+      ABI floor, both phases (write, in_buf, out_ptr; no Adapter)     0.31 us/op (min 0.31 max 0.31)      0 B/op    0 allocs/op
+      scan floor: ABI + one JSON scan of request and response     9.28 us/op (min 9.28 max 9.29)     20 B/op    0 allocs/op
+    of which: Host marshal request                      11.18 us/op (min 11.15 max 11.27)  23640 B/op  428 allocs/op
+    of which: Host unmarshal response                   22.51 us/op (min 22.35 max 23.10)  32304 B/op  140 allocs/op
+######## gen
+go1.27.2, GOMAXPROCS 18, wazero v1.12.0 compiler
+
+== openx / lt (request 1641 B marshalled, response 5995 B; guest 110 KB)
+  correctness: body and every TypedBid (incl. meta, video, seat) equal the Hand-written Adapter's
+  native PBS-Go Adapter                                 22.31 us/op (min 22.30 max 22.36)  36520 B/op  385 allocs/op
+  Shared Adapter (generated Rust, wasm)                 34.61 us/op (min 34.41 max 34.76)  35368 B/op  346 allocs/op
+  overhead, one goroutine                              +12.30 us (1.55x)
+    of which: guest calls only (write, run, read)       15.09 us/op (min 15.05 max 15.33)     33 B/op    0 allocs/op
+      guest MakeRequests                                 5.11 us/op (min 5.04 max 5.13)     10 B/op    0 allocs/op
+      guest MakeBids                                     9.59 us/op (min 9.58 max 9.61)     20 B/op    0 allocs/op
+      ABI floor, both phases (write, in_buf, out_ptr; no Adapter)     0.19 us/op (min 0.19 max 0.19)      0 B/op    0 allocs/op
+    of which: Host marshal request                       5.51 us/op (min 5.51 max 5.52)  12048 B/op  203 allocs/op
+    of which: Host unmarshal response                   11.65 us/op (min 11.61 max 11.90)  18864 B/op  116 allocs/op
+  native, process CPU                                p=1     20.68 us CPU/op (runs 20.79 20.65 20.68)
+  shared (sync.Pool), process CPU                    p=1     35.57 us CPU/op (runs 35.57 35.68 35.52)
+  overhead under concurrency                         p=1    +14.90 us CPU
+  native, process CPU                                p=2     22.04 us CPU/op (runs 22.04 22.16 21.99)
+  shared (sync.Pool), process CPU                    p=2     37.06 us CPU/op (runs 37.06 37.01 37.30)
+  overhead under concurrency                         p=2    +15.03 us CPU
+  native, process CPU                                p=4     23.57 us CPU/op (runs 23.55 23.57 23.62)
+  shared (sync.Pool), process CPU                    p=4     38.91 us CPU/op (runs 38.91 38.95 38.86)
+  overhead under concurrency                         p=4    +15.34 us CPU
+  native, process CPU                                p=8     29.28 us CPU/op (runs 29.28 29.33 29.25)
+  shared (sync.Pool), process CPU                    p=8     43.92 us CPU/op (runs 43.92 43.82 44.04)
+  overhead under concurrency                         p=8    +14.64 us CPU
+
+== openx / heavy (request 3110 B marshalled, response 11294 B; guest 110 KB)
+  correctness: body and every TypedBid (incl. meta, video, seat) equal the Hand-written Adapter's
+  native PBS-Go Adapter                                 42.90 us/op (min 42.60 max 43.11)  73445 B/op  910 allocs/op
+  Shared Adapter (generated Rust, wasm)                 67.11 us/op (min 66.61 max 67.64)  61877 B/op  587 allocs/op
+  overhead, one goroutine                              +24.21 us (1.56x)
+    of which: guest calls only (write, run, read)       29.71 us/op (min 29.66 max 29.80)     64 B/op    0 allocs/op
+      guest MakeRequests                                 9.29 us/op (min 9.19 max 9.42)     19 B/op    0 allocs/op
+      guest MakeBids                                    19.61 us/op (min 19.58 max 19.73)     42 B/op    0 allocs/op
+      ABI floor, both phases (write, in_buf, out_ptr; no Adapter)     0.30 us/op (min 0.30 max 0.30)      0 B/op    0 allocs/op
+    of which: Host marshal request                      10.32 us/op (min 10.27 max 10.34)  21176 B/op  364 allocs/op
+    of which: Host unmarshal response                   22.56 us/op (min 22.45 max 22.79)  32304 B/op  140 allocs/op
+
+== pubmatic / lt (request 1989 B marshalled, response 5995 B; guest 154 KB)
+  correctness: body and every TypedBid (incl. meta, video, seat) equal the Hand-written Adapter's
+  native PBS-Go Adapter                                 24.12 us/op (min 23.85 max 24.70)  31114 B/op  303 allocs/op
+  Shared Adapter (generated Rust, wasm)                 55.91 us/op (min 55.53 max 56.38)  40752 B/op  472 allocs/op
+  overhead, one goroutine                              +31.79 us (2.32x)
+    of which: guest calls only (write, run, read)       33.52 us/op (min 33.36 max 33.59)     71 B/op    0 allocs/op
+      guest MakeRequests                                12.76 us/op (min 12.74 max 12.91)      0 B/op    0 allocs/op
+      guest MakeBids                                    19.64 us/op (min 19.62 max 19.68)     42 B/op    0 allocs/op
+      ABI floor, both phases (write, in_buf, out_ptr; no Adapter)     0.20 us/op (min 0.19 max 0.20)      0 B/op    0 allocs/op
+    of which: Host marshal request                       7.02 us/op (min 6.99 max 7.03)  16032 B/op  311 allocs/op
+    of which: Host unmarshal response                   11.63 us/op (min 11.57 max 11.64)  18864 B/op  116 allocs/op
+  native, process CPU                                p=1     21.73 us CPU/op (runs 21.73 21.77 21.72)
+  shared (sync.Pool), process CPU                    p=1     56.98 us CPU/op (runs 56.98 56.46 57.10)
+  overhead under concurrency                         p=1    +35.25 us CPU
+  native, process CPU                                p=2     22.92 us CPU/op (runs 22.91 22.92 22.94)
+  shared (sync.Pool), process CPU                    p=2     59.46 us CPU/op (runs 59.30 59.46 59.85)
+  overhead under concurrency                         p=2    +36.53 us CPU
+  native, process CPU                                p=4     24.09 us CPU/op (runs 24.16 24.08 24.09)
+  shared (sync.Pool), process CPU                    p=4     61.63 us CPU/op (runs 61.63 61.72 61.55)
+  overhead under concurrency                         p=4    +37.54 us CPU
+  native, process CPU                                p=8     28.50 us CPU/op (runs 28.67 28.46 28.50)
+  shared (sync.Pool), process CPU                    p=8     68.98 us CPU/op (runs 68.98 69.11 68.30)
+  overhead under concurrency                         p=8    +40.48 us CPU
+
+== pubmatic / heavy (request 3310 B marshalled, response 11294 B; guest 154 KB)
+  correctness: body and every TypedBid (incl. meta, video, seat) equal the Hand-written Adapter's
+  native PBS-Go Adapter                                 37.74 us/op (min 37.43 max 37.93)  51690 B/op  461 allocs/op
+  Shared Adapter (generated Rust, wasm)                 87.57 us/op (min 86.74 max 87.80)  63731 B/op  623 allocs/op
+  overhead, one goroutine                              +49.83 us (2.32x)
+    of which: guest calls only (write, run, read)       49.80 us/op (min 48.71 max 49.89)    104 B/op    0 allocs/op
+      guest MakeRequests                                18.72 us/op (min 18.66 max 18.85)     40 B/op    0 allocs/op
+      guest MakeBids                                    29.62 us/op (min 29.50 max 29.65)     63 B/op    0 allocs/op
+      ABI floor, both phases (write, in_buf, out_ptr; no Adapter)     0.30 us/op (min 0.30 max 0.30)      0 B/op    0 allocs/op
+    of which: Host marshal request                      11.10 us/op (min 11.03 max 11.16)  23640 B/op  428 allocs/op
+    of which: Host unmarshal response                   22.38 us/op (min 22.23 max 22.44)  32304 B/op  140 allocs/op

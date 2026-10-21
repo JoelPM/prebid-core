@@ -298,6 +298,8 @@ pub enum V<'a> {
     Obj(Rc<O<'a>>),
     Arr(Rc<Vec<V<'a>>>),
     Raw(Raw<'a>),
+    /// `s.split(sep)`, not materialized: `[i]` and `.length` read it in place
+    Split(Js<'a>, &'static str),
 }
 /// An object: members in order, unique keys unless `dup` (only an indexed input can have them).
 /// `raw` is the input span while the object is unchanged.
@@ -452,6 +454,10 @@ fn as_obj<'x, 'a>(v: &'x V<'a>) -> Option<Cow<'x, O<'a>>> {
 }
 fn as_arr<'x, 'a>(v: &'x V<'a>) -> Option<Cow<'x, Vec<V<'a>>>> {
     match v {
+        V::Split(s, sep) => match split_now(&V::Str(s.clone()), sep) {
+            V::Arr(a) => Some(Cow::Owned((*a).clone())),
+            _ => None,
+        },
         V::Arr(a) => Some(Cow::Borrowed(&**a)),
         V::Raw(r) if r.first() == Some(&b'[') => {
             OFF_SHAPE.with(|c| c.set(c.get() + 1));
@@ -548,7 +554,17 @@ pub fn obj_v<'a>(o: O<'a>) -> V<'a> {
 }
 /// Array literal / map element: undefined is kept (JS keeps it; it prints as null).
 pub fn arr_v<'a>(v: Vec<V<'a>>) -> V<'a> {
+    if v.is_empty() {
+        return empty_arr();
+    }
     V::Arr(Rc::new(v))
+}
+thread_local! {
+    static EMPTY: Rc<Vec<V<'static>>> = Rc::new(Vec::new());
+}
+/// `[]`: one shared empty array (arrays are never mutated in place).
+pub fn empty_arr<'a>() -> V<'a> {
+    V::Arr(EMPTY.with(|e| e.clone()))
 }
 pub fn s<'a>(s: String) -> V<'a> {
     V::Str(Js::own(s))
@@ -582,6 +598,7 @@ pub fn get<'a>(o: &V<'a>, k: &str) -> V<'a> {
 }
 pub fn at<'a>(a: &V<'a>, i: usize) -> V<'a> {
     match a {
+        V::Split(s, sep) => split_part(s, sep, i).unwrap_or(U),
         V::Arr(a) => a.get(i).cloned().unwrap_or(U),
         V::Raw(_) => as_arr(a).and_then(|a| a.get(i).cloned()).unwrap_or(U),
         _ => U,
@@ -590,7 +607,7 @@ pub fn at<'a>(a: &V<'a>, i: usize) -> V<'a> {
 /// `o[k]` for a non-literal key.
 pub fn index<'a>(o: &V<'a>, k: &V<'a>) -> V<'a> {
     match (o, k) {
-        (V::Arr(_) | V::Raw(_), k) if fnum(k).map_or(false, |f| f >= 0.0 && f.fract() == 0.0) && !matches!(o, V::Raw(r) if r.first() == Some(&b'{')) => at(o, fnum(k).unwrap() as usize),
+        (V::Arr(_) | V::Raw(_) | V::Split(..), k) if fnum(k).map_or(false, |f| f >= 0.0 && f.fract() == 0.0) && !matches!(o, V::Raw(r) if r.first() == Some(&b'{')) => at(o, fnum(k).unwrap() as usize),
         _ => match scalar(k) {
             Some(s) => get(o, &s),
             None => U,
@@ -607,7 +624,7 @@ pub fn items<'a>(a: &V<'a>) -> Rc<Vec<V<'a>>> {
 pub fn truthy(v: &V) -> bool {
     match v {
         V::U | V::Null | V::F => false,
-        V::T | V::Obj(_) | V::Arr(_) | V::Raw(_) => true,
+        V::T | V::Obj(_) | V::Arr(_) | V::Raw(_) | V::Split(..) => true,
         V::Num(..) | V::NumR(_) => {
             let f = fnum(v).unwrap();
             f != 0.0 && !f.is_nan()
@@ -622,7 +639,7 @@ pub fn is_undef(v: &V) -> bool {
     matches!(v, V::U)
 }
 pub fn is_array(v: &V) -> bool {
-    matches!(v, V::Arr(_)) || matches!(v, V::Raw(r) if r.first() == Some(&b'['))
+    matches!(v, V::Arr(_) | V::Split(..)) || matches!(v, V::Raw(r) if r.first() == Some(&b'['))
 }
 pub fn typeof_(v: &V) -> &'static str {
     match v {
@@ -758,6 +775,7 @@ pub fn nonempty<'a>(v: V<'a>) -> V<'a> {
         V::Str(s) => s.is_empty(),
         V::Obj(o) => o.m.iter().all(|(_, x)| matches!(x, V::U)),
         V::Arr(a) => a.is_empty(),
+        V::Split(..) => false,
         V::Raw(r) => r.iter().skip(1).find(|c| !c.is_ascii_whitespace()).map_or(true, |c| *c == b'}' || *c == b']'),
         _ => false,
     };
@@ -787,6 +805,7 @@ pub fn len<'a>(v: &V<'a>) -> V<'a> {
             Ck::S(t) => t.encode_utf16().count() as f64,
             Ck::W(w) => w.len() as f64,
         }),
+        V::Split(s, sep) => num(split_len(s, sep) as f64),
         V::Arr(_) | V::Raw(_) if is_array(v) => num(items(v).len() as f64),
         _ => U,
     }
@@ -833,7 +852,27 @@ pub fn lower<'a>(v: &V<'a>) -> V<'a> {
     }
 }
 /// `s.split(sep)`, sep a non-empty literal (the subset rejects others).
-pub fn split<'a>(v: &V<'a>, sep: &str) -> V<'a> {
+pub fn split<'a>(v: &V<'a>, sep: &'static str) -> V<'a> {
+    match v {
+        V::Str(s @ (Js::Esc(_) | Js::Own(_))) => V::Split(s.clone(), sep),
+        _ => split_now(v, sep),
+    }
+}
+fn split_part<'a>(s: &Js<'a>, sep: &str, i: usize) -> Option<V<'a>> {
+    match s {
+        Js::Esc(b) => unsafe { std::str::from_utf8_unchecked(b) }.split(sep).nth(i).map(|p| V::Str(Js::Esc(p.as_bytes()))),
+        Js::Own(t) => t.split(sep).nth(i).map(|p| V::Str(Js::own(p.to_string()))),
+        _ => None,
+    }
+}
+fn split_len(s: &Js, sep: &str) -> usize {
+    match s {
+        Js::Esc(b) => unsafe { std::str::from_utf8_unchecked(b) }.split(sep).count(),
+        Js::Own(t) => t.split(sep).count(),
+        _ => 0,
+    }
+}
+fn split_now<'a>(v: &V<'a>, sep: &str) -> V<'a> {
     let V::Str(s) = v else { return U };
     let parts: Vec<V<'a>> = match s {
         Js::Esc(b) => {
@@ -891,7 +930,7 @@ fn print(v: &V, out: &mut Vec<u16>, in_join: bool) {
             Ck::S(t) => out.extend(t.encode_utf16()),
             Ck::W(w) => out.extend_from_slice(&w),
         },
-        V::Arr(_) | V::Raw(_) if is_array(v) => {
+        V::Arr(_) | V::Raw(_) | V::Split(..) if is_array(v) => {
             for (i, x) in items(v).iter().enumerate() {
                 if i > 0 {
                     out.push(b',' as u16);
@@ -904,20 +943,64 @@ fn print(v: &V, out: &mut Vec<u16>, in_join: bool) {
     }
 }
 /// A template literal: literal parts and interpolated values.
-pub struct Tmpl(Vec<u16>);
+pub struct Tmpl(String, Option<Vec<u16>>);
 impl Tmpl {
     pub fn new() -> Self {
-        Tmpl(Vec::with_capacity(32))
+        Tmpl(String::with_capacity(32), None)
     }
     pub fn lit(&mut self, s: &str) {
-        self.0.extend(s.encode_utf16())
+        match &mut self.1 {
+            None => self.0.push_str(s),
+            Some(w) => w.extend(s.encode_utf16()),
+        }
     }
     pub fn val(&mut self, v: &V) {
-        print(v, &mut self.0, false)
+        if self.1.is_none() && print_s(v, &mut self.0, false) {
+            return;
+        }
+        let w = self.1.get_or_insert_with(|| self.0.encode_utf16().collect());
+        print(v, w, false)
     }
     pub fn done<'a>(self) -> V<'a> {
-        V::Str(Js::from_u16(self.0))
+        match self.1 {
+            None => V::Str(Js::own(self.0)),
+            Some(w) => V::Str(Js::from_u16(w)),
+        }
     }
+}
+/// `print` into UTF-8; false (having written nothing) if `v` holds a lone surrogate.
+fn print_s(v: &V, out: &mut String, in_join: bool) -> bool {
+    match v {
+        V::U => {
+            if !in_join {
+                out.push_str("undefined")
+            }
+        }
+        V::Null => {
+            if !in_join {
+                out.push_str("null")
+            }
+        }
+        V::Str(s) => match s.ck() {
+            Ck::S(t) => out.push_str(&t),
+            Ck::W(_) => return false,
+        },
+        V::Arr(_) | V::Raw(_) | V::Split(..) if is_array(v) => {
+            let mark = out.len();
+            for (i, x) in items(v).iter().enumerate() {
+                if i > 0 {
+                    out.push(',');
+                }
+                if !print_s(x, out, true) {
+                    out.truncate(mark);
+                    return false;
+                }
+            }
+        }
+        V::Obj(_) | V::Raw(_) => out.push_str("[object Object]"),
+        _ => out.push_str(&scalar(v).unwrap_or_default()),
+    }
+    true
 }
 impl Default for Tmpl {
     fn default() -> Self {
@@ -928,8 +1011,23 @@ pub fn join<'a>(l: &V<'a>, sep: &str) -> V<'a> {
     if !is_array(l) {
         return U;
     }
+    let it = items(l);
+    let mut s = String::new();
+    let mut ok = true;
+    for (i, x) in it.iter().enumerate() {
+        if i > 0 {
+            s.push_str(sep);
+        }
+        if !print_s(x, &mut s, true) {
+            ok = false;
+            break;
+        }
+    }
+    if ok {
+        return V::Str(Js::own(s));
+    }
     let mut out: Vec<u16> = Vec::new();
-    for (i, x) in items(l).iter().enumerate() {
+    for (i, x) in it.iter().enumerate() {
         if i > 0 {
             out.extend(sep.encode_utf16());
         }
@@ -951,6 +1049,19 @@ pub fn keys<'a>(o: &V<'a>) -> V<'a> {
         Some(o) => arr_v(o.members().into_iter().map(|(k, _)| V::Str(k)).collect()),
         None => arr_v(vec![]),
     }
+}
+/// One `[k, v]` of a fused `Object.fromEntries(... .map(x => [k, v]))`.
+pub fn from_entry<'a>(r: &mut O<'a>, k: V<'a>, v: V<'a>) {
+    let k = match k {
+        V::Str(s) => s,
+        V::U => Js::Esc(b"undefined"),
+        V::Null => Js::Esc(b"null"),
+        k => match scalar(&k) {
+            Some(s) => Js::own(s),
+            None => return,
+        },
+    };
+    r.set(k, v);
 }
 pub fn from_entries<'a>(l: &V<'a>) -> V<'a> {
     let mut r = O::default();
@@ -1159,6 +1270,7 @@ pub fn emit(v: &V, out: &mut Vec<u8>) {
             }
             out.push(b']');
         }
+        V::Split(..) => emit(&arr_v(items(v).to_vec()), out),
     }
 }
 #[inline]
@@ -1370,4 +1482,476 @@ pub fn to_string(v: &V) -> String {
 /// Research hook: the scan floor (one pass over the input, nothing else).
 pub fn scan(b: &[u8]) -> usize {
     P::new(b).raw().len()
+}
+
+// ================================================================ Level 1: views, member arena, plans
+//
+// Generated code decodes each shape node into a struct (one field per path read) with a `match` on
+// key bytes. Objects a Phase copies (spreads) also record their members, as spans, in one arena per
+// call: members of one object are a linked list, and a member's own members hang off `kids`. A
+// `Plan` is "copy this object, with these slots overridden": emitted straight into the output.
+
+pub const NONE: u32 = u32::MAX;
+#[derive(Clone, Copy)]
+pub struct Mem<'a> {
+    pub k: &'a [u8],
+    pub kx: bool,
+    pub v: &'a [u8],
+    pub kids: u32,
+    pub kdup: bool,
+    pub next: u32,
+}
+pub type Ar<'a> = Vec<Mem<'a>>;
+
+impl Default for V<'_> {
+    fn default() -> Self {
+        U
+    }
+}
+
+impl<'a> P<'a> {
+    #[inline]
+    pub fn start(&mut self) -> usize {
+        self.ws();
+        self.i
+    }
+    #[inline]
+    pub fn since(&self, s: usize) -> &'a [u8] {
+        &self.b[s..self.i]
+    }
+    #[inline]
+    pub fn is_obj(&mut self) -> bool {
+        self.peek() == b'{'
+    }
+    #[inline]
+    pub fn is_arr(&mut self) -> bool {
+        self.peek() == b'['
+    }
+    #[inline]
+    pub fn skip_val(&mut self) {
+        self.skip()
+    }
+    /// The next value as a leaf: strings and numbers as spans, containers as raw spans.
+    #[inline]
+    pub fn leaf(&mut self) -> V<'a> {
+        val(self, &LEAF)
+    }
+    /// An array of leaves (one vector); anything else as a leaf.
+    pub fn leaf_arr(&mut self) -> V<'a> {
+        val(self, &Shape::Arr(&LEAF))
+    }
+    /// Walks an object: `f(cursor, key bytes, key has escapes)` consumes each member's value.
+    #[inline]
+    pub fn obj_each(&mut self, mut f: impl FnMut(&mut Self, &'a [u8], bool)) {
+        self.i += 1;
+        loop {
+            match self.peek() {
+                b'}' => {
+                    self.i += 1;
+                    return;
+                }
+                b',' => {
+                    self.i += 1;
+                    continue;
+                }
+                0 => return,
+                _ => {}
+            }
+            let s = self.i + 1;
+            let (e, x) = self.str_end_x(s);
+            self.i = e + 1;
+            self.ws();
+            self.i += 1;
+            self.ws();
+            let k = &self.b[s..e];
+            let before = self.i;
+            f(self, k, x);
+            if self.i == before {
+                self.skip();
+            }
+        }
+    }
+    #[inline]
+    pub fn arr_each(&mut self, mut f: impl FnMut(&mut Self)) {
+        self.i += 1;
+        loop {
+            match self.peek() {
+                b']' => {
+                    self.i += 1;
+                    return;
+                }
+                b',' => {
+                    self.i += 1;
+                    continue;
+                }
+                0 => return,
+                _ => {}
+            }
+            let before = self.i;
+            f(self);
+            if self.i == before {
+                self.skip();
+            }
+        }
+    }
+}
+/// A key as the bytes a `match` on literal keys sees (escapes resolved; rare).
+#[inline]
+pub fn key(k: &[u8], kx: bool) -> Cow<'_, [u8]> {
+    if !kx {
+        return Cow::Borrowed(k);
+    }
+    match unescape(k) {
+        Ck::S(s) => Cow::Owned(s.into_owned().into_bytes()),
+        Ck::W(_) => Cow::Owned(Vec::new()),
+    }
+}
+#[inline]
+fn mem_key_is(m: &Mem, lit: &str) -> bool {
+    if m.kx { matches!(unescape(m.k), Ck::S(s) if s == lit) } else { bytes_eq(m.k, lit.as_bytes()) }
+}
+#[inline]
+fn kbit(k: &[u8]) -> u64 {
+    1u64 << ((k.len() as u64 * 31 + *k.first().unwrap_or(&0) as u64 * 7 + *k.last().unwrap_or(&0) as u64) % 64)
+}
+/// Records one member of a copied object. `seen`/`dup` detect duplicate keys cheaply.
+#[allow(clippy::too_many_arguments)]
+#[inline]
+pub fn link<'a>(ar: &mut Ar<'a>, first: &mut u32, last: &mut u32, seen: &mut u64, dup: &mut bool, k: &'a [u8], kx: bool, v: &'a [u8], kids: u32, kdup: bool) {
+    let bit = kbit(k);
+    if *seen & bit != 0 && !*dup {
+        let mut c = *first;
+        while c != NONE {
+            if ar[c as usize].k == k {
+                *dup = true;
+                break;
+            }
+            c = ar[c as usize].next;
+        }
+    }
+    *seen |= bit;
+    let idx = ar.len() as u32;
+    ar.push(Mem { k, kx, v, kids, kdup, next: NONE });
+    if *last != NONE {
+        ar[*last as usize].next = idx;
+    } else {
+        *first = idx;
+    }
+    *last = idx;
+}
+fn mem_val<'a>(m: &Mem<'a>) -> V<'a> {
+    P::new(m.v).leaf()
+}
+fn mems<'x, 'a>(ar: &'x Ar<'a>, first: u32) -> impl Iterator<Item = &'x Mem<'a>> {
+    let mut c = first;
+    std::iter::from_fn(move || {
+        if c == NONE {
+            return None;
+        }
+        let m = &ar[c as usize];
+        c = m.next;
+        Some(m)
+    })
+}
+fn mem_key(m: &Mem<'_>) -> Js<'static> {
+    // owned: keys from the arena outlive nothing they don't need to
+    match if m.kx { unescape(m.k) } else { Ck::S(Cow::Borrowed(unsafe { std::str::from_utf8_unchecked(m.k) })) } {
+        Ck::S(s) => Js::own(s.into_owned()),
+        Ck::W(w) => Js::U16(w),
+    }
+}
+/// The recorded members of a copied object as a Level 0 object (JS order on demand).
+fn mem_obj<'a>(ar: &Ar<'a>, first: u32, raw: &V<'a>) -> O<'a> {
+    if first == NONE {
+        return as_obj(raw).map(|o| o.into_owned()).unwrap_or_default();
+    }
+    let mut o = O::default();
+    for m in mems(ar, first) {
+        let k = if m.kx { mem_key(m) } else { Js::Esc(m.k) };
+        o.m.push((k, mem_val(m)));
+    }
+    o.dup = true; // let members() dedupe if needed
+    o
+}
+pub fn entries_mem<'a>(ar: &Ar<'a>, first: u32, raw: &V<'a>) -> V<'a> {
+    if as_obj(raw).is_none() {
+        return arr_v(vec![]);
+    }
+    entries(&obj_v(mem_obj(ar, first, raw)))
+}
+pub fn keys_mem<'a>(ar: &Ar<'a>, first: u32, raw: &V<'a>) -> V<'a> {
+    if as_obj(raw).is_none() {
+        return arr_v(vec![]);
+    }
+    keys(&obj_v(mem_obj(ar, first, raw)))
+}
+
+/// What a Phase produces for output: a value, a plan, a plan that disappears when empty, or a list.
+#[derive(Clone)]
+pub enum Out<'a> {
+    V(V<'a>),
+    P(Box<Plan<'a>>),
+    NonEmpty(Box<Plan<'a>>),
+    List(Rc<Vec<Out<'a>>>),
+}
+#[derive(Clone, Default)]
+pub enum Src<'a> {
+    #[default]
+    None,
+    /// an object in the input, with its members in the arena (or `NONE`: read them from `raw`)
+    Mem { raw: Raw<'a>, first: u32, dup: bool },
+    /// a computed object
+    Val(V<'a>),
+}
+/// `{ ...src, k: v, ... }`: the source's members, with `ov` overriding (undefined deletes).
+#[derive(Clone, Default)]
+pub struct Plan<'a> {
+    pub src: Src<'a>,
+    pub ov: Vec<(Cow<'a, str>, Out<'a>)>,
+}
+impl<'a> Plan<'a> {
+    /// A plan over an input view (`v` its value, `first` its recorded members).
+    pub fn of(v: &V<'a>, first: u32, dup: bool) -> Plan<'a> {
+        let src = match v {
+            V::Raw(r) if r.first() == Some(&b'{') => Src::Mem { raw: r, first, dup },
+            V::Obj(_) => Src::Val(v.clone()),
+            _ => Src::None,
+        };
+        Plan { src, ov: Vec::with_capacity(4) }
+    }
+    pub fn from_out(o: Out<'a>, ar: &Ar<'a>) -> Plan<'a> {
+        match o {
+            Out::P(p) | Out::NonEmpty(p) => *p,
+            o => {
+                let v = o.to_v(ar);
+                if as_obj(&v).is_some() { Plan { src: Src::Val(v), ov: Vec::with_capacity(4) } } else { Plan::default() }
+            }
+        }
+    }
+    pub fn set(&mut self, k: impl Into<Cow<'a, str>>, v: Out<'a>) {
+        let k = k.into();
+        match self.ov.iter_mut().find(|(x, _)| *x == k) {
+            Some(e) => e.1 = v,
+            None => self.ov.push((k, v)),
+        }
+    }
+    pub fn with(mut self, k: &'a str, v: Out<'a>) -> Self {
+        self.set(k, v);
+        self
+    }
+    pub fn del(mut self, ks: &[&'a str]) -> Self {
+        for k in ks {
+            self.set(*k, Out::V(U));
+        }
+        self
+    }
+    fn src_mem<'x>(&self, ar: &'x Ar<'a>, k: &str) -> Option<&'x Mem<'a>> {
+        match &self.src {
+            Src::Mem { first, .. } if *first != NONE => mems(ar, *first).filter(|m| mem_key_is(m, k)).last(),
+            _ => None,
+        }
+    }
+    /// `plan.k`
+    pub fn get(&self, ar: &Ar<'a>, k: &str) -> V<'a> {
+        if let Some((_, o)) = self.ov.iter().find(|(x, _)| x == k) {
+            return o.to_v(ar);
+        }
+        match &self.src {
+            Src::Mem { raw, first, .. } => match self.src_mem(ar, k) {
+                Some(m) => mem_val(m),
+                None if *first == NONE => get(&V::Raw(raw), k),
+                None => U,
+            },
+            Src::Val(v) => get(v, k),
+            Src::None => U,
+        }
+    }
+    /// `plan.k` as something to spread or emit: a slot, or the source member (as a plan when its
+    /// own members were recorded).
+    pub fn member_out(&self, ar: &Ar<'a>, k: &str) -> Out<'a> {
+        if let Some((_, o)) = self.ov.iter().find(|(x, _)| x == k) {
+            return o.clone();
+        }
+        if let Some(m) = self.src_mem(ar, k) {
+            if m.kids != NONE {
+                return Out::P(Box::new(Plan { src: Src::Mem { raw: m.v, first: m.kids, dup: m.kdup }, ov: Vec::new() }));
+            }
+            return Out::V(mem_val(m));
+        }
+        Out::V(self.get(ar, k))
+    }
+    pub fn to_v(&self, ar: &Ar<'a>) -> V<'a> {
+        let mut o = match &self.src {
+            Src::Mem { raw, first, .. } => spread(&obj_v(mem_obj(ar, *first, &V::Raw(raw)))),
+            Src::Val(v) => spread(v),
+            Src::None => O::default(),
+        };
+        for (k, x) in &self.ov {
+            let key = match k {
+                Cow::Borrowed(t) if !t.bytes().any(|b| b == b'"' || b == b'\\' || b < 0x20) => Js::Esc(t.as_bytes()),
+                k => Js::own(k.to_string()),
+            };
+            o.set(key, x.to_v(ar));
+        }
+        obj_v(o)
+    }
+}
+impl<'a> Out<'a> {
+    /// `nonempty(x)` on Phase output: a plan becomes undefined when it emits no member.
+    pub fn nonempty(self) -> Out<'a> {
+        match self {
+            Out::P(p) => Out::NonEmpty(p),
+            Out::V(v) => Out::V(nonempty(v)),
+            o => o,
+        }
+    }
+    pub fn to_v(&self, ar: &Ar<'a>) -> V<'a> {
+        match self {
+            Out::V(v) => v.clone(),
+            Out::P(p) => p.to_v(ar),
+            Out::NonEmpty(p) => nonempty(p.to_v(ar)),
+            Out::List(l) => arr_v(l.iter().map(|x| x.to_v(ar)).collect()),
+        }
+    }
+    pub fn get(&self, ar: &Ar<'a>, k: &str) -> V<'a> {
+        match self {
+            Out::P(p) | Out::NonEmpty(p) => p.get(ar, k),
+            o => get(&o.to_v(ar), k),
+        }
+    }
+}
+/// A member `key: out` (key already escaped). Undefined writes nothing; an empty NonEmpty plan is
+/// rolled back.
+fn emit_member(key: &[u8], raw_key: bool, o: &Out, ar: &Ar, out: &mut Vec<u8>, first: &mut bool) {
+    if matches!(o, Out::V(V::U)) {
+        return;
+    }
+    let mark = out.len();
+    if !*first {
+        out.push(b',');
+    }
+    out.push(b'"');
+    if raw_key {
+        out.extend_from_slice(key);
+    } else {
+        esc_into(unsafe { std::str::from_utf8_unchecked(key) }, out);
+    }
+    out.extend_from_slice(b"\":");
+    let body = out.len();
+    emit_out(o, ar, out);
+    if matches!(o, Out::NonEmpty(_)) && out.len() == body + 2 {
+        out.truncate(mark); // {} : nonempty() made it undefined
+        return;
+    }
+    if matches!(o, Out::NonEmpty(_)) && &out[body..] == b"null" {
+        out.truncate(mark);
+        return;
+    }
+    *first = false;
+}
+pub fn emit_out(o: &Out, ar: &Ar, out: &mut Vec<u8>) {
+    match o {
+        Out::V(v) => emit(v, out),
+        Out::P(p) | Out::NonEmpty(p) => emit_plan(p, ar, out),
+        Out::List(l) => {
+            out.push(b'[');
+            for (i, x) in l.iter().enumerate() {
+                if i > 0 {
+                    out.push(b',');
+                }
+                emit_out(x, ar, out);
+            }
+            out.push(b']');
+        }
+    }
+}
+fn emit_plan(p: &Plan, ar: &Ar, out: &mut Vec<u8>) {
+    let (raw, first) = match &p.src {
+        Src::Mem { dup: true, .. } | Src::Val(_) => return emit(&p.to_v(ar), out),
+        Src::Mem { raw, first, .. } if *first == NONE => {
+            // members weren't recorded (not a copy source in the shape): fall back
+            let _ = raw;
+            return emit(&p.to_v(ar), out);
+        }
+        Src::Mem { raw, first, .. } => (Some(*raw), *first),
+        Src::None => (None, NONE),
+    };
+    let _ = raw;
+    out.push(b'{');
+    let mut done = 0u64; // which slots were emitted in place (up to 64)
+    let mut firstm = true;
+    for m in mems(ar, first) {
+        match p.ov.iter().position(|(k, _)| mem_key_is(m, k)) {
+            Some(i) => {
+                if done & (1 << i) == 0 {
+                    done |= 1 << i;
+                    emit_member(m.k, true, &p.ov[i].1, ar, out, &mut firstm);
+                }
+            }
+            None => {
+                if !firstm {
+                    out.push(b',');
+                }
+                firstm = false;
+                out.push(b'"');
+                out.extend_from_slice(m.k);
+                out.extend_from_slice(b"\":");
+                out.extend_from_slice(m.v);
+            }
+        }
+    }
+    for (i, (k, o)) in p.ov.iter().enumerate() {
+        if done & (1 << i) == 0 {
+            emit_member(k.as_bytes(), false, o, ar, out, &mut firstm);
+        }
+    }
+    out.push(b'}');
+}
+/// Add-only Extension patch on Phase output.
+pub fn fill_out<'a>(o: Out<'a>, patch: &V<'a>, ar: &Ar<'a>) -> Out<'a> {
+    let Out::P(mut p) = o else { return Out::V(fill(o.to_v(ar), patch)) };
+    let Some(po) = as_obj(patch) else { return Out::P(p) };
+    for (k, pv) in po.members() {
+        if matches!(pv, V::U) {
+            continue;
+        }
+        let ks = k.lossy();
+        let cur = p.get(ar, &ks);
+        if matches!(cur, V::U) {
+            p.set(ks, Out::V(pv));
+        } else if as_obj(&cur).is_some() && as_obj(&pv).is_some() {
+            p.set(ks, Out::V(fill(cur, &pv)));
+        }
+    }
+    Out::P(p)
+}
+/// Bid overrides straight from the bid Phase's plan over the bidder's bid: its slots.
+pub fn plan_overrides<'a>(bid: &V<'a>, o: &Out<'a>, ar: &Ar<'a>, buf: &mut Vec<u8>) {
+    let p = match o {
+        Out::P(p) if matches!((&p.src, bid), (Src::Mem { raw, .. }, V::Raw(b)) if std::ptr::eq(raw.as_ptr(), b.as_ptr())) => p,
+        o => return overrides(bid, &o.to_v(ar), buf),
+    };
+    if p.ov.is_empty() {
+        return buf.u32(0);
+    }
+    let at = buf.begin();
+    buf.push(b'{');
+    let mut first = true;
+    for (k, o) in &p.ov {
+        let o = if matches!(o, Out::V(V::U)) {
+            if p.src_mem(ar, k).is_none() {
+                continue;
+            }
+            Out::V(V::Null)
+        } else {
+            o.clone()
+        };
+        emit_member(k.as_bytes(), false, &o, ar, buf, &mut first);
+    }
+    buf.push(b'}');
+    if first {
+        buf.truncate(at);
+        return buf.u32(0);
+    }
+    buf.end(at);
 }

@@ -1,0 +1,24 @@
+openx / lt
+  make_requests (incl. parse, emit)           1.57 us
+  make_bids (incl. parse)                     2.45 us
+  mr + mb                                     4.02 us
+  shape misses per mr + mb                       0
+  allocations per mr / mb                       39 / 24
+openx / heavy
+  make_requests (incl. parse, emit)           2.98 us
+  make_bids (incl. parse)                     5.34 us
+  mr + mb                                     8.32 us
+  shape misses per mr + mb                       0
+  allocations per mr / mb                       50 / 94
+pubmatic / lt
+  make_requests (incl. parse, emit)           4.36 us
+  make_bids (incl. parse)                     2.78 us
+  mr + mb                                     7.13 us
+  shape misses per mr + mb                       0
+  allocations per mr / mb                       96 / 42
+pubmatic / heavy
+  make_requests (incl. parse, emit)           6.59 us
+  make_bids (incl. parse)                     4.75 us
+  mr + mb                                    11.34 us
+  shape misses per mr + mb                       4
+  allocations per mr / mb                      155 / 62
