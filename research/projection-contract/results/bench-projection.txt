@@ -1,0 +1,26 @@
+BenchmarkProjection/openx-lt/host-parse-18         	  176112	     12245 ns/op
+BenchmarkProjection/openx-lt/host-parse-18         	  196375	     12258 ns/op
+BenchmarkProjection/openx-lt/host-parse-18         	  196260	     12241 ns/op
+BenchmarkProjection/openx-lt/struct-18             	 9237895	       258.5 ns/op
+BenchmarkProjection/openx-lt/struct-18             	 9328759	       258.2 ns/op
+BenchmarkProjection/openx-lt/struct-18             	 9275194	       258.8 ns/op
+BenchmarkProjection/openx-lt/raw-18                	  430472	      5641 ns/op
+BenchmarkProjection/openx-lt/raw-18                	  424958	      5628 ns/op
+BenchmarkProjection/openx-lt/raw-18                	  428168	      5685 ns/op
+BenchmarkProjection/openx-heavy/host-parse-18      	  108771	     22148 ns/op
+BenchmarkProjection/openx-heavy/host-parse-18      	  108336	     22169 ns/op
+BenchmarkProjection/openx-heavy/host-parse-18      	  107577	     22173 ns/op
+BenchmarkProjection/openx-heavy/struct-18          	 6087807	       394.3 ns/op
+BenchmarkProjection/openx-heavy/struct-18          	 6100694	       390.6 ns/op
+BenchmarkProjection/openx-heavy/struct-18          	 6153807	       393.0 ns/op
+BenchmarkProjection/openx-heavy/raw-18             	  190802	     12504 ns/op
+BenchmarkProjection/openx-heavy/raw-18             	  193210	     12525 ns/op
+BenchmarkProjection/openx-heavy/raw-18             	  190215	     12541 ns/op
+BenchmarkShadow/openx-lt/shadow-parse+project-18   	  100621	     23682 ns/op
+BenchmarkShadow/openx-lt/shadow-parse+project-18   	  101110	     23682 ns/op
+BenchmarkShadow/openx-lt/shadow-parse+project-18   	   99712	     23991 ns/op
+BenchmarkShadow/openx-heavy/shadow-parse+project-18         	   53708	     44583 ns/op
+BenchmarkShadow/openx-heavy/shadow-parse+project-18         	   53982	     44405 ns/op
+BenchmarkShadow/openx-heavy/shadow-parse+project-18         	   54055	     44608 ns/op
+PASS
+ok  	projprobe	63.209s

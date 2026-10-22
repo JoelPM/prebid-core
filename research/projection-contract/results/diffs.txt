@@ -1,0 +1,278 @@
+resp/adm-lone-surrogate | PBS-Go struct | .seatbid[0].bid[0].adm: "<div>\udc00</div>" -> "<div>�</div>"
+resp/adm-lone-surrogate | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/adm-lone-surrogate | Trusted Server typed | rejects: lone leading surrogate in hex escape at line 1 column 98
+resp/adm-lone-surrogate | Trusted Server Value | rejects: lone leading surrogate in hex escape at line 1 column 98
+resp/adm-native | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/adm-null | PBS-Go struct | (normalized away) .seatbid[0].bid[0].adm: null -> absent
+resp/adm-null | PBS-Go shadow | (normalized away) .seatbid[0].bid[0].adm: null -> absent
+resp/adm-null | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/adm-null | PBS-Java ext as ObjectNode | (normalized away) .seatbid[0].bid[0].adm: null -> absent
+resp/adm-null | PBS-Java ObjectNode, exact numbers | (normalized away) .seatbid[0].bid[0].adm: null -> absent
+resp/adm-null | Trusted Server typed | (normalized away) .seatbid[0].bid[0].adm: null -> absent
+resp/base | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/bid-absent | PBS-Go struct | (normalized away) .seatbid[0].bid: absent -> null
+resp/bid-absent | PBS-Go shadow | (normalized away) .seatbid[0].bid: absent -> null
+resp/bid-absent | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/bid-ext-array | PBS-Java model | rejects: Cannot deserialize value of type `com.fasterxml.jackson.databind.node.ObjectNode` from Array value (token `JsonToken.START_ARRAY`)
+resp/bid-ext-array | PBS-Java ext as ObjectNode | rejects: Cannot deserialize value of type `com.fasterxml.jackson.databind.node.ObjectNode` from Array value (token `JsonToken.START_ARRAY`)
+resp/bid-ext-array | PBS-Java ObjectNode, exact numbers | rejects: Cannot deserialize value of type `com.fasterxml.jackson.databind.node.ObjectNode` from Array value (token `JsonToken.START_ARRAY`)
+resp/bid-ext-array | Trusted Server typed | rejects: invalid type: sequence, expected a map at line 1 column 135
+resp/bid-ext-empty | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/bid-ext-null | PBS-Go struct | (normalized away) .seatbid[0].bid[0].ext: null -> absent
+resp/bid-ext-null | PBS-Go shadow | (normalized away) .seatbid[0].bid[0].ext: null -> absent
+resp/bid-ext-null | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/bid-ext-null | PBS-Java ext as ObjectNode | (normalized away) .seatbid[0].bid[0].ext: null -> absent
+resp/bid-ext-null | PBS-Java ObjectNode, exact numbers | (normalized away) .seatbid[0].bid[0].ext: null -> absent
+resp/bid-ext-null | Trusted Server typed | (normalized away) .seatbid[0].bid[0].ext: null -> absent
+resp/bid-null | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/bid-null | PBS-Java ext as ObjectNode | (normalized away) .seatbid[0].bid: null -> absent
+resp/bid-null | PBS-Java ObjectNode, exact numbers | (normalized away) .seatbid[0].bid: null -> absent
+resp/bid-null | Trusted Server typed | rejects: invalid type: null, expected a sequence at line 1 column 48
+resp/bid-null-elem | PBS-Go struct | .seatbid[0].bid[0]: null -> {"impid":""}
+resp/bid-null-elem | PBS-Go shadow | .seatbid[0].bid[0]: null -> {"impid":""}
+resp/bid-null-elem | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/bid-null-elem | Trusted Server typed | rejects: invalid type: null, expected struct Bid at line 1 column 49
+resp/cat-absent | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/cat-empty | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/cat-empty | Trusted Server typed | (normalized away) .seatbid[0].bid[0].cat: [] -> absent
+resp/cat-null | PBS-Go struct | (normalized away) .seatbid[0].bid[0].cat: null -> absent
+resp/cat-null | PBS-Go shadow | (normalized away) .seatbid[0].bid[0].cat: null -> absent
+resp/cat-null | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/cat-null | PBS-Java ext as ObjectNode | (normalized away) .seatbid[0].bid[0].cat: null -> absent
+resp/cat-null | PBS-Java ObjectNode, exact numbers | (normalized away) .seatbid[0].bid[0].cat: null -> absent
+resp/cat-null | Trusted Server typed | rejects: invalid type: null, expected a sequence at line 1 column 115
+resp/cat-null-elem | PBS-Go struct | .seatbid[0].bid[0].cat[0]: null -> ""
+resp/cat-null-elem | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/cat-null-elem | Trusted Server typed | rejects: invalid type: null, expected a string at line 1 column 116
+resp/cat-number-elem | PBS-Go struct | rejects: cannot unmarshal []string: expects " or n, but found 1
+resp/cat-number-elem | PBS-Go shadow | rejects: cannot unmarshal []string: expects " or n, but found 1
+resp/cat-number-elem | PBS-Java model | .seatbid[0].bid[0].cat[0]: 1 -> "1"
+resp/cat-number-elem | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/cat-number-elem | PBS-Java ext as ObjectNode | .seatbid[0].bid[0].cat[0]: 1 -> "1"
+resp/cat-number-elem | PBS-Java ObjectNode, exact numbers | .seatbid[0].bid[0].cat[0]: 1 -> "1"
+resp/cat-number-elem | Trusted Server typed | rejects: invalid type: integer `1`, expected a string at line 1 column 113
+resp/cat-scalar | PBS-Go struct | rejects: cannot unmarshal openrtb2.Bid.Cat: decode slice: expect [ or n, but found "
+resp/cat-scalar | PBS-Go shadow | rejects: decode slice: expect [ or n, but found "
+resp/cat-scalar | PBS-Java model | .seatbid[0].bid[0].cat: "IAB1" -> ["IAB1"]
+resp/cat-scalar | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/cat-scalar | PBS-Java ext as ObjectNode | .seatbid[0].bid[0].cat: "IAB1" -> ["IAB1"]
+resp/cat-scalar | PBS-Java ObjectNode, exact numbers | .seatbid[0].bid[0].cat: "IAB1" -> ["IAB1"]
+resp/cat-scalar | Trusted Server typed | rejects: invalid type: string "IAB1", expected a sequence at line 1 column 117
+resp/cur-absent | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/cur-empty | PBS-Go struct | (normalized away) .cur: "" -> absent
+resp/cur-empty | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/cur-escapes | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/cur-invalid-utf8 | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/cur-invalid-utf8 | Trusted Server typed | rejects: invalid unicode code point at line 1 column 273
+resp/cur-invalid-utf8 | Trusted Server Value | rejects: invalid unicode code point at line 1 column 273
+resp/cur-lone-surrogate | PBS-Go struct | .cur: "US\ud800D" -> "US�D"
+resp/cur-lone-surrogate | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/cur-lone-surrogate | Trusted Server typed | rejects: unexpected end of hex escape at line 1 column 277
+resp/cur-lone-surrogate | Trusted Server Value | rejects: unexpected end of hex escape at line 1 column 277
+resp/cur-null | PBS-Go struct | (normalized away) .cur: null -> absent
+resp/cur-null | PBS-Go shadow | (normalized away) .cur: null -> absent
+resp/cur-null | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/cur-null | PBS-Java ext as ObjectNode | (normalized away) .cur: null -> absent
+resp/cur-null | PBS-Java ObjectNode, exact numbers | (normalized away) .cur: null -> absent
+resp/cur-null | Trusted Server typed | (normalized away) .cur: null -> absent
+resp/dur-0 | PBS-Go struct | (normalized away) .seatbid[0].bid[0].dur: 0 -> absent
+resp/dur-0 | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/dur-1e21 | PBS-Go struct | rejects: cannot unmarshal openrtb2.SeatBid.Bid: struct Decode: expect }, but found e
+resp/dur-1e21 | PBS-Go shadow | rejects: there are bytes left after unmarshal
+resp/dur-1e21 | PBS-Java model | rejects: Numeric value (1e21) out of range of int (-2147483648 - 2147483647)
+resp/dur-1e21 | PBS-Java ext as ObjectNode | rejects: Numeric value (1e21) out of range of int (-2147483648 - 2147483647)
+resp/dur-1e21 | PBS-Java ObjectNode, exact numbers | rejects: Numeric value (1e21) out of range of int (-2147483648 - 2147483647)
+resp/dur-1e21 | Trusted Server typed | rejects: invalid type: floating point `1e+21`, expected i32 at line 1 column 130
+resp/dur-2^31 | PBS-Java model | rejects: Numeric value (2147483648) out of range of int (-2147483648 - 2147483647)
+resp/dur-2^31 | PBS-Java ext as ObjectNode | rejects: Numeric value (2147483648) out of range of int (-2147483648 - 2147483647)
+resp/dur-2^31 | PBS-Java ObjectNode, exact numbers | rejects: Numeric value (2147483648) out of range of int (-2147483648 - 2147483647)
+resp/dur-2^31 | Trusted Server typed | rejects: invalid value: integer `2147483648`, expected i32 at line 1 column 136
+resp/dur-30.0 | PBS-Go struct | rejects: cannot unmarshal openrtb2.Bid.Dur: can not decode float as int
+resp/dur-30.0 | PBS-Go shadow | rejects: can not decode float as int
+resp/dur-30.0 | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/dur-30.0 | Trusted Server typed | rejects: invalid type: floating point `30.0`, expected i32 at line 1 column 130
+resp/dur-absent | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/dur-null | PBS-Go struct | (normalized away) .seatbid[0].bid[0].dur: null -> absent
+resp/dur-null | PBS-Go shadow | (normalized away) .seatbid[0].bid[0].dur: null -> absent
+resp/dur-null | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/dur-null | PBS-Java ext as ObjectNode | (normalized away) .seatbid[0].bid[0].dur: null -> absent
+resp/dur-null | PBS-Java ObjectNode, exact numbers | (normalized away) .seatbid[0].bid[0].dur: null -> absent
+resp/dur-null | Trusted Server typed | (normalized away) .seatbid[0].bid[0].dur: null -> absent
+resp/dur-string | PBS-Go struct | rejects: cannot unmarshal openrtb2.Bid.Dur: unexpected character: �
+resp/dur-string | PBS-Go shadow | rejects: unexpected character: �
+resp/dur-string | PBS-Java model | .seatbid[0].bid[0].dur: "30" -> 30
+resp/dur-string | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/dur-string | PBS-Java ext as ObjectNode | .seatbid[0].bid[0].dur: "30" -> 30
+resp/dur-string | PBS-Java ObjectNode, exact numbers | .seatbid[0].bid[0].dur: "30" -> 30
+resp/dur-string | Trusted Server typed | rejects: invalid type: string "30", expected i32 at line 1 column 130
+resp/ext-case | PBS-Go struct | .seatbid[0].bid[0].ext: absent -> {"dsp_id":"7"}
+resp/ext-case | PBS-Go shadow | .seatbid[0].bid[0].ext: absent -> {"dsp_id":"7"}
+resp/ext-case | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/ext-lone-surrogate | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/ext-lone-surrogate | Trusted Server typed | rejects: unexpected end of hex escape at line 1 column 159
+resp/ext-lone-surrogate | Trusted Server Value | rejects: unexpected end of hex escape at line 1 column 159
+resp/ext-null-member | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/ext-number-1.50 | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/ext-number-17digits | PBS-Java model | .seatbid[0].bid[0].ext.dsp_id: 0.1000000000000000055511151231257827 -> 0.1
+resp/ext-number-17digits | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/ext-number-17digits | PBS-Java ext as ObjectNode | .seatbid[0].bid[0].ext.dsp_id: 0.1000000000000000055511151231257827 -> 0.1
+resp/ext-number-17digits | Prebid.js JSON.parse | .seatbid[0].bid[0].ext.dsp_id: 0.1000000000000000055511151231257827 -> 0.1
+resp/ext-number-17digits | Trusted Server typed | .seatbid[0].bid[0].ext.dsp_id: 0.1000000000000000055511151231257827 -> 0.1
+resp/ext-number-17digits | Trusted Server Value | .seatbid[0].bid[0].ext.dsp_id: 0.1000000000000000055511151231257827 -> 0.1
+resp/ext-number-1e21 | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/ext-number-1e400 | PBS-Go struct | rejects: cannot unmarshal openrtb2.Bid.Ext: invalid number
+resp/ext-number-1e400 | PBS-Go shadow | rejects: cannot unmarshal Ext: invalid number
+resp/ext-number-1e400 | PBS-Java model | .seatbid[0].bid[0].ext.dsp_id: 1e400 -> "Infinity"
+resp/ext-number-1e400 | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/ext-number-1e400 | PBS-Java ext as ObjectNode | .seatbid[0].bid[0].ext.dsp_id: 1e400 -> "Infinity"
+resp/ext-number-1e400 | Prebid.js JSON.parse | .seatbid[0].bid[0].ext.dsp_id: 1e400 -> Infinity
+resp/ext-number-1e400 | Trusted Server typed | rejects: number out of range at line 1 column 150
+resp/ext-number-1e400 | Trusted Server Value | rejects: number out of range at line 1 column 150
+resp/ext-number-big | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/ext-number-big | Prebid.js JSON.parse | .seatbid[0].bid[0].ext.dsp_id: 12345678901234567890 -> 12345678901234567000
+resp/ext-number-neg0 | PBS-Java model | .seatbid[0].bid[0].ext.dsp_id: -0 -> 0
+resp/ext-number-neg0 | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/ext-number-neg0 | PBS-Java ext as ObjectNode | .seatbid[0].bid[0].ext.dsp_id: -0 -> 0
+resp/ext-number-neg0 | PBS-Java ObjectNode, exact numbers | .seatbid[0].bid[0].ext.dsp_id: -0 -> 0
+resp/impid-absent | PBS-Go struct | (normalized away) .seatbid[0].bid[0].impid: absent -> ""
+resp/impid-absent | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/impid-empty | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/impid-null | PBS-Go struct | (normalized away) .seatbid[0].bid[0].impid: null -> ""
+resp/impid-null | PBS-Go shadow | (normalized away) .seatbid[0].bid[0].impid: null -> absent
+resp/impid-null | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/impid-null | PBS-Java ext as ObjectNode | (normalized away) .seatbid[0].bid[0].impid: null -> absent
+resp/impid-null | PBS-Java ObjectNode, exact numbers | (normalized away) .seatbid[0].bid[0].impid: null -> absent
+resp/impid-null | Trusted Server typed | (normalized away) .seatbid[0].bid[0].impid: null -> absent
+resp/impid-number | PBS-Go struct | rejects: cannot unmarshal ImpID: expects " or n, but found 1
+resp/impid-number | PBS-Go shadow | rejects: expects " or n, but found 1
+resp/impid-number | PBS-Java model | .seatbid[0].bid[0].impid: 1 -> "1"
+resp/impid-number | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/impid-number | PBS-Java ext as ObjectNode | .seatbid[0].bid[0].impid: 1 -> "1"
+resp/impid-number | PBS-Java ObjectNode, exact numbers | .seatbid[0].bid[0].impid: 1 -> "1"
+resp/impid-number | Trusted Server typed | rejects: invalid type: integer `1`, expected a string at line 1 column 65
+resp/mtype-0 | PBS-Go struct | (normalized away) .seatbid[0].bid[0].mtype: 0 -> absent
+resp/mtype-0 | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/mtype-2.0 | PBS-Go struct | rejects: cannot unmarshal openrtb2.Bid.MType: can not decode float as int
+resp/mtype-2.0 | PBS-Go shadow | rejects: can not decode float as int
+resp/mtype-2.0 | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/mtype-2.0 | Trusted Server typed | rejects: invalid type: floating point `2.0`, expected i32 at line 1 column 106
+resp/mtype-2.5 | PBS-Go struct | rejects: cannot unmarshal openrtb2.Bid.MType: can not decode float as int
+resp/mtype-2.5 | PBS-Go shadow | rejects: can not decode float as int
+resp/mtype-2.5 | PBS-Java model | .seatbid[0].bid[0].mtype: 2.5 -> 2
+resp/mtype-2.5 | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/mtype-2.5 | PBS-Java ext as ObjectNode | .seatbid[0].bid[0].mtype: 2.5 -> 2
+resp/mtype-2.5 | PBS-Java ObjectNode, exact numbers | .seatbid[0].bid[0].mtype: 2.5 -> 2
+resp/mtype-2.5 | Trusted Server typed | rejects: invalid type: floating point `2.5`, expected i32 at line 1 column 106
+resp/mtype-2e0 | PBS-Go struct | rejects: cannot unmarshal openrtb2.SeatBid.Bid: struct Decode: expect }, but found e
+resp/mtype-2e0 | PBS-Go shadow | rejects: there are bytes left after unmarshal
+resp/mtype-2e0 | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/mtype-2e0 | Trusted Server typed | rejects: invalid type: floating point `2.0`, expected i32 at line 1 column 106
+resp/mtype-300 | PBS-Go struct | rejects: cannot unmarshal ReadInt8: 300
+resp/mtype-300 | PBS-Go shadow | rejects: cannot unmarshal ReadInt8: 300
+resp/mtype-300 | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/mtype-absent | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/mtype-case | PBS-Go struct | .seatbid[0].bid[0].mtype: absent -> 2
+resp/mtype-case | PBS-Go shadow | .seatbid[0].bid[0].mtype: absent -> 2
+resp/mtype-case | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/mtype-case-and-exact | PBS-Go struct | .seatbid[0].bid[0].mtype: 1 -> 2
+resp/mtype-case-and-exact | PBS-Go shadow | .seatbid[0].bid[0].mtype: 1 -> 2
+resp/mtype-case-and-exact | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/mtype-dup | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/mtype-dup | Trusted Server typed | rejects: duplicate field `mtype` at line 1 column 264
+resp/mtype-neg0 | PBS-Go struct | (normalized away) .seatbid[0].bid[0].mtype: -0 -> absent
+resp/mtype-neg0 | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/mtype-neg0 | PBS-Java ext as ObjectNode | (normalized away) .seatbid[0].bid[0].mtype: -0 -> 0
+resp/mtype-neg0 | PBS-Java ObjectNode, exact numbers | (normalized away) .seatbid[0].bid[0].mtype: -0 -> 0
+resp/mtype-neg0 | Trusted Server typed | rejects: invalid type: floating point `-0.0`, expected i32 at line 1 column 105
+resp/mtype-null | PBS-Go struct | (normalized away) .seatbid[0].bid[0].mtype: null -> absent
+resp/mtype-null | PBS-Go shadow | (normalized away) .seatbid[0].bid[0].mtype: null -> absent
+resp/mtype-null | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/mtype-null | PBS-Java ext as ObjectNode | (normalized away) .seatbid[0].bid[0].mtype: null -> absent
+resp/mtype-null | PBS-Java ObjectNode, exact numbers | (normalized away) .seatbid[0].bid[0].mtype: null -> absent
+resp/mtype-null | Trusted Server typed | (normalized away) .seatbid[0].bid[0].mtype: null -> absent
+resp/mtype-string | PBS-Go struct | rejects: cannot unmarshal openrtb2.Bid.MType: unexpected character: �
+resp/mtype-string | PBS-Go shadow | rejects: unexpected character: �
+resp/mtype-string | PBS-Java model | .seatbid[0].bid[0].mtype: "2" -> 2
+resp/mtype-string | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/mtype-string | PBS-Java ext as ObjectNode | .seatbid[0].bid[0].mtype: "2" -> 2
+resp/mtype-string | PBS-Java ObjectNode, exact numbers | .seatbid[0].bid[0].mtype: "2" -> 2
+resp/mtype-string | Trusted Server typed | rejects: invalid type: string "2", expected i32 at line 1 column 106
+resp/mtype-true | PBS-Go struct | rejects: cannot unmarshal openrtb2.Bid.MType: unexpected character: �
+resp/mtype-true | PBS-Go shadow | rejects: unexpected character: �
+resp/mtype-true | PBS-Java model | rejects: Cannot deserialize value of type `java.lang.Integer` from Boolean value (token `JsonToken.VALUE_TRUE`)
+resp/mtype-true | PBS-Java ext as ObjectNode | rejects: Cannot deserialize value of type `java.lang.Integer` from Boolean value (token `JsonToken.VALUE_TRUE`)
+resp/mtype-true | PBS-Java ObjectNode, exact numbers | rejects: Cannot deserialize value of type `java.lang.Integer` from Boolean value (token `JsonToken.VALUE_TRUE`)
+resp/mtype-true | Trusted Server typed | rejects: invalid type: boolean `true`, expected i32 at line 1 column 107
+resp/paapi-constructor | PBS-Java model | .ext.fledge_auction_configs: {"1":{"constructor":{"prototype":{}}}} -> absent
+resp/paapi-constructor | Prebid.js JSON.parse | .ext.fledge_auction_configs.1.constructor: {"prototype":{}} -> absent
+resp/paapi-dup-key | PBS-Java model | .ext.fledge_auction_configs: {"1":{"s":3},"2":{"s":2}} -> absent
+resp/paapi-inner-order | PBS-Java model | .ext.fledge_auction_configs: {"1":{"z":1,"a":2.50}} -> absent
+resp/paapi-int-keys | PBS-Java model | .ext.fledge_auction_configs: {"x":{"s":1},"2":{"s":2},"1":{"s":3}} -> absent
+resp/paapi-order | PBS-Java model | .ext.fledge_auction_configs: {"b":{"s":1},"a":{"s":2}} -> absent
+resp/paapi-order | Trusted Server typed | .ext.fledge_auction_configs: Object.keys b,a -> a,b
+resp/paapi-order | Trusted Server Value | .ext.fledge_auction_configs: Object.keys b,a -> a,b
+resp/paapi-proto-key | PBS-Java model | .ext.fledge_auction_configs: {"__proto__":{"s":1},"1":{"s":2}} -> absent
+resp/paapi-proto-key | Prebid.js JSON.parse | .ext.fledge_auction_configs: Object.keys 1,__proto__ -> 1
+resp/paapi-proto-key | Prebid.js JSON.parse | .ext.fledge_auction_configs.__proto__: {"s":1} -> absent
+resp/resp-ext-dup-paapi | PBS-Java model | .ext.fledge_auction_configs: {"2":{"s":2}} -> absent
+resp/resp-ext-null | PBS-Go struct | (normalized away) .ext: null -> absent
+resp/resp-ext-null | PBS-Go shadow | (normalized away) .ext: null -> absent
+resp/resp-ext-null | PBS-Java model | (normalized away) .ext: null -> absent
+resp/resp-ext-null | PBS-Java ext as ObjectNode | (normalized away) .ext: null -> absent
+resp/resp-ext-null | PBS-Java ObjectNode, exact numbers | (normalized away) .ext: null -> absent
+resp/resp-ext-null | Trusted Server typed | (normalized away) .ext: null -> absent
+resp/resp-ext-string | PBS-Java model | rejects: Cannot construct instance of `Model$ExtBidResponse` (although at least one Creator exists): no String-argument constructor/factory method to
+resp/resp-ext-string | PBS-Java ext as ObjectNode | rejects: Cannot deserialize value of type `com.fasterxml.jackson.databind.node.ObjectNode` from String value (token `JsonToken.VALUE_STRING`)
+resp/resp-ext-string | PBS-Java ObjectNode, exact numbers | rejects: Cannot deserialize value of type `com.fasterxml.jackson.databind.node.ObjectNode` from String value (token `JsonToken.VALUE_STRING`)
+resp/resp-ext-string | Trusted Server typed | rejects: invalid type: string "x", expected a map at line 1 column 282
+resp/seatbid-absent | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/seatbid-empty | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/seatbid-empty | Trusted Server typed | (normalized away) .seatbid: [] -> absent
+resp/seatbid-null | PBS-Go struct | (normalized away) .seatbid: null -> absent
+resp/seatbid-null | PBS-Go shadow | (normalized away) .seatbid: null -> absent
+resp/seatbid-null | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/seatbid-null | PBS-Java ext as ObjectNode | (normalized away) .seatbid: null -> absent
+resp/seatbid-null | PBS-Java ObjectNode, exact numbers | (normalized away) .seatbid: null -> absent
+resp/seatbid-null | Trusted Server typed | rejects: invalid type: null, expected a sequence at line 1 column 25
+resp/seatbid-null-elem | PBS-Go struct | .seatbid[0]: null -> {"bid":[]}
+resp/seatbid-null-elem | PBS-Go shadow | .seatbid[0]: null -> {"bid":[]}
+resp/seatbid-null-elem | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/seatbid-null-elem | Trusted Server typed | rejects: invalid type: null, expected struct SeatBid at line 1 column 26
+resp/seatbid-object | PBS-Go struct | rejects: cannot unmarshal openrtb2.BidResponse.SeatBid: decode slice: expect [ or n, but found {
+resp/seatbid-object | PBS-Go shadow | rejects: cannot unmarshal main.shadowResp.SeatBid: decode slice: expect [ or n, but found {
+resp/seatbid-object | PBS-Java model | .seatbid: {"seat":"openx","bid":[{"id":"b1","impid":"1","price":1.5,"adm":"<div/>","mtype":1,"cat":["IAB1"],"dur":30,"ext":{"dsp_id":"7","buyer_id":"8","brand_id":"9","prebiddealpriority":5,"marketplace":"m","video":{"duration":15},"ibv":false}}]} -> [{"bid":[{"impid":"1","adm":"<div/>","cat":["IAB1"],"dur":30,"mtype":1,"ext":{"dsp_id":"7","buyer_id":"8","brand_id":"9","prebiddealpriority":5,"marketplace":"m","video":{"duration":15},"ibv":false}}]}]
+resp/seatbid-object | PBS-Java model | .ext.fledge_auction_configs: {"1":{"seller":"https://x"}} -> absent
+resp/seatbid-object | PBS-Java ext as ObjectNode | .seatbid: {"seat":"openx","bid":[{"id":"b1","impid":"1","price":1.5,"adm":"<div/>","mtype":1,"cat":["IAB1"],"dur":30,"ext":{"dsp_id":"7","buyer_id":"8","brand_id":"9","prebiddealpriority":5,"marketplace":"m","video":{"duration":15},"ibv":false}}]} -> [{"bid":[{"impid":"1","adm":"<div/>","cat":["IAB1"],"dur":30,"mtype":1,"ext":{"dsp_id":"7","buyer_id":"8","brand_id":"9","prebiddealpriority":5,"marketplace":"m","video":{"duration":15},"ibv":false}}]}]
+resp/seatbid-object | PBS-Java ObjectNode, exact numbers | .seatbid: {"seat":"openx","bid":[{"id":"b1","impid":"1","price":1.5,"adm":"<div/>","mtype":1,"cat":["IAB1"],"dur":30,"ext":{"dsp_id":"7","buyer_id":"8","brand_id":"9","prebiddealpriority":5,"marketplace":"m","video":{"duration":15},"ibv":false}}]} -> [{"bid":[{"impid":"1","adm":"<div/>","cat":["IAB1"],"dur":30,"mtype":1,"ext":{"dsp_id":"7","buyer_id":"8","brand_id":"9","prebiddealpriority":5,"marketplace":"m","video":{"duration":15},"ibv":false}}]}]
+resp/seatbid-object | Trusted Server typed | rejects: invalid type: map, expected a sequence at line 1 column 21
+req/banner-format-empty | PBS-Go marshal (today) | (normalized away) .imp[0].banner.format: [] -> absent
+req/banner-format-empty | Trusted Server typed | (normalized away) .imp[0].banner.format: [] -> absent
+req/banner-null | PBS-Go struct | (normalized away) .imp[0].banner: null -> absent
+req/banner-null | PBS-Go marshal (today) | (normalized away) .imp[0].banner: null -> absent
+req/banner-null | PBS-Java model | (normalized away) .imp[0].banner: null -> absent
+req/banner-null | Trusted Server typed | (normalized away) .imp[0].banner: null -> absent
+req/banner-w-300.0 | PBS-Go struct | rejects: cannot unmarshal openrtb2.Banner.W: can not decode float as int
+req/banner-w-300.0 | PBS-Go marshal (today) | rejects: cannot unmarshal openrtb2.Banner.W: can not decode float as int
+req/banner-w-300.0 | Trusted Server typed | rejects: invalid type: floating point `300.0`, expected i32 at line 1 column 47
+req/bidfloor-0 | PBS-Go struct | (normalized away) .imp[0].bidfloor: 0 -> absent
+req/bidfloor-0 | PBS-Go marshal (today) | (normalized away) .imp[0].bidfloor: 0 -> absent
+req/bidfloor-17digits | PBS-Go struct | .imp[0].bidfloor: 0.1000000000000000055511151231257827 -> 0.1
+req/bidfloor-17digits | PBS-Go marshal (today) | .imp[0].bidfloor: 0.1000000000000000055511151231257827 -> 0.1
+req/bidfloor-17digits | Trusted Server typed | .imp[0].bidfloor: 0.1000000000000000055511151231257827 -> 0.1
+req/bidfloor-string | PBS-Go struct | rejects: cannot unmarshal openrtb2.Imp.BidFloor: invalid number
+req/bidfloor-string | PBS-Go marshal (today) | rejects: cannot unmarshal openrtb2.Imp.BidFloor: invalid number
+req/bidfloor-string | PBS-Java model | .imp[0].bidfloor: "1.5" -> 1.5
+req/bidfloor-string | Trusted Server typed | rejects: invalid type: string "1.5", expected f64 at line 1 column 112
+req/imp-ext-data-order | Trusted Server typed | .imp[0].ext.data: Object.keys z,pbadslot,a -> a,pbadslot,z
+req/imp-ext-lone-surrogate | Trusted Server typed | rejects: unexpected end of hex escape at line 1 column 145
+req/rwdd-0 | PBS-Go struct | (normalized away) .imp[0].rwdd: 0 -> absent
+req/rwdd-0 | PBS-Go marshal (today) | (normalized away) .imp[0].rwdd: 0 -> absent
+req/rwdd-1.0 | PBS-Go struct | rejects: cannot unmarshal openrtb2.Imp.Rwdd: can not decode float as int
+req/rwdd-1.0 | PBS-Go marshal (today) | rejects: cannot unmarshal openrtb2.Imp.Rwdd: can not decode float as int
+req/rwdd-true | PBS-Go struct | rejects: cannot unmarshal openrtb2.Imp.Rwdd: unexpected character: �
+req/rwdd-true | PBS-Go marshal (today) | rejects: cannot unmarshal openrtb2.Imp.Rwdd: unexpected character: �
+req/rwdd-true | PBS-Java model | rejects: Cannot deserialize value of type `java.lang.Integer` from Boolean value (token `JsonToken.VALUE_TRUE`)
+req/rwdd-true | Trusted Server typed | .imp[0].rwdd: true -> 1
+req/tagid-lone-surrogate | PBS-Go struct | .imp[0].tagid: "t\ud800" -> "t�"
+req/tagid-lone-surrogate | PBS-Go marshal (today) | .imp[0].tagid: "t\ud800" -> "t�"
+req/tagid-lone-surrogate | Trusted Server typed | rejects: unexpected end of hex escape at line 1 column 101
