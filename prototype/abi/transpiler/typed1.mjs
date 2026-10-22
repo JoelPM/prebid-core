@@ -207,6 +207,7 @@ export function transpileTyped1(file, side = 'server') {
   const pP = P('req', 'imp', '*', 'ext', 'bidder');
   const bidP = P('resp', 'seatbid', '*', 'bid', '*');
   need('req', ['imp', '*', 'ext', 'bidder']);
+  need('req', ['imp', '*', 'id']);
   need('resp', ['seatbid', '*', 'bid', '*']).index = true;
   need('breq', ['imp', '*', 'id']);
   const rootsOf = (group, name) => {
@@ -326,7 +327,7 @@ export function transpileTyped1(file, side = 'server') {
       const isUndef = (e) => ts.isIdentifier(e) && e.text === 'undefined';
       if (op === K_.EqualsEqualsToken || op === K_.ExclamationEqualsToken) {
         const other = isNull(n.left) ? n.right : n.left;
-        return `${op === K_.ExclamationEqualsToken ? '!' : ''}rt::nullish(&${ex(other, sc)})`;
+        return `${op === K_.ExclamationEqualsToken ? '!' : ''}${presence(other, sc, 'nullish')}`;
       }
       if (op === K_.EqualsEqualsEqualsToken || op === K_.ExclamationEqualsEqualsToken) {
         const neg = op === K_.ExclamationEqualsEqualsToken ? '!' : '';
@@ -341,7 +342,7 @@ export function transpileTyped1(file, side = 'server') {
       if (cmp) return `rt::${cmp}(&${ex(n.left, sc)}, &${ex(n.right, sc)})`;
     }
     if (ts.isCallExpression(n) && n.expression.getText(sf) === 'Array.isArray') return `rt::is_array(&${ex(n.arguments[0], sc)})`;
-    return `rt::truthy(&${ex(n, sc)})`;
+    return presence(n, sc, 'truthy');
   }
 
   function objLit(n, sc) {
@@ -466,7 +467,7 @@ export function transpileTyped1(file, side = 'server') {
         case 'leaf': return `b${q(k)} => ${f} = p.leaf(),`;
         case 'arrleaf': return `b${q(k)} => ${f} = p.leaf_arr(),`;
         case 'list': return `b${q(k)} => l${nid(ch.el)}(p, ar, &mut ${f}),`;
-        default: return `b${q(k)} => { d${nid(ch)}(p, ar, &mut ${f}); ${copy ? `kid = (${f}.m, ${f}.dup); ` : ''}}`;
+        default: return `b${q(k)} => { d${nid(ch)}(p, ar, &mut ${f}); ${copy && (ch.copy || ch.any) ? `kid = (${f}.m, ${f}.dup, true); ` : ''}}`;
       }
     });
     typesRs += `fn d${nid(n)}<'a>(p: &mut rt::P<'a>, ar: &mut rt::Ar<'a>, x: &mut ${sname(n)}<'a>) {
@@ -474,9 +475,9 @@ let s = p.start();
 if !p.is_obj() { x.v = p.leaf(); return; }
 ${copy ? 'let (mut first, mut last, mut seen) = (rt::NONE, rt::NONE, 0u64);' : ''}
 p.obj_each(|p, k, kx| {
-${copy ? 'let vs = p.start(); let mut kid = (rt::NONE, false);' : ''}
+${copy ? 'let vs = p.start(); let mut kid = (rt::NONE, false, false);' : ''}
 match &*rt::key(k, kx) { ${arms.join(' ')} _ => p.skip_val(), }
-${copy ? 'rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid.0, kid.1);' : ''}
+${copy ? 'rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid);' : ''}
 });
 x.v = V::Raw(p.since(s)); ${copy ? 'x.m = first;' : ''}
 }
@@ -502,15 +503,15 @@ x.v = V::Raw(p.since(s)); ${copy ? 'x.m = first;' : ''}
   function toVal(x) {
     switch (x.k) {
       case 'val': return x.rs;
-      case 'view': return x.objOnly ? `rt::obj_(&${x.rs}.v)` : `${x.rs}.v.clone()`;
-      case 'oview': return `${x.rs}.map_or(V::U, |x| ${x.objOnly ? 'rt::obj_(&x.v)' : 'x.v.clone()'})`;
-      case 'list': return `${x.rs}.v.clone()`;
-      case 'olist': return `${x.rs}.map_or(V::U, |l| l.v.clone())`;
-      case 'vlist': return `rt::arr_v(${x.rs}.iter().map(|x| x.v.clone()).collect())`;
-      case 'plan': return `${x.rs}.to_v(ar)`;
+      case 'view': whole(x.node); return x.objOnly ? `rt::obj_(&${x.rs}.v)` : `${x.rs}.v.clone()`;
+      case 'oview': whole(x.node); return `${x.rs}.map_or(V::U, |x| ${x.objOnly ? 'rt::obj_(&x.v)' : 'x.v.clone()'})`;
+      case 'list': whole(x.arr); return `${x.rs}.v.clone()`;
+      case 'olist': whole(x.arr); return `${x.rs}.map_or(V::U, |l| l.v.clone())`;
+      case 'vlist': whole(x.node); return `rt::arr_v(${x.rs}.iter().map(|x| x.v.clone()).collect())`;
+      case 'plan': whole(x.src); return `${x.rs}.to_v(ar)`;
       case 'out': return `(${x.rs}).to_v(ar)`;
       case 'pm': return `(${x.plan}).get(ar, ${q(x.key)})`;
-      case 'reqin': return `rt::Plan::of(&v_req.v.v, v_req.v.m, v_req.v.dup).with("imp", rt::Out::List(v_req.imps.clone())).to_v(ar)`;
+      case 'reqin': return `rt::Plan::of(&v_req.v.v, v_req.v.m, v_req.v.dup).with("imp", rt::Out::IdxList(v_req.imps.clone(), v_req.ix.clone())).to_v(ar)`;
     }
     throw new Error('toVal ' + x.k);
   }
@@ -520,6 +521,14 @@ x.v = V::Raw(p.since(s)); ${copy ? 'x.m = first;' : ''}
     if (x.k === 'pm') return `(${x.plan}).member_out(ar, ${q(x.key)})`;
     return `rt::Out::V(${toVal(x)})`;
   }
+  const whole = (n) => { if (n) n.whole = true; };
+  // truthiness / nullishness: a view's projected value answers it (present iff the input's is)
+  function presence(n, sc, f) {
+    const t = tex(n, sc);
+    if (t.k === 'view' || t.k === 'list') return `rt::${f}(&${t.rs}.v)`;
+    if (t.k === 'oview' || t.k === 'olist') return `${t.rs}.map_or(${f === 'nullish'}, |x| rt::${f}(&x.v))`;
+    return `rt::${f}(&${toVal(t)})`;
+  }
   const planable = (x) => ['view', 'oview', 'plan', 'out', 'pm', 'reqin'].includes(x.k);
   function toPlan(x) {
     switch (x.k) {
@@ -528,7 +537,7 @@ x.v = V::Raw(p.since(s)); ${copy ? 'x.m = first;' : ''}
       case 'plan': return `${x.rs}.clone()`;
       case 'out': return `rt::Plan::from_out(${x.rs}, ar)`;
       case 'pm': return `rt::Plan::from_out((${x.plan}).member_out(ar, ${q(x.key)}), ar)`;
-      case 'reqin': return `rt::Plan::of(&v_req.v.v, v_req.v.m, v_req.v.dup).with("imp", rt::Out::List(v_req.imps.clone()))`;
+      case 'reqin': return `rt::Plan::of(&v_req.v.v, v_req.v.m, v_req.v.dup).with("imp", rt::Out::IdxList(v_req.imps.clone(), v_req.ix.clone()))`;
     }
     return `rt::Plan::from_out(rt::Out::V(${toVal(x)}), ar)`;
   }
@@ -588,11 +597,11 @@ x.v = V::Raw(p.since(s)); ${copy ? 'x.m = first;' : ''}
       const c = cls(ch);
       if (b.k === 'view') {
         if (c === 'leaf' || c === 'arrleaf') return V_(`${b.rs}.${f}.clone()`);
-        if (c === 'list') return { k: 'list', rs: `(&${b.rs}.${f})`, node: ch.el };
+        if (c === 'list') return { k: 'list', rs: `(&${b.rs}.${f})`, node: ch.el, arr: ch };
         return { k: 'view', rs: `(&${b.rs}.${f})`, node: ch };
       }
       if (c === 'leaf' || c === 'arrleaf') return V_(`${b.rs}.map_or(V::U, |x| x.${f}.clone())`);
-      if (c === 'list') return { k: 'olist', rs: `${b.rs}.map(|x| &x.${f})`, node: ch.el };
+      if (c === 'list') return { k: 'olist', rs: `${b.rs}.map(|x| &x.${f})`, node: ch.el, arr: ch };
       return { k: 'oview', rs: `${b.rs}.map(|x| &x.${f})`, node: ch };
     }
     if (b.k === 'plan') return { k: 'pm', plan: b.rs, key: k };
@@ -699,7 +708,7 @@ x.v = V::Raw(p.since(s)); ${copy ? 'x.m = first;' : ''}
           const init = unwrapE(d.initializer);
           if (ts.isObjectLiteralExpression(init)) {
             const p = objPlan(init, sc);
-            if (p) { sc.vars[name] = { k: 'plan', rs }; return `let mut ${rs} = ${p};`; }
+            if (p) { sc.vars[name] = { k: 'plan', rs, src: tex(init.properties[0].expression, sc).node }; return `let mut ${rs} = ${p};`; }
           }
           const x = tex(d.initializer, sc);
           if (['view', 'oview', 'list', 'olist', 'vlist'].includes(x.k)) { sc.vars[name] = { ...x, rs }; return `let ${rs} = ${x.rs};`; }
@@ -806,7 +815,20 @@ x.v = V::Raw(p.since(s)); ${copy ? 'x.m = first;' : ''}
   s += `#![allow(unused_variables, unused_mut, unused_braces, unused_parens, unreachable_code, non_snake_case, dead_code, clippy::all)]\n`;
   s += `use prebid_core_rt2::{self as rt, Fr, V};\n\npub const BIDDER: &str = ${q(bidder)};\npub const ENDPOINT: &str = ${q(endpoint)};\n\n`;
   s += `// views: one struct per shape node, one field per key a Phase reads; d<n> decodes one in place\n${typesRs}\n`;
-  s += `pub struct ReqIn<'x, 'a> { pub v: &'x ${sname(shapes.req)}<'a>, pub imps: std::rc::Rc<Vec<rt::Out<'a>>> }\n\n${out}\n`;
+  // the projection contract: per input document, the terminal paths the Phases read ('*' any element,
+  // '%' any member); the Host sends only these (whole values at each terminal path)
+  const terminals = (n, pre, outp) => {
+    if (n.whole) { outp.push(pre); return outp; }
+    if (n.el) return terminals(n.el, [...pre, '*'], outp);
+    if (n.any) { outp.push([...pre, '%']); }
+    if (!n.kids.size) { if (!n.any) outp.push(pre); return outp; }
+    for (const [k, c] of n.kids) terminals(c, [...pre, k], outp);
+    return outp;
+  };
+  const shapeJson = JSON.stringify({ req: terminals(shapes.req, [], []), resp: terminals(shapes.resp, [], []), breq: terminals(shapes.breq, [], []) });
+  s += `/// What the Phases read, per input document (the Host's projection; see the ABI prototype).\npub const SHAPES: &str = ${q(shapeJson)};\n\n`;
+    s += `pub struct ReqIn<'x, 'a> { pub v: &'x ${sname(shapes.req)}<'a>, pub imps: std::rc::Rc<Vec<rt::Out<'a>>>, pub ix: std::rc::Rc<Vec<u32>> }\n`;
+  s += `impl<'a> ${sname(shapes.req)}<'a> { fn v_raw(&self) -> Option<&'a [u8]> { if let V::Raw(r) = self.v { Some(r) } else { None } } }\n\n${out}\n`;
   s += `pub fn make_requests(input: &[u8], out: &mut Vec<u8>) {
 let cx = rt::Cx::new(); let cx = &cx;
 let mut ar: rt::Ar = Vec::with_capacity(128);
@@ -820,10 +842,33 @@ ${has.ext_imp ? `let o = { let patch = ${okU('ext_imp(cx, ar, imp, p, &req)')}; 
 ids.push(rt::to_string(&o.get(ar, "id"))); imps.push(o); params.push(p);
 }
 if ids.is_empty() { out.u32(0); } else {
-let rq = ReqIn { v: &req, imps: std::rc::Rc::new(imps) };
+let rq = ReqIn { v: &req, imps: std::rc::Rc::new(imps), ix: std::rc::Rc::new(Vec::new()) };
 let o = ${okU('core_request(cx, ar, &rq, &params)', 'rt::Out::V(V::U)')};
 ${has.ext_request ? `let o = { let patch = ${okU('ext_request(cx, ar, &rq, &params)')}; rt::fill_out(o, &patch, ar) };` : ''}
 out.u32(1); let at = out.begin(); rt::emit_out(&o, ar, out); out.end(at);
+}
+out.u32(ids.len() as u32); for i in &ids { out.bytes(i.as_bytes()); }
+out.u32(errs.len() as u32); for e in &errs { out.bytes(e.as_bytes()); }
+}
+
+/// ABI #24: MakeRequests over a projected request, returning edits to the Host's own request.
+pub fn make_requests_edits(input: &[u8], out: &mut Vec<u8>) {
+let cx = rt::Cx::new(); let cx = &cx;
+let mut ar: rt::Ar = Vec::with_capacity(128);
+let mut req = ${sname(shapes.req)}::default(); d${nid(shapes.req)}(&mut rt::P::new(input), &mut ar, &mut req);
+let ar = &ar;
+let mut errs: Vec<String> = Vec::new(); let mut imps: Vec<rt::Out> = Vec::new(); let mut ix: Vec<u32> = Vec::new(); let mut params = Vec::new(); let mut ids: Vec<String> = Vec::new();
+for (i, imp) in req.${fld(shapes.req, 'imp')}.items.iter().enumerate() {
+let p = &imp.${fld(nImp, 'ext')}.${fld(nodeAt('req', ['imp', '*', 'ext']), 'bidder')};
+let o = match core_imp(cx, ar, imp, p, &req) { Ok(o) => o, Err(e) => { errs.push(e); continue; } };
+${has.ext_imp ? `let o = { let patch = ${okU('ext_imp(cx, ar, imp, p, &req)')}; rt::Out::Fill(Box::new(o), patch) };` : ''}
+ids.push(rt::to_string(&o.get(ar, "id"))); imps.push(o); ix.push(i as u32); params.push(p);
+}
+if ids.is_empty() { out.u32(0); } else {
+let rq = ReqIn { v: &req, imps: std::rc::Rc::new(imps), ix: std::rc::Rc::new(ix) };
+let o = ${okU('core_request(cx, ar, &rq, &params)', 'rt::Out::V(V::U)')};
+${has.ext_request ? `let o = { let patch = ${okU('ext_request(cx, ar, &rq, &params)')}; rt::Out::Fill(Box::new(o), patch) };` : ''}
+out.u32(1); let at = out.begin(); rt::emit_edit(&o, ar, req.v_raw(), out); out.end(at);
 }
 out.u32(ids.len() as u32); for i in &ids { out.bytes(i.as_bytes()); }
 out.u32(errs.len() as u32); for e in &errs { out.bytes(e.as_bytes()); }

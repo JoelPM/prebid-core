@@ -1,0 +1,30 @@
+# single goroutine, after the Go-side rewrites (one-pass edit parser and raw projector); stage 0 and stage 1 (struct) paths unchanged from bench-abi.txt
+## stage0
+== openx / lt
+ overhead, one goroutine +9.27 us (1.44x)
+== openx / heavy
+ overhead, one goroutine +14.15 us (1.33x)
+== pubmatic / lt
+ overhead, one goroutine +17.27 us (1.77x)
+== pubmatic / heavy
+ overhead, one goroutine +26.35 us (1.71x)
+## stage2
+== openx / lt
+ overhead, one goroutine +13.65 us (1.65x)
+== openx / heavy
+ overhead, one goroutine +22.61 us (1.54x)
+== pubmatic / lt
+ overhead, one goroutine +29.87 us (2.33x)
+== pubmatic / heavy
+ overhead, one goroutine +43.13 us (2.15x)
+## stage1raw
+== openx / lt
+ overhead, one goroutine +9.89 us (1.47x)
+== openx / heavy
+ overhead, one goroutine +18.20 us (1.43x)
+== pubmatic / lt
+ overhead, one goroutine +21.82 us (1.98x)
+== pubmatic / heavy
+ overhead, one goroutine +37.81 us (2.02x)
+
+[exited with code 0]

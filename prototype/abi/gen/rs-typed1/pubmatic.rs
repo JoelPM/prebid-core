@@ -73,9 +73,9 @@ let s = p.start();
 if !p.is_obj() { x.v = p.leaf(); return; }
 let (mut first, mut last, mut seen) = (rt::NONE, rt::NONE, 0u64);
 p.obj_each(|p, k, kx| {
-let vs = p.start(); let mut kid = (rt::NONE, false);
-match &*rt::key(k, kx) { b"adserver" => { d15(p, ar, &mut x.f_adserver_0); kid = (x.f_adserver_0.m, x.f_adserver_0.dup); } b"pbadslot" => x.f_pbadslot_1 = p.leaf(), _ => p.skip_val(), }
-rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid.0, kid.1);
+let vs = p.start(); let mut kid = (rt::NONE, false, false);
+match &*rt::key(k, kx) { b"adserver" => { d15(p, ar, &mut x.f_adserver_0); } b"pbadslot" => x.f_pbadslot_1 = p.leaf(), _ => p.skip_val(), }
+rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid);
 });
 x.v = V::Raw(p.since(s)); x.m = first;
 }
@@ -120,22 +120,22 @@ let s = p.start();
 if !p.is_obj() { x.v = p.leaf(); return; }
 let (mut first, mut last, mut seen) = (rt::NONE, rt::NONE, 0u64);
 p.obj_each(|p, k, kx| {
-let vs = p.start(); let mut kid = (rt::NONE, false);
+let vs = p.start(); let mut kid = (rt::NONE, false, false);
 match &*rt::key(k, kx) { b"w" => x.f_w_0 = p.leaf(), b"h" => x.f_h_1 = p.leaf(), b"format" => l24(p, ar, &mut x.f_format_2), _ => p.skip_val(), }
-rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid.0, kid.1);
+rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid);
 });
 x.v = V::Raw(p.since(s)); x.m = first;
 }
-pub struct N31<'a> { pub v: V<'a>, pub m: u32, pub dup: bool, pub f_ext_0: N20<'a>, pub f_banner_1: N27<'a>, pub f_video_2: V<'a>, pub f_native_3: V<'a>, pub f_id_4: V<'a>, pub f_displaymanager_5: V<'a>, pub f_displaymanagerver_6: V<'a>, pub f_tagid_7: V<'a>, pub f_bidfloor_8: V<'a> }
-impl Default for N31<'_> { fn default() -> Self { N31 { v: V::U, m: rt::NONE, dup: false, f_ext_0: Default::default(), f_banner_1: Default::default(), f_video_2: Default::default(), f_native_3: Default::default(), f_id_4: Default::default(), f_displaymanager_5: Default::default(), f_displaymanagerver_6: Default::default(), f_tagid_7: Default::default(), f_bidfloor_8: Default::default() } } }
+pub struct N31<'a> { pub v: V<'a>, pub m: u32, pub dup: bool, pub f_ext_0: N20<'a>, pub f_id_1: V<'a>, pub f_banner_2: N27<'a>, pub f_video_3: V<'a>, pub f_native_4: V<'a>, pub f_displaymanager_5: V<'a>, pub f_displaymanagerver_6: V<'a>, pub f_tagid_7: V<'a>, pub f_bidfloor_8: V<'a> }
+impl Default for N31<'_> { fn default() -> Self { N31 { v: V::U, m: rt::NONE, dup: false, f_ext_0: Default::default(), f_id_1: Default::default(), f_banner_2: Default::default(), f_video_3: Default::default(), f_native_4: Default::default(), f_displaymanager_5: Default::default(), f_displaymanagerver_6: Default::default(), f_tagid_7: Default::default(), f_bidfloor_8: Default::default() } } }
 fn d31<'a>(p: &mut rt::P<'a>, ar: &mut rt::Ar<'a>, x: &mut N31<'a>) {
 let s = p.start();
 if !p.is_obj() { x.v = p.leaf(); return; }
 let (mut first, mut last, mut seen) = (rt::NONE, rt::NONE, 0u64);
 p.obj_each(|p, k, kx| {
-let vs = p.start(); let mut kid = (rt::NONE, false);
-match &*rt::key(k, kx) { b"ext" => { d20(p, ar, &mut x.f_ext_0); kid = (x.f_ext_0.m, x.f_ext_0.dup); } b"banner" => { d27(p, ar, &mut x.f_banner_1); kid = (x.f_banner_1.m, x.f_banner_1.dup); } b"video" => x.f_video_2 = p.leaf(), b"native" => x.f_native_3 = p.leaf(), b"id" => x.f_id_4 = p.leaf(), b"displaymanager" => x.f_displaymanager_5 = p.leaf(), b"displaymanagerver" => x.f_displaymanagerver_6 = p.leaf(), b"tagid" => x.f_tagid_7 = p.leaf(), b"bidfloor" => x.f_bidfloor_8 = p.leaf(), _ => p.skip_val(), }
-rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid.0, kid.1);
+let vs = p.start(); let mut kid = (rt::NONE, false, false);
+match &*rt::key(k, kx) { b"ext" => { d20(p, ar, &mut x.f_ext_0); } b"id" => x.f_id_1 = p.leaf(), b"banner" => { d27(p, ar, &mut x.f_banner_2); kid = (x.f_banner_2.m, x.f_banner_2.dup, true); } b"video" => x.f_video_3 = p.leaf(), b"native" => x.f_native_4 = p.leaf(), b"displaymanager" => x.f_displaymanager_5 = p.leaf(), b"displaymanagerver" => x.f_displaymanagerver_6 = p.leaf(), b"tagid" => x.f_tagid_7 = p.leaf(), b"bidfloor" => x.f_bidfloor_8 = p.leaf(), _ => p.skip_val(), }
+rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid);
 });
 x.v = V::Raw(p.since(s)); x.m = first;
 }
@@ -180,9 +180,9 @@ let s = p.start();
 if !p.is_obj() { x.v = p.leaf(); return; }
 let (mut first, mut last, mut seen) = (rt::NONE, rt::NONE, 0u64);
 p.obj_each(|p, k, kx| {
-let vs = p.start(); let mut kid = (rt::NONE, false);
+let vs = p.start(); let mut kid = (rt::NONE, false, false);
 match &*rt::key(k, kx) {  _ => p.skip_val(), }
-rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid.0, kid.1);
+rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid);
 });
 x.v = V::Raw(p.since(s)); x.m = first;
 }
@@ -193,9 +193,9 @@ let s = p.start();
 if !p.is_obj() { x.v = p.leaf(); return; }
 let (mut first, mut last, mut seen) = (rt::NONE, rt::NONE, 0u64);
 p.obj_each(|p, k, kx| {
-let vs = p.start(); let mut kid = (rt::NONE, false);
-match &*rt::key(k, kx) { b"ext" => { d42(p, ar, &mut x.f_ext_0); kid = (x.f_ext_0.m, x.f_ext_0.dup); } b"publisher" => { d45(p, ar, &mut x.f_publisher_1); kid = (x.f_publisher_1.m, x.f_publisher_1.dup); } _ => p.skip_val(), }
-rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid.0, kid.1);
+let vs = p.start(); let mut kid = (rt::NONE, false, false);
+match &*rt::key(k, kx) { b"ext" => { d42(p, ar, &mut x.f_ext_0); } b"publisher" => { d45(p, ar, &mut x.f_publisher_1); kid = (x.f_publisher_1.m, x.f_publisher_1.dup, true); } _ => p.skip_val(), }
+rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid);
 });
 x.v = V::Raw(p.since(s)); x.m = first;
 }
@@ -271,9 +271,9 @@ let s = p.start();
 if !p.is_obj() { x.v = p.leaf(); return; }
 let (mut first, mut last, mut seen) = (rt::NONE, rt::NONE, 0u64);
 p.obj_each(|p, k, kx| {
-let vs = p.start(); let mut kid = (rt::NONE, false);
+let vs = p.start(); let mut kid = (rt::NONE, false, false);
 match &*rt::key(k, kx) {  _ => p.skip_val(), }
-rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid.0, kid.1);
+rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid);
 });
 x.v = V::Raw(p.since(s)); x.m = first;
 }
@@ -310,9 +310,9 @@ let s = p.start();
 if !p.is_obj() { x.v = p.leaf(); return; }
 let (mut first, mut last, mut seen) = (rt::NONE, rt::NONE, 0u64);
 p.obj_each(|p, k, kx| {
-let vs = p.start(); let mut kid = (rt::NONE, false);
+let vs = p.start(); let mut kid = (rt::NONE, false, false);
 match &*rt::key(k, kx) {  _ => p.skip_val(), }
-rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid.0, kid.1);
+rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid);
 });
 x.v = V::Raw(p.since(s)); x.m = first;
 }
@@ -323,9 +323,9 @@ let s = p.start();
 if !p.is_obj() { x.v = p.leaf(); return; }
 let (mut first, mut last, mut seen) = (rt::NONE, rt::NONE, 0u64);
 p.obj_each(|p, k, kx| {
-let vs = p.start(); let mut kid = (rt::NONE, false);
-match &*rt::key(k, kx) { b"publisher" => { d62(p, ar, &mut x.f_publisher_0); kid = (x.f_publisher_0.m, x.f_publisher_0.dup); } _ => p.skip_val(), }
-rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid.0, kid.1);
+let vs = p.start(); let mut kid = (rt::NONE, false, false);
+match &*rt::key(k, kx) { b"publisher" => { d62(p, ar, &mut x.f_publisher_0); kid = (x.f_publisher_0.m, x.f_publisher_0.dup, true); } _ => p.skip_val(), }
+rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid);
 });
 x.v = V::Raw(p.since(s)); x.m = first;
 }
@@ -336,9 +336,9 @@ let s = p.start();
 if !p.is_obj() { x.v = p.leaf(); return; }
 let (mut first, mut last, mut seen) = (rt::NONE, rt::NONE, 0u64);
 p.obj_each(|p, k, kx| {
-let vs = p.start(); let mut kid = (rt::NONE, false);
-match &*rt::key(k, kx) { b"imp" => l31(p, ar, &mut x.f_imp_0), b"app" => { d46(p, ar, &mut x.f_app_1); kid = (x.f_app_1.m, x.f_app_1.dup); } b"ext" => { d61(p, ar, &mut x.f_ext_2); kid = (x.f_ext_2.m, x.f_ext_2.dup); } b"site" => { d63(p, ar, &mut x.f_site_3); kid = (x.f_site_3.m, x.f_site_3.dup); } _ => p.skip_val(), }
-rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid.0, kid.1);
+let vs = p.start(); let mut kid = (rt::NONE, false, false);
+match &*rt::key(k, kx) { b"imp" => l31(p, ar, &mut x.f_imp_0), b"app" => { d46(p, ar, &mut x.f_app_1); kid = (x.f_app_1.m, x.f_app_1.dup, true); } b"ext" => { d61(p, ar, &mut x.f_ext_2); } b"site" => { d63(p, ar, &mut x.f_site_3); kid = (x.f_site_3.m, x.f_site_3.dup, true); } _ => p.skip_val(), }
+rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid);
 });
 x.v = V::Raw(p.since(s)); x.m = first;
 }
@@ -375,9 +375,9 @@ let s = p.start();
 if !p.is_obj() { x.v = p.leaf(); return; }
 let (mut first, mut last, mut seen) = (rt::NONE, rt::NONE, 0u64);
 p.obj_each(|p, k, kx| {
-let vs = p.start(); let mut kid = (rt::NONE, false);
-match &*rt::key(k, kx) { b"mtype" => x.f_mtype_0 = p.leaf(), b"impid" => x.f_impid_1 = p.leaf(), b"adm" => x.f_adm_2 = p.leaf(), b"cat" => x.f_cat_3 = p.leaf_arr(), b"ext" => { d68(p, ar, &mut x.f_ext_4); kid = (x.f_ext_4.m, x.f_ext_4.dup); } _ => p.skip_val(), }
-rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid.0, kid.1);
+let vs = p.start(); let mut kid = (rt::NONE, false, false);
+match &*rt::key(k, kx) { b"mtype" => x.f_mtype_0 = p.leaf(), b"impid" => x.f_impid_1 = p.leaf(), b"adm" => x.f_adm_2 = p.leaf(), b"cat" => x.f_cat_3 = p.leaf_arr(), b"ext" => { d68(p, ar, &mut x.f_ext_4); } _ => p.skip_val(), }
+rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid);
 });
 x.v = V::Raw(p.since(s)); x.m = first;
 }
@@ -417,9 +417,9 @@ let s = p.start();
 if !p.is_obj() { x.v = p.leaf(); return; }
 let (mut first, mut last, mut seen) = (rt::NONE, rt::NONE, 0u64);
 p.obj_each(|p, k, kx| {
-let vs = p.start(); let mut kid = (rt::NONE, false);
+let vs = p.start(); let mut kid = (rt::NONE, false, false);
 match &*rt::key(k, kx) {  _ => p.skip_val(), }
-rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid.0, kid.1);
+rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid);
 });
 x.v = V::Raw(p.since(s)); x.m = first;
 }
@@ -484,7 +484,11 @@ match &*rt::key(k, kx) { b"imp" => l85(p, ar, &mut x.f_imp_0), _ => p.skip_val()
 x.v = V::Raw(p.since(s)); 
 }
 
-pub struct ReqIn<'x, 'a> { pub v: &'x N64<'a>, pub imps: std::rc::Rc<Vec<rt::Out<'a>>> }
+/// What the Phases read, per input document (the Host's projection; see the ABI prototype).
+pub const SHAPES: &str = "{\"req\":[[\"imp\",\"*\",\"ext\",\"bidder\",\"adSlot\"],[\"imp\",\"*\",\"ext\",\"bidder\",\"kadfloor\"],[\"imp\",\"*\",\"ext\",\"bidder\",\"keywords\",\"*\",\"value\",\"*\"],[\"imp\",\"*\",\"ext\",\"bidder\",\"keywords\",\"*\",\"key\"],[\"imp\",\"*\",\"ext\",\"bidder\",\"dctr\"],[\"imp\",\"*\",\"ext\",\"bidder\",\"pmzoneid\"],[\"imp\",\"*\",\"ext\",\"bidder\",\"publisherId\"],[\"imp\",\"*\",\"ext\",\"bidder\",\"wrapper\",\"profile\"],[\"imp\",\"*\",\"ext\",\"bidder\",\"wrapper\",\"version\"],[\"imp\",\"*\",\"ext\",\"data\",\"%\"],[\"imp\",\"*\",\"ext\",\"data\",\"adserver\",\"name\"],[\"imp\",\"*\",\"ext\",\"data\",\"adserver\",\"adslot\"],[\"imp\",\"*\",\"ext\",\"data\",\"pbadslot\"],[\"imp\",\"*\",\"ext\",\"ae\"],[\"imp\",\"*\",\"ext\",\"gpid\"],[\"imp\",\"*\",\"ext\",\"skadn\"],[\"imp\",\"*\",\"id\"],[\"imp\",\"*\",\"banner\",\"w\"],[\"imp\",\"*\",\"banner\",\"h\"],[\"imp\",\"*\",\"banner\",\"format\",\"*\",\"w\"],[\"imp\",\"*\",\"banner\",\"format\",\"*\",\"h\"],[\"imp\",\"*\",\"video\"],[\"imp\",\"*\",\"native\"],[\"imp\",\"*\",\"displaymanager\"],[\"imp\",\"*\",\"displaymanagerver\"],[\"imp\",\"*\",\"tagid\"],[\"imp\",\"*\",\"bidfloor\"],[\"app\",\"ext\"],[\"app\",\"publisher\"],[\"ext\",\"prebid\",\"bidderparams\",\"wrapper\",\"profile\"],[\"ext\",\"prebid\",\"bidderparams\",\"wrapper\",\"version\"],[\"ext\",\"prebid\",\"bidderparams\",\"acat\"],[\"ext\",\"prebid\",\"alternatebiddercodes\",\"bidders\",\"pubmatic\",\"allowedbiddercodes\",\"*\"],[\"ext\",\"prebid\",\"alternatebiddercodes\",\"bidders\",\"pubmatic\",\"enabled\"],[\"ext\",\"prebid\",\"alternatebiddercodes\",\"enabled\"],[\"ext\",\"prebid\",\"aliases\"],[\"site\",\"publisher\"]],\"resp\":[[\"seatbid\",\"*\",\"bid\",\"*\",\"mtype\"],[\"seatbid\",\"*\",\"bid\",\"*\",\"impid\"],[\"seatbid\",\"*\",\"bid\",\"*\",\"adm\"],[\"seatbid\",\"*\",\"bid\",\"*\",\"cat\",\"*\"],[\"seatbid\",\"*\",\"bid\",\"*\",\"ext\",\"prebiddealpriority\"],[\"seatbid\",\"*\",\"bid\",\"*\",\"ext\",\"marketplace\"],[\"seatbid\",\"*\",\"bid\",\"*\",\"ext\",\"video\",\"duration\"],[\"seatbid\",\"*\",\"bid\",\"*\",\"ext\",\"ibv\"],[\"cur\"],[\"ext\",\"fledge_auction_configs\",\"%\"]],\"breq\":[[\"imp\",\"*\",\"id\"]]}";
+
+pub struct ReqIn<'x, 'a> { pub v: &'x N64<'a>, pub imps: std::rc::Rc<Vec<rt::Out<'a>>>, pub ix: std::rc::Rc<Vec<u32>> }
+impl<'a> N64<'a> { fn v_raw(&self) -> Option<&'a [u8]> { if let V::Raw(r) = self.v { Some(r) } else { None } } }
 
 fn f_dataPair<'a>(cx: &'a rt::Cx, v_k: V<'a>, v_v: V<'a>) -> V<'a> {
 if (rt::typeof_(&v_v.clone()) == "string") { return { let mut tm = rt::Tmpl::new(); tm.val(&rt::trim(&v_k.clone())); tm.lit("="); tm.val(&rt::trim(&v_v.clone())); tm.done() }; }
@@ -502,8 +506,8 @@ let mut v_at_5 = { let t6 = rt::split(&v_slot_2.clone(), "@"); if rt::nullish(&t
 let mut v_sz_8 = { let t9 = rt::split(&rt::lower(&rt::at(&v_at_5.clone(), 1)), "x"); if rt::nullish(&t9) { { let mut t10: Vec<V> = Vec::with_capacity(0);  rt::arr_v(t10) } } else { t9 } };
 let mut v_w_11 = rt::int(&rt::trim(&rt::at(&v_sz_8.clone(), 0)));
 let mut v_h_12 = rt::int(&rt::trim(&rt::at(&rt::split(&rt::at(&v_sz_8.clone(), 1), ":"), 0)));
-if ((!rt::truthy(&(&v_imp.f_banner_1).v.clone()) && !rt::truthy(&v_imp.f_video_2.clone())) && !rt::truthy(&v_imp.f_native_3.clone())) {
-return Err(rt::to_string(&{ let mut tm = rt::Tmpl::new(); tm.lit("invalid MediaType. PubMatic only supports Banner, Video and Native. Ignoring ImpID="); tm.val(&v_imp.f_id_4.clone()); tm.done() }));
+if ((!rt::truthy(&(&v_imp.f_banner_2).v) && !rt::truthy(&v_imp.f_video_3.clone())) && !rt::truthy(&v_imp.f_native_4.clone())) {
+return Err(rt::to_string(&{ let mut tm = rt::Tmpl::new(); tm.lit("invalid MediaType. PubMatic only supports Banner, Video and Native. Ignoring ImpID="); tm.val(&v_imp.f_id_1.clone()); tm.done() }));
 }
 if (rt::truthy(&v_hasSize_3.clone()) && !((rt::eq(&rt::len(&v_at_5.clone()), &rt::num(2.0)) && !rt::is_lit(&rt::at(&v_at_5.clone(), 0), "")) && !rt::is_lit(&rt::at(&v_at_5.clone(), 1), ""))) { return Err(rt::to_string(&{ let mut tm = rt::Tmpl::new(); tm.lit("Invalid adSlot "); tm.val(&v_slot_2.clone()); tm.done() })); }
 if (rt::truthy(&v_hasSize_3.clone()) && !rt::eq(&rt::len(&v_sz_8.clone()), &rt::num(2.0))) { return Err(rt::to_string(&{ let mut tm = rt::Tmpl::new(); tm.lit("Invalid size provided in adSlot "); tm.val(&v_slot_2.clone()); tm.done() })); }
@@ -517,8 +521,8 @@ if ((!rt::truthy(&v_imp.f_displaymanager_5.clone()) && !rt::truthy(&v_imp.f_disp
 { let o = rt::Out::V(rt::get(&v_dm_15.clone(), "version")); v_out_13.set("displaymanagerver", o); }
 }
 if !rt::is_lit(&v_slot_2.clone(), "") { { let o = rt::Out::V(if rt::truthy(&v_hasSize_3.clone()) { rt::trim(&rt::at(&v_at_5.clone(), 0)) } else { v_slot_2.clone() }); v_out_13.set("tagid", o); } }
-let v_banner_16 = (&v_imp.f_banner_1);
-if rt::truthy(&v_banner_16.v.clone()) {
+let v_banner_16 = (&v_imp.f_banner_2);
+if rt::truthy(&v_banner_16.v) {
 if rt::truthy(&v_hasSize_3.clone()) { { let o = rt::Out::P(Box::new({ let mut pl = rt::Plan::of(&v_banner_16.v, v_banner_16.m, v_banner_16.dup); { let o = rt::Out::V(v_w_11.clone()); pl.set("w", o); } { let o = rt::Out::V(v_h_12.clone()); pl.set("h", o); } pl })); v_out_13.set("banner", o); } } else { if (rt::nullish(&v_banner_16.f_w_0.clone()) || rt::nullish(&v_banner_16.f_h_1.clone())) { { let o = rt::Out::P(Box::new({ let mut pl = rt::Plan::of(&v_banner_16.v, v_banner_16.m, v_banner_16.dup); { let o = rt::Out::V((&v_banner_16.f_format_2).items.get(0).map_or(V::U, |x| x.f_w_0.clone())); pl.set("w", o); } { let o = rt::Out::V((&v_banner_16.f_format_2).items.get(0).map_or(V::U, |x| x.f_h_1.clone())); pl.set("h", o); } pl })); v_out_13.set("banner", o); } } }
 }
 let mut v_kad_17 = rt::num_(&rt::trim(&v_p.f_kadfloor_1.clone()));
@@ -539,7 +543,7 @@ let v_pm_44 = (&(&v_abc_43.f_bidders_0).f_pubmatic_0);
 let mut v_allowed_45 = v_pm_44.f_allowedbiddercodes_0.clone();
 let mut v_pub_46 = { let src = rt::items(&{ let mut o: Vec<V> = Vec::new(); for x48 in v_params.iter().copied() { o.push(rt::trim(&x48.f_publisherId_5.clone())); } rt::arr_v(o) }); let mut f = rt::U; for it in src.iter() { let v_x_49 = it.clone(); if rt::truthy(&v_x_49.clone()) { f = it.clone(); break; } } f };
 let mut v_acat_50 = if rt::is_array(&v_bp_41.f_acat_1.clone()) { v_bp_41.f_acat_1.clone() } else { { let mut t51: Vec<V> = Vec::with_capacity(0);  rt::arr_v(t51) } };
-let mut v_out_52 = { let mut pl = rt::Plan::of(&v_req.v.v, v_req.v.m, v_req.v.dup).with("imp", rt::Out::List(v_req.imps.clone())); { let o = rt::Out::V({ let mut t53 = rt::O::default(); { let x = rt::nonempty({ let mut t54 = rt::O::default(); { let x = { let t55 = { let t56 = v_bpWrapper_42.f_profile_0.clone(); if rt::truthy(&t56) { t56 } else { { let src = rt::items(&{ let mut o: Vec<V> = Vec::new(); for x58 in v_params.iter().copied() { o.push((&x58.f_wrapper_6).f_profile_0.clone()); } rt::arr_v(o) }); let mut f = rt::U; for it in src.iter() { let v_x_59 = it.clone(); if rt::truthy(&v_x_59.clone()) { f = it.clone(); break; } } f } } }; if rt::truthy(&t55) { t55 } else { rt::U } }; t54.set(rt::Js::Esc(b"profile"), x); } { let x = { let t60 = { let t61 = v_bpWrapper_42.f_version_1.clone(); if rt::truthy(&t61) { t61 } else { { let src = rt::items(&{ let mut o: Vec<V> = Vec::new(); for x63 in v_params.iter().copied() { o.push((&x63.f_wrapper_6).f_version_1.clone()); } rt::arr_v(o) }); let mut f = rt::U; for it in src.iter() { let v_x_64 = it.clone(); if rt::truthy(&v_x_64.clone()) { f = it.clone(); break; } } f } } }; if rt::truthy(&t60) { t60 } else { rt::U } }; t54.set(rt::Js::Esc(b"version"), x); } { let x = if rt::truthy(&(&v_req.v.f_ext_2).v.clone()) { { let t65 = rt::at(&rt::keys_mem(ar, (&(&(&v_req.v.f_ext_2).f_prebid_0).f_aliases_2).m, &(&(&(&v_req.v.f_ext_2).f_prebid_0).f_aliases_2).v), 0); if rt::nullish(&t65) { rt::lit(b"pubmatic") } else { t65 } } } else { rt::U }; t54.set(rt::Js::Esc(b"biddercode"), x); } rt::obj_v(t54) }); t53.set(rt::Js::Esc(b"wrapper"), x); } { let x = rt::nonempty({ let src = rt::items(&{ let src = rt::items(&v_acat_50.clone()); let mut out: Vec<V> = Vec::with_capacity(src.len()); for it in src.iter() { let v_a_67 = it.clone(); if (rt::typeof_(&v_a_67.clone()) == "string") { out.push(it.clone()); } } rt::arr_v(out) }); let mut out: Vec<V> = Vec::with_capacity(src.len()); for it in src.iter() { let v_a_68 = it.clone(); out.push(rt::trim(&rt::str_(&v_a_68.clone()))); } rt::arr_v(out) }); t53.set(rt::Js::Esc(b"acat"), x); } { let x = if rt::nullish(&v_abc_43.v.clone()) { rt::U } else { { let mut t69 = rt::O::default(); { let x = if !(rt::truthy(&v_abc_43.f_enabled_1.clone()) && rt::truthy(&v_pm_44.f_enabled_1.clone())) { { let mut t70: Vec<V> = Vec::with_capacity(1); t70.push(rt::lit(b"pubmatic")); rt::arr_v(t70) } } else { if (rt::nullish(&v_allowed_45.clone()) || (rt::eq(&rt::len(&v_allowed_45.clone()), &rt::num(1.0)) && rt::is_lit(&rt::at(&v_allowed_45.clone(), 0), "*"))) { { let mut t71: Vec<V> = Vec::with_capacity(1); t71.push(rt::lit(b"all")); rt::arr_v(t71) } } else { { let mut t72: Vec<V> = Vec::with_capacity(2); t72.push(rt::lit(b"pubmatic")); t72.extend(rt::items(&v_allowed_45.clone()).iter().cloned()); rt::arr_v(t72) } } }; t69.set(rt::Js::Esc(b"allowedbidders"), x); } rt::obj_v(t69) } }; t53.set(rt::Js::Esc(b"marketplace"), x); } rt::obj_v(t53) }); pl.set("ext", o); } pl };
+let mut v_out_52 = { let mut pl = rt::Plan::of(&v_req.v.v, v_req.v.m, v_req.v.dup).with("imp", rt::Out::IdxList(v_req.imps.clone(), v_req.ix.clone())); { let o = rt::Out::V({ let mut t53 = rt::O::default(); { let x = rt::nonempty({ let mut t54 = rt::O::default(); { let x = { let t55 = { let t56 = v_bpWrapper_42.f_profile_0.clone(); if rt::truthy(&t56) { t56 } else { { let src = rt::items(&{ let mut o: Vec<V> = Vec::new(); for x58 in v_params.iter().copied() { o.push((&x58.f_wrapper_6).f_profile_0.clone()); } rt::arr_v(o) }); let mut f = rt::U; for it in src.iter() { let v_x_59 = it.clone(); if rt::truthy(&v_x_59.clone()) { f = it.clone(); break; } } f } } }; if rt::truthy(&t55) { t55 } else { rt::U } }; t54.set(rt::Js::Esc(b"profile"), x); } { let x = { let t60 = { let t61 = v_bpWrapper_42.f_version_1.clone(); if rt::truthy(&t61) { t61 } else { { let src = rt::items(&{ let mut o: Vec<V> = Vec::new(); for x63 in v_params.iter().copied() { o.push((&x63.f_wrapper_6).f_version_1.clone()); } rt::arr_v(o) }); let mut f = rt::U; for it in src.iter() { let v_x_64 = it.clone(); if rt::truthy(&v_x_64.clone()) { f = it.clone(); break; } } f } } }; if rt::truthy(&t60) { t60 } else { rt::U } }; t54.set(rt::Js::Esc(b"version"), x); } { let x = if rt::truthy(&(&v_req.v.f_ext_2).v) { { let t65 = rt::at(&rt::keys_mem(ar, (&(&(&v_req.v.f_ext_2).f_prebid_0).f_aliases_2).m, &(&(&(&v_req.v.f_ext_2).f_prebid_0).f_aliases_2).v), 0); if rt::nullish(&t65) { rt::lit(b"pubmatic") } else { t65 } } } else { rt::U }; t54.set(rt::Js::Esc(b"biddercode"), x); } rt::obj_v(t54) }); t53.set(rt::Js::Esc(b"wrapper"), x); } { let x = rt::nonempty({ let src = rt::items(&{ let src = rt::items(&v_acat_50.clone()); let mut out: Vec<V> = Vec::with_capacity(src.len()); for it in src.iter() { let v_a_67 = it.clone(); if (rt::typeof_(&v_a_67.clone()) == "string") { out.push(it.clone()); } } rt::arr_v(out) }); let mut out: Vec<V> = Vec::with_capacity(src.len()); for it in src.iter() { let v_a_68 = it.clone(); out.push(rt::trim(&rt::str_(&v_a_68.clone()))); } rt::arr_v(out) }); t53.set(rt::Js::Esc(b"acat"), x); } { let x = if rt::nullish(&v_abc_43.v) { rt::U } else { { let mut t69 = rt::O::default(); { let x = if !(rt::truthy(&v_abc_43.f_enabled_1.clone()) && rt::truthy(&v_pm_44.f_enabled_1.clone())) { { let mut t70: Vec<V> = Vec::with_capacity(1); t70.push(rt::lit(b"pubmatic")); rt::arr_v(t70) } } else { if (rt::nullish(&v_allowed_45.clone()) || (rt::eq(&rt::len(&v_allowed_45.clone()), &rt::num(1.0)) && rt::is_lit(&rt::at(&v_allowed_45.clone(), 0), "*"))) { { let mut t71: Vec<V> = Vec::with_capacity(1); t71.push(rt::lit(b"all")); rt::arr_v(t71) } } else { { let mut t72: Vec<V> = Vec::with_capacity(2); t72.push(rt::lit(b"pubmatic")); t72.extend(rt::items(&v_allowed_45.clone()).iter().cloned()); rt::arr_v(t72) } } }; t69.set(rt::Js::Esc(b"allowedbidders"), x); } rt::obj_v(t69) } }; t53.set(rt::Js::Esc(b"marketplace"), x); } rt::obj_v(t53) }); pl.set("ext", o); } pl };
 let mut v_id_73 = { let t74 = v_pub_46.clone(); if rt::truthy(&t74) { t74 } else { rt::U } };
 if rt::truthy(&(v_out_52).get(ar, "site")) {
 if (rt::truthy(&v_id_73.clone()) || rt::truthy(&(rt::Plan::from_out((v_out_52).member_out(ar, "site"), ar)).get(ar, "publisher"))) { { let o = rt::Out::P(Box::new({ let mut pl = rt::Plan::from_out((v_out_52).member_out(ar, "site"), ar); { let o = rt::Out::P(Box::new({ let mut pl = rt::Plan::from_out((rt::Plan::from_out((v_out_52).member_out(ar, "site"), ar)).member_out(ar, "publisher"), ar); { let o = rt::Out::V(v_id_73.clone()); pl.set("id", o); } pl })); pl.set("publisher", o); } pl })); v_out_52.set("site", o); } }
@@ -558,7 +562,7 @@ if (rt::truthy(&v_bid.f_cat_3.clone()) && rt::gt(&rt::len(&v_bid.f_cat_3.clone()
 let mut v_native_82 = rt::get(&rt::obj_(&v_nat_78.clone()), "native");
 if !rt::nullish(&v_native_82.clone()) { { let o = rt::Out::V(rt::stringify(&v_native_82.clone())); v_out_79.set("adm", o); } }
 let mut v_dp_83 = (&v_bid.f_ext_4).f_prebiddealpriority_0.clone();
-return Ok(({ let mut o = rt::O::default(); { let x = v_type_75.clone(); o.set(rt::Js::Esc(b"type"), x); } { let x = (&v_bid.f_ext_4).f_marketplace_1.clone(); o.set(rt::Js::Esc(b"seat"), x); } { let x = if (!rt::is_undef(&v_dp_83.clone()) && rt::gt(&v_dp_83.clone(), &rt::num(0.0))) { v_dp_83.clone() } else { rt::U }; o.set(rt::Js::Esc(b"dealPriority"), x); } { let x = { let mut t84 = rt::O::default(); { let x = (&(&v_bid.f_ext_4).f_video_2).f_duration_0.clone(); t84.set(rt::Js::Esc(b"duration"), x); } rt::obj_v(t84) }; o.set(rt::Js::Esc(b"video"), x); } { let x = if rt::truthy(&(&v_bid.f_ext_4).v.clone()) { { let mut t85 = rt::O::default(); { let x = if rt::truthy(&(&v_bid.f_ext_4).f_ibv_3.clone()) { rt::lit(b"video") } else { v_type_75.clone() }; t85.set(rt::Js::Esc(b"mediaType"), x); } rt::obj_v(t85) } } else { rt::U }; o.set(rt::Js::Esc(b"meta"), x); } { let x = if (rt::is_lit(&v_type_75.clone(), "native") && rt::nullish(&v_nat_78.clone())) { rt::lit(b"unable to unmarshal native adm") } else { rt::U }; o.set(rt::Js::Esc(b"warning"), x); } rt::obj_v(o) }, Some(rt::Out::P(Box::new(v_out_79.clone())))));
+return Ok(({ let mut o = rt::O::default(); { let x = v_type_75.clone(); o.set(rt::Js::Esc(b"type"), x); } { let x = (&v_bid.f_ext_4).f_marketplace_1.clone(); o.set(rt::Js::Esc(b"seat"), x); } { let x = if (!rt::is_undef(&v_dp_83.clone()) && rt::gt(&v_dp_83.clone(), &rt::num(0.0))) { v_dp_83.clone() } else { rt::U }; o.set(rt::Js::Esc(b"dealPriority"), x); } { let x = { let mut t84 = rt::O::default(); { let x = (&(&v_bid.f_ext_4).f_video_2).f_duration_0.clone(); t84.set(rt::Js::Esc(b"duration"), x); } rt::obj_v(t84) }; o.set(rt::Js::Esc(b"video"), x); } { let x = if rt::truthy(&(&v_bid.f_ext_4).v) { { let mut t85 = rt::O::default(); { let x = if rt::truthy(&(&v_bid.f_ext_4).f_ibv_3.clone()) { rt::lit(b"video") } else { v_type_75.clone() }; t85.set(rt::Js::Esc(b"mediaType"), x); } rt::obj_v(t85) } } else { rt::U }; o.set(rt::Js::Esc(b"meta"), x); } { let x = if (rt::is_lit(&v_type_75.clone(), "native") && rt::nullish(&v_nat_78.clone())) { rt::lit(b"unable to unmarshal native adm") } else { rt::U }; o.set(rt::Js::Esc(b"warning"), x); } rt::obj_v(o) }, Some(rt::Out::P(Box::new(v_out_79.clone())))));
 Ok((V::U, None))
 }
 fn core_response<'a, 'x>(cx: &'a rt::Cx, ar: &'x rt::Ar<'a>, v_resp: &'x N82<'a>) -> Result<V<'a>, String> {
@@ -579,10 +583,33 @@ let o = match core_imp(cx, ar, imp, p, &req) { Ok(o) => o, Err(e) => { errs.push
 ids.push(rt::to_string(&o.get(ar, "id"))); imps.push(o); params.push(p);
 }
 if ids.is_empty() { out.u32(0); } else {
-let rq = ReqIn { v: &req, imps: std::rc::Rc::new(imps) };
+let rq = ReqIn { v: &req, imps: std::rc::Rc::new(imps), ix: std::rc::Rc::new(Vec::new()) };
 let o = match core_request(cx, ar, &rq, &params) { Ok(v) => v, Err(_) => rt::Out::V(V::U) };
 
 out.u32(1); let at = out.begin(); rt::emit_out(&o, ar, out); out.end(at);
+}
+out.u32(ids.len() as u32); for i in &ids { out.bytes(i.as_bytes()); }
+out.u32(errs.len() as u32); for e in &errs { out.bytes(e.as_bytes()); }
+}
+
+/// ABI #24: MakeRequests over a projected request, returning edits to the Host's own request.
+pub fn make_requests_edits(input: &[u8], out: &mut Vec<u8>) {
+let cx = rt::Cx::new(); let cx = &cx;
+let mut ar: rt::Ar = Vec::with_capacity(128);
+let mut req = N64::default(); d64(&mut rt::P::new(input), &mut ar, &mut req);
+let ar = &ar;
+let mut errs: Vec<String> = Vec::new(); let mut imps: Vec<rt::Out> = Vec::new(); let mut ix: Vec<u32> = Vec::new(); let mut params = Vec::new(); let mut ids: Vec<String> = Vec::new();
+for (i, imp) in req.f_imp_0.items.iter().enumerate() {
+let p = &imp.f_ext_0.f_bidder_0;
+let o = match core_imp(cx, ar, imp, p, &req) { Ok(o) => o, Err(e) => { errs.push(e); continue; } };
+
+ids.push(rt::to_string(&o.get(ar, "id"))); imps.push(o); ix.push(i as u32); params.push(p);
+}
+if ids.is_empty() { out.u32(0); } else {
+let rq = ReqIn { v: &req, imps: std::rc::Rc::new(imps), ix: std::rc::Rc::new(ix) };
+let o = match core_request(cx, ar, &rq, &params) { Ok(v) => v, Err(_) => rt::Out::V(V::U) };
+
+out.u32(1); let at = out.begin(); rt::emit_edit(&o, ar, req.v_raw(), out); out.end(at);
 }
 out.u32(ids.len() as u32); for i in &ids { out.bytes(i.as_bytes()); }
 out.u32(errs.len() as u32); for e in &errs { out.bytes(e.as_bytes()); }

@@ -157,6 +157,8 @@ for (const bidder of ['openx', 'pubmatic']) {
     }
   }
   const input = cases.map((c) => [bidder, c.op, JSON.stringify(c.req), ...(c.resp ? [JSON.stringify(c.resp)] : [])].join('\t')).join('\n') + '\n';
+  // DUMP_CASES=<file>: also write the cases (one per line) for hostgo/cmd/abifuzz
+  if (process.env.DUMP_CASES) fs.appendFileSync(process.env.DUMP_CASES, input);
   const rs = spawnSync(process.env.FUZZ_BIN || path.join(root, 'out/target-native/release/fuzz'), { input, maxBuffer: 1 << 30 });
   if (rs.status !== 0) throw new Error(rs.stderr.toString());
   const rsOut = rs.stdout.toString().trim().split('\n').map((l) => JSON.parse(l));

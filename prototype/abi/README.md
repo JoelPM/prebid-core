@@ -1,118 +1,92 @@
-# PROTOTYPE: Can the Definition Compiler emit typed Rust that keeps OpenX and PubMatic within ~+10 µs per call?
+# PROTOTYPE: Can a projected-input, edits-out ABI get generated Shared Adapters within ~+10 µs per call?
 
-Throwaway prototype for [#17](https://github.com/JoelPM/prebid-core/issues/17) (map [#1](https://github.com/JoelPM/prebid-core/issues/1)). It builds on [`prototype/ts-transpiler`](https://github.com/JoelPM/prebid-core/tree/prototype/ts-transpiler/prototype/ts-transpiler): the same Adapter Definitions, front end, subset checker, parity harness and fuzz, copied here. It measures against the hand-written floor from [Can typed codegen bring a generated PubMatic within ~+10 µs per call on PBS-Go?](https://github.com/JoelPM/prebid-core/issues/16) (`research/typed-codegen`, copied into `typed-ref/`). Vocabulary follows [`CONTEXT.md`](../../CONTEXT.md). Nothing here is meant to be merged.
+Throwaway prototype for [#24](https://github.com/JoelPM/prebid-core/issues/24) (map [#1](https://github.com/JoelPM/prebid-core/issues/1)). It builds on [`prototype/typed-backend`](https://github.com/JoelPM/prebid-core/blob/prototype/typed-backend/prototype/typed-backend/README.md) (#17): the same Definitions and the Level 1 typed back end, here with its per-call bump allocator. Only the Host↔guest ABI changes. Vocabulary follows [`CONTEXT.md`](../../CONTEXT.md). Nothing here is meant to be merged.
 
 ## TL;DR
 
-**Partly.** The Definition Compiler generates typed Rust from the unchanged Restricted TypeScript Definitions, with parity and JS semantics exact. It gets OpenX, the Proof of Concept's Adapter, to the ~+10 µs gate. But it does not get within 15% of the hand-written floor: it is 1.42× (OpenX) and 1.67× (PubMatic) of it.
+**Partly.**
 
-Guest-only time in wasm (PBS-Go / wazero), `lt` payloads. All guests were measured in one session on a quiet machine; raw output is in [`results/bench-level1-r2.txt`](results/bench-level1-r2.txt), [`results/bench-level1.txt`](results/bench-level1.txt) and [`results/bench-level0.txt`](results/bench-level0.txt).
+- **Projection in pays when the Host projects its own structs.** Generated OpenX, the Proof of Concept's Adapter, drops to about half its overhead, well inside the gate.
+- **Edits out does not pay with a JSON patcher.** MakeRequests should stay body-out.
+- **PubMatic stays over the gate.** A static projection can't express its data-dependent `adm` read, and its Phase code is the costliest.
 
-| guest | OpenX `lt` | ÷ floor | PubMatic `lt` | ÷ floor |
+Overhead per call against the Hand-written PBS-Go Adapter (wazero, macOS arm64), with the same guest at every stage. The guest has to match the Hand-written Adapter's output before each payload is timed.
+
+| ABI | OpenX `lt` | OpenX `heavy` | PubMatic `lt` | PubMatic `heavy` |
 |---|---:|---:|---:|---:|
-| hand-written typed (floor, #16), bump allocator | **7.04 µs** | 1.00 | **10.36 µs** | 1.00 |
-| transpiled TS on the generic runtime (#15) | 15.09 | 2.1 | 33.52 | 3.2 |
-| Level 0 typed back end | 14.21 | 1.9 | 28.63 | 2.75 |
-| Level 1 typed back end | 10.87 | 1.54 | 19.39 | 1.87 |
-| Level 1 + per-call bump allocator | **10.01** | **1.42** | **17.28** | **1.67** |
+| stage 0: variant D (today's ABI) | +9.3 µs | +14.2 | +17.3 | +26.4 |
+| **stage 1: bid response projected from the Host's structs** | **+5.3** (CPU +5.0 to +6.2 at 1–8 goroutines) | **+6.2** | +17.9 | +26.4 |
+| stage 1, projected from the raw bytes instead | +9.9 | +18.2 | +21.8 | +37.8 |
+| stage 2: + request projected, MakeRequests returns edits | +13.7 | +22.6 | +29.9 | +43.1 |
+| *gate* | *~+10* | | | |
 
-| per call vs the Hand-written Adapter, Level 1 + bump | overhead | process CPU at 1 / 2 / 4 / 8 goroutines | gate |
-|---|---:|---|---|
-| OpenX `lt` | **+8.8 µs** | +9.9 / +9.9 / +10.2 / +9.2 | ✅ at ~+10 |
-| OpenX `heavy` | +11.9 µs | | ❌ just over |
-| PubMatic `lt` | +16.7 µs | +18.7 / +18.6 / +19.9 / +21.2 | ❌ |
-| PubMatic `heavy` | +25.5 µs | | ❌ |
-| *floor, for comparison: OpenX / PubMatic `lt`* | *+5.0 / +9.1* | *+6.2 / … / +5.9; +11.6 / … / +13.2* | |
+Raw output: [`results/bench-abi.txt`](results/bench-abi.txt) (full run, CPU at 1–8 goroutines) and [`results/bench-abi-rewrite-1goroutine.txt`](results/bench-abi-rewrite-1goroutine.txt). The full run measured the first, naive Go-side raw projector and edit patcher. The raw and stage 2 rows above are after their one-pass rewrites, single goroutine.
 
-Correctness held at every step, for every guest:
+Correctness at every stage, both projection sources:
 
-- **Parity:** 33/33 fixtures, with the same 3 pinned Known Differences, against both the fixtures and the Hand-written Adapter's full output.
-- **TS vs Rust:** identical to the TS as written on every fixture.
-- **PBS-Go's own `adapterstest`:** 30/33, failing exactly the three Known Difference fixtures.
-- **Differential fuzz:** 0 differences in 77,063 calls. The fuzz now also uses lone surrogates, broken pairs and emoji, which the new runtime handles per [What happens to a lone UTF-16 surrogate on its way to a Shared Adapter?](https://github.com/JoelPM/prebid-core/issues/23).
-
-**Reading:**
-
-- **The hard analysis is tractable.** Restricted TypeScript's rules (fresh locals, one-level writes, read-only inputs) make "which input paths does a Phase read" and "which locals are copy-with-overrides" decidable from the source. The compiler found every read on the bench payloads: no shape misses on `lt`.
-- **The remaining gap is spread thinly** over the generated code's value model, not concentrated in one pattern (see "Where the gap is").
-- **Gains are shrinking:** each of the last rounds gave 5–20%.
-- **The ABI is now the bigger lever.** #16 found that 50–70% of the floor's own time is re-scanning JSON the Host already parsed. In this prototype, the scanner (`skip`) is the single largest cost of generated OpenX too.
+- **Parity:** 33/33 fixtures, with the same 3 pinned Known Differences, identical to the TS as written.
+- **Differential fuzz through the real PBS-Go Host binding:** 77k fuzz cases (5,362 rejected by Go's own model) run at stage 0 and at stage N on the same guest. 0 differences for stage 1, stage 2, and stage 2 with raw projection. Stage 0 is itself fuzz-verified against the TS. A planted bug in the Go patcher shows up on 16,394 of 16,673 OpenX MakeRequests calls.
 
 ## What was built
 
 ```
-transpiler/typed.mjs     Level 0 typed back end: shape analysis + spread-plus-overrides over rt2 values
-transpiler/typed1.mjs    Level 1: views (a struct per shape node), member arena, plans; Level 0 as fallback
-transpiler/cli-typed*.mjs  -> gen/rs-typed/, gen/rs-typed1/ (generated Rust, committed for reading)
-runtime/rt2/             runtime for both: span values, JS strings (UTF-16 code units), shapes, views,
-                         arena, plans, frames; JS semantics as in SUBSET.md, plus #23's string contract
-guest-typed/ guest-typed1/  wasm guests (same ABI as guest/ and typed-ref/); bin/fuzz, bin/native
-typed-ref/               the hand-written floor (#16), unchanged but for the crate name
-harness/fuzz.mjs         now with lone surrogates; FUZZ_BIN picks the guest; Host string slots compared
-                         as the ABI carries them (see "ABI details")
-run.sh                   rebuilds and reruns everything here; results/ has the measured run
+transpiler/typed1.mjs   + SHAPES: per input document, the terminal paths the Phases read (the projection
+                        contract); + make_requests_edits; whole-value marking (below); presence checks
+runtime/rt2             + emit_edit (Phase output as edits), Out::IdxList / Out::Fill; Mem.kc (below)
+guest-typed1/           + <bidder>_shapes and <bidder>_mre exports
+hostgo/host/project.go  Projector: shapes compiled once per Adapter; Append (from the Host's structs,
+                        by json tags, omitempty honoured) and AppendRaw (from the input bytes, one pass)
+hostgo/host/edits.go    the edit language and a one-pass streaming patcher (with Extension fills)
+hostgo/host/shared.go   ABI_STAGE=0|1|2, ABI_PROJ=raw
+hostgo/cmd/abifuzz      differential fuzz of stage N against stage 0 through the Host binding
+hostgo/cmd/projsize     projection sizes; cmd/abiprof: CPU profile of the Host side of a stage
 ```
 
-The front end and the subset rules are unchanged: same Definitions, same 35 rejection cases. Both back ends compile both Adapters with no hand-written code per Adapter.
+### Projection in (stage 1)
 
-### Level 0: shapes and spread-plus-overrides
+- **The guest declares what its Phases read.** The Definition Compiler already derives each Phase's input paths (its shapes, #17). The guest exports them as a list of terminal paths per document (`*` any element, `%` any member).
+- **The Host projects to those paths.** It compiles the list once per Adapter and, per call, writes only those fields as JSON. The guest's decoders are unchanged, since a projection is a document of the same shape with less in it.
 
-1. **Shape analysis.** For each Phase, the compiler collects the input paths it reads. It follows aliases (`const banner = imp.banner`), callbacks (`p.keywords.filter(k => k.value…)`), `Object.entries(x).filter(...).map(([k, v]) => …)`, the `params` list (each element is `imp.ext.bidder`), and module helpers, interprocedurally. The result is a static shape per input document (request, response, outgoing request). Decoding indexes exactly those paths in one scan, and everything else stays a span.
-2. **Values are spans, not arena nodes.** Strings stay escaped spans until read, numbers keep their input text (exact pass-through, parsed on first use), and untouched containers stay raw. Indexed objects remember their span, so emitting them unchanged is one copy.
-3. **Spread-plus-overrides.** Keys are interned as pre-escaped byte strings. The outgoing request in MakeBids is decoded only if a bid Phase reads its imp.
-
-Result: 1.9× / 2.75× the floor, barely better than the generic runtime. Profiling showed why. Every indexed object was a heap vector of members with linear key lookups (plus quadratic duplicate detection, removed), and output was a tree built and then emitted.
-
-### Level 1: views, member arena, plans
-
-1. **Views.** Every shape node compiles to a Rust struct with one field per key read: a leaf value, an array of leaves, a list of structs, or a nested struct. Its decoder is a single `match` on key bytes, filling the struct in place. `imp.ext.bidder.unit` compiles to a field access.
-2. **Member arena.** Objects a Phase copies (spread, `without`, `Object.entries`) also record their members in one vector per call: spans plus links, with nested copy sources linked from their parent member. Copying never re-scans and allocates nothing per object.
-3. **Plans.** A fresh local built by spreading a view (`const out = { ...imp, tagid }`) compiles to a plan: source members plus override slots. Plans nest (`out.banner = { ...banner, w, h }`, `out.site = { ...out.site, publisher: { ...out.site.publisher, id } }`) and handle `without` and `nonempty`. They are emitted straight into the output frame: untouched members as raw spans, overrides in place, new keys last (allowed by ADR 0001). The bid Phase's plan over the bidder's bid *is* the overrides frame, with no JSON diff.
-4. **Fused `Object.fromEntries(list.map(x => [k, v]))`, lazy `split`, UTF-8 templates and joins, a shared empty array.** These came from allocation counts.
-5. **Fallback.** Anything outside these forms is a Level 0 value: open `Json`, `json()` results, small computed objects, string pipelines. That keeps every output correct, at Level 0 speed there.
-
-### Where the gap is (Level 1, native profiles and allocation counts)
-
-| | floor (#16) | Level 1 | |
+| bid response | full | projected | |
 |---|---:|---:|---|
-| OpenX `lt`, MakeRequests + MakeBids, native | 2.85 µs | 4.02 µs | 39 + 24 allocations per call |
-| PubMatic `lt`, native | 3.98 µs | 7.13 µs | 96 + 42 allocations per call |
+| OpenX `lt` / `heavy` | 5,995 / 11,294 B | 461 / 471 B | 8% / 4% |
+| PubMatic `lt` / `heavy` | 5,995 / 11,294 B | 4,517 / 6,871 B | 75% / 61% |
 
-What's left, in profile order:
+PubMatic keeps most of the response because its bid Phase reads `bid.adm` (native bids only, to re-serialize the markup). A static projection can't know which bids are native, so every `adm` goes in.
 
-- **Scanning (`skip`), the single largest item.** The floor pays this too.
-- **Allocation:**
-  - a slot vector and a `Box` per plan;
-  - vectors for lists;
-  - strings for templates and joins;
-  - `Rc` for computed arrays and objects.
+**Rules the compiler had to add for projection to stay correct:**
 
-  The per-call bump allocator recovers about 2–3 µs of PubMatic's time in wasm.
-- **Value clones and drops.** Phase code passes dynamic values, even where the TS type says `string` or `number`.
-- **Struct moves.**
+1. **Whole values.** Wherever generated code uses a view's *value* rather than reading fields of it, the node is marked whole and projected entirely. Examples are Level 0 fallbacks, `JSON.stringify`, and a plan materialized as a value. Without this, a fallback would silently see the projected subset.
+2. **Presence checks use the projection.** `if (imp.banner)` and `x == null` are answered by the projected value, since a projected object is present exactly when the input's is. So truthiness doesn't force whole values.
+3. **Empty objects.** A copied object whose projection is empty (`site` with only `publisher` read, in a request without one) must still count as recorded. Treating "no members" as "not recorded" made a nested plan fall back to a value and lose `site.id` (`pubmatic/supplemental/multiplemedia.json`). Hence `Mem.kc`.
 
-Phase code is still Level 0 value code on top of the views. PubMatic's adSlot parsing, the keywords pipeline and the `key_val` builder run on dynamic values. #16 measured string views, fusion and hoisting at about 2 µs, consistent with what remains.
+**Projecting from the Host's structs vs. its bytes.** The struct projection sees the Host's model of the response, as a Hand-written Adapter on that Host does. `omitempty` zero values vanish (`"mtype": 0` becomes absent), and raw-JSON fields (`bid.ext`) go whole. Other Hosts' models will differ in such details, which weakens "the same bidder response yields the same bids in every Host". Projecting the raw bytes is exact and means the same thing on every Host. But on the bench payloads it costs about +4.6 µs (OpenX `lt`) over the struct projection, roughly what it saves the guest: scanning 6 KB in Go costs about what scanning it in wasm did.
 
-## Requirements for a back end that reaches the floor
+### Edits out (stage 2)
 
-These update #16's list with what generating the code taught.
+The guest's MakeRequests takes the projected request and returns its plans as edits. The Host applies them to the body it marshals anyway, in one streaming pass. Extension patches go to the Host as add-only fills, because a fill must see members the projection doesn't carry (e.g. `regs.gdpr` beside the `regs.coppa` it adds).
 
-1. **Copy-with-overrides is recognizable from Restricted TypeScript.** #16 called this the hardest piece; it isn't. Fresh locals, one-level writes and read-only inputs make every spread-then-write local a plan, decidable from the source. *Done here.*
-2. **One-pass decoding needs no dependency ordering at all.** Decode first into views (a two-pass index, as decided here), then run the Phases. No speculation or redo. *Done here; costs nothing measurable over the floor's single pass.*
-3. **Typed primitive locals.** `string`-typed locals should be the string type, `number` an `f64`, and `T | undefined` an `Option<T>`, instead of dynamic values. This is the main remaining codegen work.
-4. **Plans without allocation.** Slots inline (a per-site generated struct, or an arena), and nested plans without boxes.
-5. **Stream plans during decoding where nothing depends on later input,** as the floor does. That avoids even the arena pass.
-6. **An allocator that suits the call shape.** A per-call bump arena helps generated code where it didn't help the floor. It has a hazard, though: lazily initialized globals must be created before the arena is on. A shared empty array crashed the guest until it was. Every guest-side global would need that rule.
+```
+["v", value]  replace      ["d"]  delete      ["p", {k: edit}, nonempty]  patch the object here
+["l", [[i, edit], ...]]  the input's imps i, edited      ["f", value]  fill      ["s", [e1, e2]]  e1 then e2
+```
 
-## ABI details found on the way
+It is correct (0 fuzz differences) but slower than stage 0. The Host still marshals the whole request, then must scan all of it to apply the edits. That costs more than the guest's span copy of untouched members saved. The first version, using the standard-library JSON decoder for edits, was far worse (+26.9 µs); half of that was parsing edits. **Edits would only pay if the Host applied them to its own structs**, which means per-Host, per-field code, the option rejected when this ticket was charted. So MakeRequests should stay body-out.
 
-- **Deal priority** travels as an int32. `1e21` saturates to 2147483647 in Rust, where a JS `|0` would wrap; the harness now mirrors the ABI.
-- **Host string slots can't carry lone surrogates.** Errors, bid type, seat, currency and kv string values are decoded into native strings, so a lone surrogate becomes U+FFFD there (the #23 question). Request bodies and overrides are JSON, and keep it exactly.
-- **Guest size grows:** Level 1 + bump is 201 KB (OpenX) and 318 KB (PubMatic) of wasm, against 110 / 206 KB for the floor.
+### String slots (stage 3, not built)
+
+Escaped-JSON string slots (errors, bid type, seat, currency, kv strings) would let lone surrogates through the ABI. On PBS-Go that buys nothing: the Host's own JSON layer turns them into U+FFFD anyway. It is a contract decision for Hosts whose strings can hold them (PBS-Java, Prebid.js).
+
+## What this leaves
+
+- **The ABI to keep:** projection in, from the Host's structs, for MakeBids; body out for MakeRequests. Generated OpenX then sits at +5 µs per call, about half the gate.
+- **A projection contract.** For "the same response yields the same bids in every Host", each Host's projector must keep the same things: zero values, absent vs. null, raw `ext` fields. Exact raw projection is the costlier alternative.
+- **Data-dependent reads.** PubMatic's native-only `adm` needs either on-demand reads (the guest asks the Host for a field) or a cheaper guest. The host-call cost under wazero isn't measured.
+- **PubMatic's guest itself.** Its Phase code is still Level 0 value code on top of the views; that is #25's typed-primitive work.
 
 ## Caveats
 
-- One machine (macOS arm64). Not rerun on x86-64 Linux. PBS-Java not covered.
-- Same payloads as #14 and #16: OpenX-shaped, with PubMatic params injected. PubMatic `heavy` shows 4 shape misses per call (dynamic re-indexing of `imp.ext.data` values a module helper reads). `lt` has none.
-- The fuzz runs the native guests without the bump allocator. The bump variant is covered by the fixtures and `adapterstest`.
-- Only OpenX and PubMatic. Constructs no Adapter uses yet fall back to Level 0 or are rejected, for example the request Phase reading `req.imp`, or copy sources in the outgoing request.
+- One machine (macOS arm64, Go 1.27.2, wazero 1.12.0). Not rerun on x86-64 Linux.
+- PBS-Go only. PBS-Java's and Trusted Server's projector costs are argued, not measured.
+- Same payloads as #14, #16 and #17. They have no `app`, `imp.ext.data` or native bids, so the struct projector's handling of those is covered by fixtures and the fuzz, not timed.
+- The Go projector uses reflection with cached per-type plans. A generated projector would be faster still; it wasn't needed for OpenX.

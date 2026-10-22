@@ -1499,6 +1499,8 @@ pub struct Mem<'a> {
     pub v: &'a [u8],
     pub kids: u32,
     pub kdup: bool,
+    /// the value was itself recorded as a copy source (`kids` may be NONE: an empty object)
+    pub kc: bool,
     pub next: u32,
 }
 pub type Ar<'a> = Vec<Mem<'a>>;
@@ -1617,7 +1619,7 @@ fn kbit(k: &[u8]) -> u64 {
 /// Records one member of a copied object. `seen`/`dup` detect duplicate keys cheaply.
 #[allow(clippy::too_many_arguments)]
 #[inline]
-pub fn link<'a>(ar: &mut Ar<'a>, first: &mut u32, last: &mut u32, seen: &mut u64, dup: &mut bool, k: &'a [u8], kx: bool, v: &'a [u8], kids: u32, kdup: bool) {
+pub fn link<'a>(ar: &mut Ar<'a>, first: &mut u32, last: &mut u32, seen: &mut u64, dup: &mut bool, k: &'a [u8], kx: bool, v: &'a [u8], (kids, kdup, kc): (u32, bool, bool)) {
     let bit = kbit(k);
     if *seen & bit != 0 && !*dup {
         let mut c = *first;
@@ -1631,7 +1633,7 @@ pub fn link<'a>(ar: &mut Ar<'a>, first: &mut u32, last: &mut u32, seen: &mut u64
     }
     *seen |= bit;
     let idx = ar.len() as u32;
-    ar.push(Mem { k, kx, v, kids, kdup, next: NONE });
+    ar.push(Mem { k, kx, v, kids, kdup, kc, next: NONE });
     if *last != NONE {
         ar[*last as usize].next = idx;
     } else {
@@ -1693,6 +1695,10 @@ pub enum Out<'a> {
     P(Box<Plan<'a>>),
     NonEmpty(Box<Plan<'a>>),
     List(Rc<Vec<Out<'a>>>),
+    /// the accepted imps, with their index in the input's imp array (for edits)
+    IdxList(Rc<Vec<Out<'a>>>, Rc<Vec<u32>>),
+    /// an Extension's add-only patch over Phase output (applied by the Host when it applies edits)
+    Fill(Box<Out<'a>>, V<'a>),
 }
 #[derive(Clone, Default)]
 pub enum Src<'a> {
@@ -1773,7 +1779,7 @@ impl<'a> Plan<'a> {
             return o.clone();
         }
         if let Some(m) = self.src_mem(ar, k) {
-            if m.kids != NONE {
+            if m.kc {
                 return Out::P(Box::new(Plan { src: Src::Mem { raw: m.v, first: m.kids, dup: m.kdup }, ov: Vec::new() }));
             }
             return Out::V(mem_val(m));
@@ -1810,7 +1816,8 @@ impl<'a> Out<'a> {
             Out::V(v) => v.clone(),
             Out::P(p) => p.to_v(ar),
             Out::NonEmpty(p) => nonempty(p.to_v(ar)),
-            Out::List(l) => arr_v(l.iter().map(|x| x.to_v(ar)).collect()),
+            Out::List(l) | Out::IdxList(l, _) => arr_v(l.iter().map(|x| x.to_v(ar)).collect()),
+            Out::Fill(o, p) => fill(o.to_v(ar), p),
         }
     }
     pub fn get(&self, ar: &Ar<'a>, k: &str) -> V<'a> {
@@ -1853,7 +1860,7 @@ pub fn emit_out(o: &Out, ar: &Ar, out: &mut Vec<u8>) {
     match o {
         Out::V(v) => emit(v, out),
         Out::P(p) | Out::NonEmpty(p) => emit_plan(p, ar, out),
-        Out::List(l) => {
+        Out::List(l) | Out::IdxList(l, _) => {
             out.push(b'[');
             for (i, x) in l.iter().enumerate() {
                 if i > 0 {
@@ -1862,6 +1869,76 @@ pub fn emit_out(o: &Out, ar: &Ar, out: &mut Vec<u8>) {
                 emit_out(x, ar, out);
             }
             out.push(b']');
+        }
+        Out::Fill(..) => emit(&o.to_v(ar), out),
+    }
+}
+
+// ---------- edits (ABI #24): Phase output as edits to the Host's own copy of the input ----------
+//   ["v", value]  replace          ["d"]  delete
+//   ["p", {k: edit}, nonempty]     patch the input object at this position (nonempty: drop it if empty)
+//   ["l", [[i, edit], ...]]        the input array's elements i, edited, in this order
+//   ["f", value]                   add-only fill (an Extension patch)   ["s", [e1, e2]]  e1 then e2
+/// Writes `o` as an edit of the input value at its position. `at` is that input value's span (so a
+/// plan can be checked to be over the same input object; projected inputs hold only what is read).
+pub fn emit_edit(o: &Out, ar: &Ar, at: Option<Raw>, out: &mut Vec<u8>) {
+    match o {
+        Out::V(V::U) => out.extend_from_slice(b"[\"d\"]"),
+        Out::V(v) => {
+            out.extend_from_slice(b"[\"v\",");
+            emit(v, out);
+            out.push(b']');
+        }
+        Out::P(p) | Out::NonEmpty(p) => match &p.src {
+            Src::Mem { raw, first, .. } => {
+                // a plan over a different input object can't be an edit here: the guest only holds
+                // the projected part of it (the prototype's adapters never do this)
+                if let Some(a) = at {
+                    assert!(std::ptr::eq(a.as_ptr(), raw.as_ptr()), "plan source moved: not expressible as an edit");
+                }
+                out.extend_from_slice(b"[\"p\",{");
+                for (i, (k, x)) in p.ov.iter().enumerate() {
+                    if i > 0 {
+                        out.push(b',');
+                    }
+                    out.push(b'"');
+                    esc_into(k, out);
+                    out.extend_from_slice(b"\":");
+                    let child = if *first != NONE {
+                        mems(ar, *first).filter(|m| mem_key_is(m, k)).last().map(|m| m.v)
+                    } else {
+                        None
+                    };
+                    emit_edit(x, ar, child, out);
+                }
+                out.extend_from_slice(if matches!(o, Out::NonEmpty(_)) { b"},1]" } else { b"},0]" });
+            }
+            _ => {
+                let v = o.to_v(ar);
+                emit_edit(&Out::V(v), ar, None, out)
+            }
+        },
+        Out::IdxList(l, ix) => {
+            out.extend_from_slice(b"[\"l\",[");
+            for (i, (x, j)) in l.iter().zip(ix.iter()).enumerate() {
+                if i > 0 {
+                    out.push(b',');
+                }
+                out.push(b'[');
+                out.extend_from_slice(j.to_string().as_bytes());
+                out.push(b',');
+                emit_edit(x, ar, None, out);
+                out.push(b']');
+            }
+            out.extend_from_slice(b"]]");
+        }
+        Out::List(_) => emit_edit(&Out::V(o.to_v(ar)), ar, None, out),
+        Out::Fill(x, p) => {
+            out.extend_from_slice(b"[\"s\",[");
+            emit_edit(x, ar, at, out);
+            out.extend_from_slice(b",[\"f\",");
+            emit(p, out);
+            out.extend_from_slice(b"]]]");
         }
     }
 }

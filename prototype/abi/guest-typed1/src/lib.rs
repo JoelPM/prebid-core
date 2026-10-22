@@ -58,7 +58,22 @@ fn run(f: impl FnOnce(&[u8], &mut Vec<u8>)) -> u32 {
     })
 }
 macro_rules! exports {
-    ($feat:literal, $m:ident, $mr:ident, $mb:ident) => {
+    ($feat:literal, $m:ident, $mr:ident, $mb:ident, $sh:ident, $mre:ident) => {
+        /// ABI #24: MakeRequests over a projected request, returning edits.
+        #[cfg(feature = $feat)]
+        #[no_mangle]
+        pub extern "C" fn $mre(len: u32) -> u32 {
+            run(|i, o| {
+                let inp = prebid_core_rt2::utf8_input(&i[..len as usize]);
+                $m::make_requests_edits(&inp, o)
+            })
+        }
+        /// The Adapter's shapes (JSON): what the Host projects its inputs to.
+        #[cfg(feature = $feat)]
+        #[no_mangle]
+        pub extern "C" fn $sh() -> u32 {
+            run(|_, o| o.extend_from_slice($m::SHAPES.as_bytes()))
+        }
         #[cfg(feature = $feat)]
         #[no_mangle]
         pub extern "C" fn $mr(len: u32) -> u32 {
@@ -78,8 +93,8 @@ macro_rules! exports {
         }
     };
 }
-exports!("openx", openx, openx_mr, openx_mb);
-exports!("pubmatic", pubmatic, pubmatic_mr, pubmatic_mb);
+exports!("openx", openx, openx_mr, openx_mb, openx_shapes, openx_mre);
+exports!("pubmatic", pubmatic, pubmatic_mr, pubmatic_mb, pubmatic_shapes, pubmatic_mre);
 
 /// Research hook (bench): the scan floor.
 #[no_mangle]

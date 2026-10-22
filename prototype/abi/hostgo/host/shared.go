@@ -10,6 +10,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"sync"
 
@@ -42,9 +43,11 @@ type instance struct {
 	mem           api.Memory
 	inBuf, outPtr api.Function
 	mr, mb        api.Function
+	mre           api.Function // ABI #24 stage 2: MakeRequests over a projection, returning edits
 	scan          api.Function // typed guests only (research hook)
 	stack         []uint64
 	inPtr, inCap  uint32
+	proj          []byte // reused projection buffer
 }
 
 // Shared is one Shared Adapter, with a pool of guest instances (pooling is mandatory: a fresh
@@ -52,6 +55,12 @@ type instance struct {
 type Shared struct {
 	bidder, endpoint string
 	pool             sync.Pool
+	// ABI (#24): Stage 0 = variant D; 1 = the bid response is projected to the guest's shapes;
+	// 2 = also the request is projected and MakeRequests returns edits the Host applies
+	Stage             int
+	projResp, projReq *Projector
+	// ABI_PROJ=raw: project the input bytes instead of the Host's structs (exact, Host-independent)
+	rawProj bool
 }
 
 func (r *Runtime) Bidder(bidder, endpoint string) *Shared {
@@ -62,9 +71,37 @@ func (r *Runtime) Bidder(bidder, endpoint string) *Shared {
 			panic(err)
 		}
 		f := m.ExportedFunction
-		return &instance{mem: m.Memory(), inBuf: f("in_buf"), outPtr: f("out_ptr"), mr: f(bidder + "_mr"), mb: f(bidder + "_mb"), scan: f("scan"), stack: make([]uint64, 2)}
+		return &instance{mem: m.Memory(), inBuf: f("in_buf"), outPtr: f("out_ptr"), mr: f(bidder + "_mr"), mb: f(bidder + "_mb"), mre: f(bidder + "_mre"), scan: f("scan"), stack: make([]uint64, 2)}
+	}
+	if st, err := strconv.Atoi(os.Getenv("ABI_STAGE")); err == nil {
+		s.Stage = st
+	}
+	s.rawProj = os.Getenv("ABI_PROJ") == "raw"
+	if s.Stage >= 1 {
+		// the guest declares what its Phases read; the Host compiles that once
+		sh, err := r.shapes(bidder)
+		if err != nil {
+			panic(err)
+		}
+		s.projResp = NewProjector(sh.Resp)
+		s.projReq = NewProjector(sh.Req)
 	}
 	return s
+}
+
+// shapes asks a fresh instance for the guest's declared shapes.
+func (r *Runtime) shapes(bidder string) (*Shapes, error) {
+	m, err := r.rt.InstantiateModule(ctx, r.cm, wazero.NewModuleConfig().WithName(""))
+	if err != nil {
+		return nil, err
+	}
+	defer m.Close(ctx)
+	g := &instance{mem: m.Memory(), outPtr: m.ExportedFunction("out_ptr"), stack: make([]uint64, 2)}
+	fn := m.ExportedFunction(bidder + "_shapes")
+	if fn == nil {
+		return nil, fmt.Errorf("the guest doesn't export %s_shapes", bidder)
+	}
+	return parseShapes(append([]byte(nil), g.call(fn)...))
 }
 
 func (g *instance) write(parts ...[]byte) {
@@ -128,14 +165,38 @@ func (s *Shared) MakeRequests(request *openrtb2.BidRequest, _ *adapters.ExtraReq
 	}
 	g := s.pool.Get().(*instance)
 	defer s.pool.Put(g)
-	g.write(body)
-	f := frame{b: g.call(g.mr, uint64(len(body)))}
+	var f frame
+	if s.Stage >= 2 {
+		if s.rawProj {
+			g.proj = s.projReq.AppendRaw(g.proj[:0], body)
+		} else {
+			g.proj = s.projReq.Append(g.proj[:0], request)
+		}
+		g.write(g.proj)
+		f = frame{b: g.call(g.mre, uint64(len(g.proj)))}
+	} else {
+		g.write(body)
+		f = frame{b: g.call(g.mr, uint64(len(body)))}
+	}
 	var rd *adapters.RequestData
 	if f.u32() == 1 {
 		headers := http.Header{}
 		headers.Add("Content-Type", "application/json;charset=utf-8")
 		headers.Add("Accept", "application/json")
-		rd = &adapters.RequestData{Method: "POST", Uri: s.endpoint, Body: append([]byte(nil), f.bytes()...), Headers: headers}
+		out := f.bytes()
+		if s.Stage >= 2 {
+			if os.Getenv("ABI_DEBUG") != "" {
+				fmt.Fprintf(os.Stderr, "projection: %s\nedits: %s\n", g.proj, out)
+			}
+			edited, err := ApplyEdits(body, out)
+			if err != nil {
+				return nil, []error{err}
+			}
+			out = edited
+		} else {
+			out = append([]byte(nil), out...)
+		}
+		rd = &adapters.RequestData{Method: "POST", Uri: s.endpoint, Body: out, Headers: headers}
 	}
 	ids := f.strs()
 	var errs []error
@@ -166,8 +227,17 @@ func (s *Shared) MakeBids(_ *openrtb2.BidRequest, ext *adapters.RequestData, res
 	}
 	g := s.pool.Get().(*instance)
 	defer s.pool.Put(g)
-	g.write(ext.Body, response.Body)
-	f := frame{b: g.call(g.mb, uint64(len(ext.Body)), uint64(len(response.Body)))}
+	resp := response.Body
+	if s.projResp != nil {
+		if s.rawProj {
+			g.proj = s.projResp.AppendRaw(g.proj[:0], response.Body)
+		} else {
+			g.proj = s.projResp.Append(g.proj[:0], &br)
+		}
+		resp = g.proj
+	}
+	g.write(ext.Body, resp)
+	f := frame{b: g.call(g.mb, uint64(len(ext.Body)), uint64(len(resp)))}
 
 	out := adapters.NewBidderResponseWithBidsCapacity(5)
 	var errs []error

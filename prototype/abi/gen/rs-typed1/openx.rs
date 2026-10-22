@@ -26,9 +26,9 @@ let s = p.start();
 if !p.is_obj() { x.v = p.leaf(); return; }
 let (mut first, mut last, mut seen) = (rt::NONE, rt::NONE, 0u64);
 p.obj_each(|p, k, kx| {
-let vs = p.start(); let mut kid = (rt::NONE, false);
-match &*rt::key(k, kx) { b"bidder" => { d0(p, ar, &mut x.f_bidder_0); kid = (x.f_bidder_0.m, x.f_bidder_0.dup); } _ => p.skip_val(), }
-rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid.0, kid.1);
+let vs = p.start(); let mut kid = (rt::NONE, false, false);
+match &*rt::key(k, kx) { b"bidder" => { d0(p, ar, &mut x.f_bidder_0); } _ => p.skip_val(), }
+rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid);
 });
 x.v = V::Raw(p.since(s)); x.m = first;
 }
@@ -39,22 +39,22 @@ let s = p.start();
 if !p.is_obj() { x.v = p.leaf(); return; }
 let (mut first, mut last, mut seen) = (rt::NONE, rt::NONE, 0u64);
 p.obj_each(|p, k, kx| {
-let vs = p.start(); let mut kid = (rt::NONE, false);
+let vs = p.start(); let mut kid = (rt::NONE, false, false);
 match &*rt::key(k, kx) {  _ => p.skip_val(), }
-rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid.0, kid.1);
+rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid);
 });
 x.v = V::Raw(p.since(s)); x.m = first;
 }
-pub struct N9<'a> { pub v: V<'a>, pub m: u32, pub dup: bool, pub f_ext_0: N7<'a>, pub f_banner_1: V<'a>, pub f_video_2: N8<'a>, pub f_native_3: V<'a>, pub f_id_4: V<'a>, pub f_bidfloor_5: V<'a>, pub f_rwdd_6: V<'a> }
-impl Default for N9<'_> { fn default() -> Self { N9 { v: V::U, m: rt::NONE, dup: false, f_ext_0: Default::default(), f_banner_1: Default::default(), f_video_2: Default::default(), f_native_3: Default::default(), f_id_4: Default::default(), f_bidfloor_5: Default::default(), f_rwdd_6: Default::default() } } }
+pub struct N9<'a> { pub v: V<'a>, pub m: u32, pub dup: bool, pub f_ext_0: N7<'a>, pub f_id_1: V<'a>, pub f_banner_2: V<'a>, pub f_video_3: N8<'a>, pub f_native_4: V<'a>, pub f_bidfloor_5: V<'a>, pub f_rwdd_6: V<'a> }
+impl Default for N9<'_> { fn default() -> Self { N9 { v: V::U, m: rt::NONE, dup: false, f_ext_0: Default::default(), f_id_1: Default::default(), f_banner_2: Default::default(), f_video_3: Default::default(), f_native_4: Default::default(), f_bidfloor_5: Default::default(), f_rwdd_6: Default::default() } } }
 fn d9<'a>(p: &mut rt::P<'a>, ar: &mut rt::Ar<'a>, x: &mut N9<'a>) {
 let s = p.start();
 if !p.is_obj() { x.v = p.leaf(); return; }
 let (mut first, mut last, mut seen) = (rt::NONE, rt::NONE, 0u64);
 p.obj_each(|p, k, kx| {
-let vs = p.start(); let mut kid = (rt::NONE, false);
-match &*rt::key(k, kx) { b"ext" => { d7(p, ar, &mut x.f_ext_0); kid = (x.f_ext_0.m, x.f_ext_0.dup); } b"banner" => x.f_banner_1 = p.leaf(), b"video" => { d8(p, ar, &mut x.f_video_2); kid = (x.f_video_2.m, x.f_video_2.dup); } b"native" => x.f_native_3 = p.leaf(), b"id" => x.f_id_4 = p.leaf(), b"bidfloor" => x.f_bidfloor_5 = p.leaf(), b"rwdd" => x.f_rwdd_6 = p.leaf(), _ => p.skip_val(), }
-rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid.0, kid.1);
+let vs = p.start(); let mut kid = (rt::NONE, false, false);
+match &*rt::key(k, kx) { b"ext" => { d7(p, ar, &mut x.f_ext_0); kid = (x.f_ext_0.m, x.f_ext_0.dup, true); } b"id" => x.f_id_1 = p.leaf(), b"banner" => x.f_banner_2 = p.leaf(), b"video" => { d8(p, ar, &mut x.f_video_3); kid = (x.f_video_3.m, x.f_video_3.dup, true); } b"native" => x.f_native_4 = p.leaf(), b"bidfloor" => x.f_bidfloor_5 = p.leaf(), b"rwdd" => x.f_rwdd_6 = p.leaf(), _ => p.skip_val(), }
+rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid);
 });
 x.v = V::Raw(p.since(s)); x.m = first;
 }
@@ -73,9 +73,9 @@ let s = p.start();
 if !p.is_obj() { x.v = p.leaf(); return; }
 let (mut first, mut last, mut seen) = (rt::NONE, rt::NONE, 0u64);
 p.obj_each(|p, k, kx| {
-let vs = p.start(); let mut kid = (rt::NONE, false);
+let vs = p.start(); let mut kid = (rt::NONE, false, false);
 match &*rt::key(k, kx) { b"imp" => l9(p, ar, &mut x.f_imp_0), _ => p.skip_val(), }
-rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid.0, kid.1);
+rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid);
 });
 x.v = V::Raw(p.since(s)); x.m = first;
 }
@@ -141,9 +141,9 @@ let s = p.start();
 if !p.is_obj() { x.v = p.leaf(); return; }
 let (mut first, mut last, mut seen) = (rt::NONE, rt::NONE, 0u64);
 p.obj_each(|p, k, kx| {
-let vs = p.start(); let mut kid = (rt::NONE, false);
+let vs = p.start(); let mut kid = (rt::NONE, false, false);
 match &*rt::key(k, kx) {  _ => p.skip_val(), }
-rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid.0, kid.1);
+rt::link(ar, &mut first, &mut last, &mut seen, &mut x.dup, k, kx, p.since(vs), kid);
 });
 x.v = V::Raw(p.since(s)); x.m = first;
 }
@@ -208,7 +208,11 @@ match &*rt::key(k, kx) { b"imp" => l34(p, ar, &mut x.f_imp_0), _ => p.skip_val()
 x.v = V::Raw(p.since(s)); 
 }
 
-pub struct ReqIn<'x, 'a> { pub v: &'x N15<'a>, pub imps: std::rc::Rc<Vec<rt::Out<'a>>> }
+/// What the Phases read, per input document (the Host's projection; see the ABI prototype).
+pub const SHAPES: &str = "{\"req\":[[\"imp\",\"*\",\"ext\",\"bidder\",\"unit\"],[\"imp\",\"*\",\"ext\",\"bidder\",\"customFloor\"],[\"imp\",\"*\",\"ext\",\"bidder\",\"customParams\"],[\"imp\",\"*\",\"ext\",\"bidder\",\"delDomain\"],[\"imp\",\"*\",\"ext\",\"bidder\",\"platform\"],[\"imp\",\"*\",\"id\"],[\"imp\",\"*\",\"banner\"],[\"imp\",\"*\",\"video\"],[\"imp\",\"*\",\"native\"],[\"imp\",\"*\",\"bidfloor\"],[\"imp\",\"*\",\"rwdd\"]],\"resp\":[[\"seatbid\",\"*\",\"bid\",\"*\",\"mtype\"],[\"seatbid\",\"*\",\"bid\",\"*\",\"cat\",\"*\"],[\"seatbid\",\"*\",\"bid\",\"*\",\"dur\"],[\"seatbid\",\"*\",\"bid\",\"*\",\"ext\",\"dsp_id\"],[\"seatbid\",\"*\",\"bid\",\"*\",\"ext\",\"buyer_id\"],[\"seatbid\",\"*\",\"bid\",\"*\",\"ext\",\"brand_id\"],[\"seatbid\",\"*\",\"bid\",\"*\",\"impid\"],[\"cur\"],[\"ext\",\"fledge_auction_configs\",\"%\"]],\"breq\":[[\"imp\",\"*\",\"id\"],[\"imp\",\"*\",\"banner\"],[\"imp\",\"*\",\"video\"],[\"imp\",\"*\",\"native\"]]}";
+
+pub struct ReqIn<'x, 'a> { pub v: &'x N15<'a>, pub imps: std::rc::Rc<Vec<rt::Out<'a>>>, pub ix: std::rc::Rc<Vec<u32>> }
+impl<'a> N15<'a> { fn v_raw(&self) -> Option<&'a [u8]> { if let V::Raw(r) = self.v { Some(r) } else { None } } }
 
 fn f_positiveId<'a>(cx: &'a rt::Cx, v_x: V<'a>) -> V<'a> {
 let mut v_n_0 = rt::int(&v_x.clone());
@@ -216,8 +220,8 @@ return if (!rt::is_undef(&v_n_0.clone()) && rt::gt(&v_n_0.clone(), &rt::num(0.0)
 V::U
 }
 fn core_imp<'a, 'x>(cx: &'a rt::Cx, ar: &'x rt::Ar<'a>, v_imp: &'x N9<'a>, v_p: &'x N0<'a>, _v_req: &'x N15<'a>) -> Result<rt::Out<'a>, String> {
-if ((!rt::truthy(&v_imp.f_banner_1.clone()) && !rt::truthy(&(&v_imp.f_video_2).v.clone())) && !rt::truthy(&v_imp.f_native_3.clone())) {
-return Err(rt::to_string(&{ let mut tm = rt::Tmpl::new(); tm.lit("OpenX only supports banner, video and native imps; ignoring imp "); tm.val(&v_imp.f_id_4.clone()); tm.done() }));
+if ((!rt::truthy(&v_imp.f_banner_2.clone()) && !rt::truthy(&(&v_imp.f_video_3).v)) && !rt::truthy(&v_imp.f_native_4.clone())) {
+return Err(rt::to_string(&{ let mut tm = rt::Tmpl::new(); tm.lit("OpenX only supports banner, video and native imps; ignoring imp "); tm.val(&v_imp.f_id_1.clone()); tm.done() }));
 }
 let mut v_out_1 = { let mut pl = rt::Plan::of(&v_imp.v, v_imp.m, v_imp.dup); { let o = rt::Out::V(rt::str_(&v_p.f_unit_0.clone())); pl.set("tagid", o); } pl };
 let mut v_floor_2 = rt::num_(&v_p.f_customFloor_1.clone());
@@ -228,7 +232,7 @@ return Ok(rt::Out::P(Box::new(std::mem::take(&mut v_out_1))));
 Ok(rt::Out::V(V::U))
 }
 fn core_request<'a, 'x>(cx: &'a rt::Cx, ar: &'x rt::Ar<'a>, v_req: &'x ReqIn<'x, 'a>, v_params: &'x Vec<&'x N0<'a>>) -> Result<rt::Out<'a>, String> {
-return Ok(rt::Out::P(Box::new({ let mut pl = rt::Plan::of(&v_req.v.v, v_req.v.m, v_req.v.dup).with("imp", rt::Out::List(v_req.imps.clone())); { let o = rt::Out::V({ let mut t4 = rt::O::default(); { let x = v_params.get(0).copied().map_or(V::U, |x| x.f_delDomain_3.clone()); t4.set(rt::Js::Esc(b"delDomain"), x); } { let x = v_params.get(0).copied().map_or(V::U, |x| x.f_platform_4.clone()); t4.set(rt::Js::Esc(b"platform"), x); } rt::obj_v(t4) }); pl.set("ext", o); } pl })));
+return Ok(rt::Out::P(Box::new({ let mut pl = rt::Plan::of(&v_req.v.v, v_req.v.m, v_req.v.dup).with("imp", rt::Out::IdxList(v_req.imps.clone(), v_req.ix.clone())); { let o = rt::Out::V({ let mut t4 = rt::O::default(); { let x = v_params.get(0).copied().map_or(V::U, |x| x.f_delDomain_3.clone()); t4.set(rt::Js::Esc(b"delDomain"), x); } { let x = v_params.get(0).copied().map_or(V::U, |x| x.f_platform_4.clone()); t4.set(rt::Js::Esc(b"platform"), x); } rt::obj_v(t4) }); pl.set("ext", o); } pl })));
 Ok(rt::Out::V(V::U))
 }
 fn core_bid<'a, 'x>(cx: &'a rt::Cx, ar: &'x rt::Ar<'a>, v_bid: &'x N21<'a>, v_imp: &dyn Fn() -> Option<&'x N34<'a>>, _v_resp: &'x N31<'a>) -> Result<(V<'a>, Option<rt::Out<'a>>), String> {
@@ -256,10 +260,33 @@ let o = match core_imp(cx, ar, imp, p, &req) { Ok(o) => o, Err(e) => { errs.push
 ids.push(rt::to_string(&o.get(ar, "id"))); imps.push(o); params.push(p);
 }
 if ids.is_empty() { out.u32(0); } else {
-let rq = ReqIn { v: &req, imps: std::rc::Rc::new(imps) };
+let rq = ReqIn { v: &req, imps: std::rc::Rc::new(imps), ix: std::rc::Rc::new(Vec::new()) };
 let o = match core_request(cx, ar, &rq, &params) { Ok(v) => v, Err(_) => rt::Out::V(V::U) };
 let o = { let patch = match ext_request(cx, ar, &rq, &params) { Ok(v) => v, Err(_) => V::U }; rt::fill_out(o, &patch, ar) };
 out.u32(1); let at = out.begin(); rt::emit_out(&o, ar, out); out.end(at);
+}
+out.u32(ids.len() as u32); for i in &ids { out.bytes(i.as_bytes()); }
+out.u32(errs.len() as u32); for e in &errs { out.bytes(e.as_bytes()); }
+}
+
+/// ABI #24: MakeRequests over a projected request, returning edits to the Host's own request.
+pub fn make_requests_edits(input: &[u8], out: &mut Vec<u8>) {
+let cx = rt::Cx::new(); let cx = &cx;
+let mut ar: rt::Ar = Vec::with_capacity(128);
+let mut req = N15::default(); d15(&mut rt::P::new(input), &mut ar, &mut req);
+let ar = &ar;
+let mut errs: Vec<String> = Vec::new(); let mut imps: Vec<rt::Out> = Vec::new(); let mut ix: Vec<u32> = Vec::new(); let mut params = Vec::new(); let mut ids: Vec<String> = Vec::new();
+for (i, imp) in req.f_imp_0.items.iter().enumerate() {
+let p = &imp.f_ext_0.f_bidder_0;
+let o = match core_imp(cx, ar, imp, p, &req) { Ok(o) => o, Err(e) => { errs.push(e); continue; } };
+
+ids.push(rt::to_string(&o.get(ar, "id"))); imps.push(o); ix.push(i as u32); params.push(p);
+}
+if ids.is_empty() { out.u32(0); } else {
+let rq = ReqIn { v: &req, imps: std::rc::Rc::new(imps), ix: std::rc::Rc::new(ix) };
+let o = match core_request(cx, ar, &rq, &params) { Ok(v) => v, Err(_) => rt::Out::V(V::U) };
+let o = { let patch = match ext_request(cx, ar, &rq, &params) { Ok(v) => v, Err(_) => V::U }; rt::Out::Fill(Box::new(o), patch) };
+out.u32(1); let at = out.begin(); rt::emit_edit(&o, ar, req.v_raw(), out); out.end(at);
 }
 out.u32(ids.len() as u32); for i in &ids { out.bytes(i.as_bytes()); }
 out.u32(errs.len() as u32); for e in &errs { out.bytes(e.as_bytes()); }

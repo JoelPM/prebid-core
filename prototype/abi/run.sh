@@ -60,3 +60,16 @@ if [ -n "${BENCH-1}" ]; then
   echo "== PBS-Go / wazero: overhead vs Hand-written, guest-only time, CPU at 1-8 goroutines (run on a quiet machine)"
   (cd hostgo && for g in refb typed1 typed1b; do echo "######## $g"; go run ./cmd/bench -wasm ../out/w-$g -par ${PAR:-1,2,4,8} -dur ${DUR:-2s}; done) | tee results/bench-level1-r2.txt
 fi
+
+echo "== ABI (#24): parity and Host-side differential fuzz at each stage (0 variant D, 1 projected response, 2 + projected request and edits out; ABI_PROJ=raw projects bytes)"
+for v in "1:" "1:raw" "2:" "2:raw"; do
+  IFS=: read st pr <<<"$v"
+  rm -rf out/rs-abi; (cd hostgo && ABI_STAGE=$st ABI_PROJ=$pr go run ./cmd/sharedout ../out/w-typed1b/both.wasm "$PBS" ../out/rs-abi)
+  node harness/parity.mjs "$PBS" --rs out/rs-abi | tail -2 | sed "s/^/  [stage $st$pr] /"
+done
+rm -f out/cases.tsv; DUMP_CASES=$here/out/cases.tsv FUZZ_BIN=$here/out/target-typed1-native/release/fuzz node harness/fuzz.mjs "$PBS" ${FUZZ:-20000} 7 >/dev/null
+for v in "1:" "2:" "2:raw"; do IFS=: read st pr <<<"$v"; (cd hostgo && ABI_PROJ=$pr go run ./cmd/abifuzz ../out/w-typed1b/both.wasm $st < ../out/cases.tsv); done
+(cd hostgo && for b in openx pubmatic; do go run ./cmd/projsize ../out/w-typed1b/both.wasm $b payload; done)
+if [ -n "${BENCH-1}" ]; then
+  (cd hostgo && for v in "0:" "1:" "1:raw" "2:" "2:raw"; do IFS=: read st pr <<<"$v"; echo "######## stage$st$pr"; ABI_STAGE=$st ABI_PROJ=$pr go run ./cmd/bench -wasm ../out/w-typed1b -par ${PAR:-1,2,4,8} -dur ${DUR:-2s}; done) | tee results/bench-abi.txt
+fi
