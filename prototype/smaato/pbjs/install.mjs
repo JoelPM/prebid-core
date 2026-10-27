@@ -34,6 +34,11 @@ const MODULES = {
     context: `{}`,
     verbatim: () => '',
   },
+  smaato: {
+    spec: `{ code: 'smaato', gvlid: 82, supportedMediaTypes: [BANNER, VIDEO, NATIVE] }`,
+    context: `{}`,
+    verbatim: () => '',
+  },
 };
 for (const [bidder, mod] of Object.entries(MODULES)) {
   fs.writeFileSync(path.join(lib, `params/${bidder}.ts`), fs.readFileSync(path.join(root, `adapters/${bidder}.params.ts`), 'utf8').replace("'../core/ortb.ts'", "'../ortb.js'"));

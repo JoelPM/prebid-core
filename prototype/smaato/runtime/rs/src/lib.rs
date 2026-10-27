@@ -10,6 +10,9 @@
 //! numbers compute as f64 and print like JS `String(n)`; `stringify` is canonical JSON.stringify.
 use std::borrow::Cow;
 mod js;
+pub use js::host_now;
+#[cfg(not(target_arch = "wasm32"))]
+pub use js::set_host;
 
 pub type V = u32; // node id; 0 = absent
 pub const ABSENT: V = 0;
@@ -1148,6 +1151,13 @@ pub struct BidsOut {
     pub currency: String,
     pub paapi: Vec<u8>,
     pub errs: Vec<String>,
+    /// the response Phase rejected the response: no bids at all
+    pub rejected: bool,
+}
+/// Several outgoing requests (one per group), each with its imp ids.
+pub struct Reqs {
+    pub reqs: Vec<(Vec<u8>, Vec<String>)>,
+    pub errs: Vec<String>,
 }
 impl Doc {
     /// An object's members as key/value frames the Host can read without a JSON decoder:
@@ -1155,7 +1165,11 @@ impl Doc {
     pub fn kv_slot(&mut self, v: V) -> Vec<u8> {
         self.expand(v);
         let mut f = Frame(Vec::new());
-        if self.kind(v) != K::Obj || self.n[v as usize].first == 0 {
+        if self.kind(v) != K::Obj {
+            return f.0; // absent (or not an object): an empty slot
+        }
+        if self.n[v as usize].first == 0 {
+            f.u32(0); // an object with no members: present, but empty
             return f.0;
         }
         let ms = self.members(v);

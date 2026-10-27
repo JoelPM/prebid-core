@@ -32,7 +32,9 @@ export interface ImpExt {
   [k: string]: unknown;
 }
 export interface Publisher { id?: string; [k: string]: unknown }
-export interface Site { publisher?: Publisher; [k: string]: unknown }
+export interface Site { publisher?: Publisher; keywords?: string; ext?: Json; [k: string]: unknown }
+export interface User { gender?: string; yob?: number; keywords?: string; ext?: { [k: string]: unknown }; [k: string]: unknown }
+export interface Dooh { publisher?: Publisher; [k: string]: unknown }
 export interface App {
   publisher?: Publisher;
   ext?: { source?: string; version?: string; prebid?: { source?: string; version?: string; [k: string]: unknown }; [k: string]: unknown };
@@ -56,6 +58,8 @@ export interface BidRequest {
   imp: Imp[];
   site?: Site;
   app?: App;
+  dooh?: Dooh;
+  user?: User;
   device?: { dnt?: number; [k: string]: unknown };
   regs?: { coppa?: number; [k: string]: unknown };
   at?: number;
@@ -72,6 +76,7 @@ export interface Bid<BidExt = JsonObject> {
   cat?: string[];
   dur?: number;
   mtype?: number;
+  exp?: number;
   ext?: BidExt;
   [k: string]: unknown;
 }

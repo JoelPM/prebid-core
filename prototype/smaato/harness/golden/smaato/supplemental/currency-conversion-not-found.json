@@ -1,0 +1,50 @@
+{
+ "hostRequest": {
+  "id": "1C86242D-9535-47D6-9576-7B1FE87F282C",
+  "imp": [
+   {
+    "id": "1C86242D-9535-47D6-9576-7B1FE87F282C",
+    "banner": {
+     "format": [
+      {
+       "w": 320,
+       "h": 50
+      }
+     ]
+    },
+    "bidfloor": 1,
+    "bidfloorcur": "JPY",
+    "ext": {
+     "bidder": {
+      "publisherId": "1100042525",
+      "adspaceId": "130563103"
+     }
+    }
+   }
+  ],
+  "site": {
+   "page": "http://localhost:3000/server.html",
+   "publisher": {
+    "id": "1100042525"
+   }
+  },
+  "ext": {
+   "prebid": {
+    "currency": {
+     "rates": {
+      "EUR": {
+       "USD": 1.2
+      }
+     }
+    }
+   }
+  }
+ },
+ "native": {
+  "requests": [],
+  "requestErrs": [
+   "Currency conversion rate not found: 'JPY' =\u003e 'USD'"
+  ],
+  "responses": []
+ }
+}

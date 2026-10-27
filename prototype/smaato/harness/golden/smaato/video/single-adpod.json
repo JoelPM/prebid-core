@@ -1,0 +1,253 @@
+{
+ "hostRequest": {
+  "id": "447a0a1d-389d-4730-a418-3777e95de7bd",
+  "imp": [
+   {
+    "id": "1_1",
+    "video": {
+     "mimes": [
+      "video/mp4",
+      "video/3gpp"
+     ],
+     "minduration": 5,
+     "maxduration": 30,
+     "startdelay": 0,
+     "protocols": [
+      7
+     ],
+     "w": 1024,
+     "h": 768,
+     "linearity": 1,
+     "skip": 1,
+     "skipmin": 5,
+     "api": [
+      7
+     ]
+    },
+    "bidfloor": 0.00123,
+    "ext": {
+     "bidder": {
+      "publisherId": "1100042525",
+      "adbreakId": "400000001"
+     }
+    }
+   },
+   {
+    "id": "1_2",
+    "video": {
+     "mimes": [
+      "video/mp4",
+      "video/3gpp"
+     ],
+     "minduration": 5,
+     "maxduration": 30,
+     "startdelay": 0,
+     "protocols": [
+      7
+     ],
+     "w": 1024,
+     "h": 768,
+     "linearity": 1,
+     "skip": 1,
+     "skipmin": 5,
+     "api": [
+      7
+     ]
+    },
+    "bidfloor": 0.00123,
+    "ext": {
+     "bidder": {
+      "publisherId": "1100042525",
+      "adbreakId": "400000001"
+     }
+    }
+   }
+  ],
+  "site": {
+   "publisher": {
+    "id": "1100042525"
+   },
+   "content": {
+    "episode": 1,
+    "title": "a-title",
+    "series": "a-series",
+    "season": "a-season",
+    "livestream": 1,
+    "len": 900
+   }
+  },
+  "device": {
+   "ua": "test-user-agent"
+  },
+  "user": {
+   "ext": {
+    "data": {}
+   }
+  }
+ },
+ "native": {
+  "requests": [
+   {
+    "method": "POST",
+    "uri": "https://prebid/bidder",
+    "body": {
+     "id": "447a0a1d-389d-4730-a418-3777e95de7bd",
+     "imp": [
+      {
+       "id": "1_1",
+       "video": {
+        "mimes": [
+         "video/mp4",
+         "video/3gpp"
+        ],
+        "minduration": 5,
+        "maxduration": 30,
+        "startdelay": 0,
+        "protocols": [
+         7
+        ],
+        "w": 1024,
+        "h": 768,
+        "linearity": 1,
+        "skip": 1,
+        "skipmin": 5,
+        "sequence": 1,
+        "api": [
+         7
+        ],
+        "ext": {
+         "context": "adpod"
+        }
+       },
+       "tagid": "400000001",
+       "bidfloor": 0.00123
+      },
+      {
+       "id": "1_2",
+       "video": {
+        "mimes": [
+         "video/mp4",
+         "video/3gpp"
+        ],
+        "minduration": 5,
+        "maxduration": 30,
+        "startdelay": 0,
+        "protocols": [
+         7
+        ],
+        "w": 1024,
+        "h": 768,
+        "linearity": 1,
+        "skip": 1,
+        "skipmin": 5,
+        "sequence": 2,
+        "api": [
+         7
+        ],
+        "ext": {
+         "context": "adpod"
+        }
+       },
+       "tagid": "400000001",
+       "bidfloor": 0.00123
+      }
+     ],
+     "site": {
+      "publisher": {
+       "id": "1100042525"
+      },
+      "content": {
+       "episode": 1,
+       "title": "a-title",
+       "series": "a-series",
+       "season": "a-season",
+       "livestream": 1,
+       "len": 900
+      }
+     },
+     "device": {
+      "ua": "test-user-agent"
+     },
+     "user": {
+      "ext": {}
+     },
+     "ext": {
+      "client": "prebid_server_1.3"
+     }
+    },
+    "impIDs": [
+     "1_1",
+     "1_2"
+    ]
+   }
+  ],
+  "requestErrs": [],
+  "responses": [
+   {
+    "currency": "USD",
+    "bids": [
+     {
+      "bid": {
+       "id": "6906aae8-7f74-4edd-9a4f-f49379a3cadd",
+       "impid": "1_1",
+       "price": 0.01,
+       "nurl": "https://nurl",
+       "adm": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?\u003e\u003cVAST version=\"2.0\"\u003e\u003c/VAST\u003e",
+       "adomain": [
+        "smaato.com"
+       ],
+       "iurl": "https://iurl",
+       "cid": "CM6523",
+       "crid": "CR69381",
+       "cat": [
+        "IAB1"
+       ],
+       "w": 1024,
+       "h": 768,
+       "exp": 300,
+       "ext": {
+        "duration": 5
+       }
+      },
+      "type": "video",
+      "video": {
+       "duration": 5,
+       "primary_category": "IAB1"
+      }
+     },
+     {
+      "bid": {
+       "id": "6906aae8-7f74-4edd-9a4f-f49379a3cadd",
+       "impid": "1_2",
+       "price": 0.01,
+       "nurl": "https://nurl",
+       "adm": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?\u003e\u003cVAST version=\"2.0\"\u003e\u003c/VAST\u003e",
+       "adomain": [
+        "smaato.com"
+       ],
+       "iurl": "https://iurl",
+       "cid": "CM6523",
+       "crid": "CR69381",
+       "cat": [
+        "IAB2"
+       ],
+       "w": 1024,
+       "h": 768,
+       "exp": 300,
+       "ext": {
+        "duration": 30
+       }
+      },
+      "type": "video",
+      "video": {
+       "duration": 30,
+       "primary_category": "IAB2"
+      }
+     }
+    ],
+    "paapi": null,
+    "errs": []
+   }
+  ]
+ }
+}

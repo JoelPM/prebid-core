@@ -125,8 +125,59 @@ function applyOverrides(bid, ov) {
   return b;
 }
 
+// Smaato: several requests per call, pods on the video entry point, Host clock and currency, headers
+MUT.smaato = {
+  imp: (imp) => {
+    if (chance(0.3)) set(imp, 'banner', opt(() => ({ format: [{ w: 320, h: 50 }] }), 0.5));
+    if (chance(0.3)) set(imp, 'video', opt(() => ({ mimes: ['video/mp4'], w: 640, h: 480 }), 0.5));
+    if (chance(0.3)) set(imp, 'native', opt(() => ({ request: '{}' }), 0.5));
+    if (chance(0.3)) imp.id = pick(['1_1', '1_2', '2_1', 'a', 'a_b_c', '_x', imp.id]);
+    if (chance(0.3)) set(imp, 'ext.bidder.publisherId', opt(str, 0.2));
+    if (chance(0.3)) set(imp, 'ext.bidder.adspaceId', opt(str, 0.3));
+    if (chance(0.3)) set(imp, 'ext.bidder.adbreakId', opt(str, 0.3));
+    if (chance(0.3)) { set(imp, 'bidfloor', opt(() => pick(NUMS))); set(imp, 'bidfloorcur', opt(() => pick(['USD', 'usd', 'EUR', 'JPY', '', 'GBP']))); }
+    if (chance(0.2)) set(imp, 'ext.skadn', opt(() => json(1)));
+  },
+  req: (req) => {
+    if (chance(0.4)) set(req, 'user.ext', opt(() => (chance(0.7) ? { data: pick([json(1), { keywords: pick([str(), 5, null]), gender: pick(['M', '', 7]), yob: pick([1984, 0, 1.5, '1984']) }]), consent: 'c' } : json(1))));
+    if (chance(0.3)) set(req, 'user.gender', opt(() => pick(['F', ''])));
+    if (chance(0.3)) set(req, 'site.ext', opt(() => (chance(0.7) ? { data: pick([{ keywords: pick([str(), 3, null]) }, json(1), null]) } : json(1))));
+    if (chance(0.2)) set(req, pick(['site', 'app', 'dooh']), opt(() => ({ id: 'x', publisher: { id: 'old', name: 'n' } })));
+  },
+  bid: (bid) => {
+    if (chance(0.4)) set(bid, 'adm', opt(() => pick(['<img src="x">', '{"native":{"assets":[{"id":1}]}}', '{"native":null}', '{"x":1}', 'not json', '5', '', '<a href="?a=1&b=2">'])));
+    if (chance(0.4)) set(bid, 'ext', opt(() => pick([{ duration: pick([5, 0, 1.5, '5', null]), curls: pick([['https://a.b/c?d=e f&g', 'x y'], [], ['é', '😀 ~!*'], 'u', [1], null]) }, json(1), null])));
+    if (chance(0.3)) set(bid, 'cat', opt(strArr));
+  },
+  resp: () => {},
+};
+const ADTYPES = ['Img', 'Richmedia', 'Video', 'Native', '', 'Banner', 'img'];
+const NOW = Date.UTC(2021, 5, 25, 10, 0, 0);
+// a random Host context: the TS view (functions) and the native runner's (data)
+function hostCase(bidder, req) {
+  const conv = req?.ext?.prebid?.currency?.rates ?? {};
+  const rates = [];
+  for (const [f, tos] of Object.entries(conv)) for (const [t, r] of Object.entries(tos ?? {})) if (typeof r === 'number') rates.push([f, t, r]);
+  if (chance(0.5)) rates.push(['EUR', 'USD', pick([1.2, 0.5, 2])]);
+  const data = { entryPoint: bidder === 'smaato' && chance(0.4) ? 'video' : 'auction', now: chance(0.8) ? NOW : NOW + pick([1, 999, 1001, -5000]), rates };
+  const rate = (f, t) => {
+    if (f === t) return 1;
+    const d = rates.find(([x, y]) => x === f && y === t);
+    if (d) return d[2];
+    const v = rates.find(([x, y]) => x === t && y === f);
+    return v ? 1 / v[2] : undefined;
+  };
+  return { data, ts: { entryPoint: data.entryPoint, now: () => data.now, convertCurrency: (a, f, t) => { const r = rate(f, t); return r === undefined ? undefined : f === t ? a : rates.find(([x, y]) => x === f && y === t) ? a * r : a / rates.find(([x, y]) => x === t && y === f)[2]; } } };
+}
+function httpCase() {
+  const headers = {};
+  if (chance(0.9)) headers['x-smt-adtype'] = pick(ADTYPES);
+  if (chance(0.5)) headers['x-smt-expires'] = pick([String(NOW + 60000), String(NOW - 1000), String(NOW + 1500), 'soon', '', String(NOW + 60000) + '.5']);
+  return { data: { status: 200, headers }, ts: { status: 200, header: (n) => headers[n.toLowerCase()] } };
+}
+
 const results = {};
-for (const bidder of ['openx', 'pubmatic']) {
+for (const bidder of ['openx', 'pubmatic', 'smaato']) {
   const sa = build((await import(path.join(root, `adapters/${bidder}.ts`))).default, 'server');
   const dir = path.join(root, 'harness/golden', bidder);
   const files = fs.readdirSync(dir, { recursive: true }).filter((f) => f.endsWith('.json')).sort();
@@ -142,46 +193,48 @@ for (const bidder of ['openx', 'pubmatic']) {
     const req = clone(s.req);
     for (const imp of req.imp ?? []) if (imp.ext?.bidder && chance(0.8)) MUT[bidder].imp(imp, req);
     MUT[bidder].req?.(req);
-    cases.push({ op: 'mr', req });
+    cases.push({ op: 'mr', req, host: hostCase(bidder, req) });
     const call = s.calls.length && pick(s.calls);
     if (call) {
       const out = clone(call.expectedRequest.body);
       const resp = clone(call.mockResponse.body);
       for (const sb of resp.seatbid ?? []) for (const bid of sb.bid ?? []) MUT[bidder].bid(bid);
       MUT[bidder].resp(resp);
-      cases.push({ op: 'mb', req: out, resp });
+      cases.push({ op: 'mb', req: out, resp, host: hostCase(bidder, out), http: httpCase() });
     }
   }
-  const input = cases.map((c) => [bidder, c.op, JSON.stringify(c.req), ...(c.resp ? [JSON.stringify(c.resp)] : [])].join('\t')).join('\n') + '\n';
+  const line = (c) => [bidder, c.op, JSON.stringify(c.host.data), JSON.stringify(c.req), ...(c.op === 'mb' ? [JSON.stringify(c.resp), JSON.stringify(c.http.data)] : [])].join('\t');
+  const input = cases.map(line).join('\n') + '\n';
   const rs = spawnSync(path.join(root, 'out/target-native/release/fuzz'), { input, maxBuffer: 1 << 30 });
   if (rs.status !== 0) throw new Error(rs.stderr.toString());
   const rsOut = rs.stdout.toString().trim().split('\n').map((l) => JSON.parse(l));
-  const r = (results[bidder] = { cases: cases.length, tsThrew: 0, differ: 0, cover: { body: 0, impRejected: 0, bidsKept: 0, bidsRejected: 0, warnings: 0, paapi: 0, meta: 0 }, examples: [] });
+  const r = (results[bidder] = { cases: cases.length, tsThrew: 0, differ: 0, cover: { requests: 0, impRejected: 0, bidsKept: 0, bidsRejected: 0, warnings: 0, rejectedResponses: 0, paapi: 0, meta: 0 }, examples: [] });
   cases.forEach((c, i) => {
     let ts;
     try {
-      ts = c.op === 'mr' ? sa.makeRequests(c.req) : sa.makeBids(c.req, c.resp);
+      ts = c.op === 'mr' ? sa.makeRequests(c.req, c.host.ts) : sa.makeBids(c.req, c.resp, c.http.ts, c.host.ts);
     } catch (e) {
       r.tsThrew++;
+      if (r.examples.length < 5) r.examples.push({ op: c.op, threw: String(e), input: c });
       return;
     }
     const x = rsOut[i];
     const cv = r.cover;
-    if (c.op === 'mr') { cv.body += !!ts.body; cv.impRejected += ts.errs.length; }
-    else { cv.bidsKept += ts.bids.length; cv.bidsRejected += x.bids.filter((b) => !b.keep).length; cv.warnings += ts.errs.length - x.bids.filter((b) => !b.keep).length; cv.paapi += !!ts.paapi?.length; cv.meta += ts.bids.filter((b) => !emptyish(clean(b.meta))).length; }
+    if (c.op === 'mr') { cv.requests += ts.requests.length; cv.impRejected += ts.errs.length; }
+    else { cv.bidsKept += ts.bids.length; cv.rejectedResponses += !!ts.rejected; cv.bidsRejected += x.bids.filter((b) => !b.keep).length; cv.warnings += ts.errs.length - x.bids.filter((b) => !b.keep).length; cv.paapi += !!ts.paapi?.length; cv.meta += ts.bids.filter((b) => !emptyish(clean(b.meta))).length; }
     let d;
-    if (c.op === 'mr') d = diff({ body: clean(ts.body), impIDs: ts.impIDs ?? [], errs: ts.errs }, { body: x.body, impIDs: x.impIDs, errs: x.errs });
+    if (c.op === 'mr') d = diff({ reqs: ts.requests.map((q) => ({ body: clean(q.body), impIDs: q.impIDs })), errs: ts.errs }, { reqs: x.reqs, errs: x.errs });
     else {
       const bids = c.resp.seatbid?.flatMap((sb) => sb.bid ?? []) ?? [];
       const kept = x.bids.map((b, j) => [b, bids[j]]).filter(([b]) => b.keep);
       d = diff(
-        { bids: ts.bids.map((b) => ({ bid: clean(b.bid), type: b.type, seat: b.seat || null, dp: b.dealPriority || 0, video: norm(b.video), meta: norm(b.meta) })), cur: ts.currency || null, paapi: norm(ts.paapi), errs: ts.errs },
-        { bids: kept.map(([b, orig]) => ({ bid: applyOverrides(orig, b.overrides), type: b.type, seat: b.seat || null, dp: b.dealPriority, video: norm(b.video), meta: norm(b.meta) })), cur: x.currency || null, paapi: norm(x.paapi), errs: x.errs },
+        { rejected: !!ts.rejected, bids: ts.bids.map((b) => ({ bid: clean(b.bid), type: b.type, seat: b.seat || null, dp: b.dealPriority || 0, video: b.video === undefined ? null : norm(b.video) ?? {}, meta: norm(b.meta) })), cur: ts.currency || null, paapi: norm(ts.paapi), errs: ts.errs },
+        { rejected: x.rejected, bids: kept.map(([b, orig]) => ({ bid: applyOverrides(orig, b.overrides), type: b.type, seat: b.seat || null, dp: b.dealPriority, video: b.video === null ? null : norm(b.video) ?? {}, meta: norm(b.meta) })), cur: x.currency || null, paapi: norm(x.paapi), errs: x.errs },
       );
     }
     if (d.length) {
       r.differ++;
-      if (r.examples.length < 5) r.examples.push({ op: c.op, at: d.slice(0, 5), input: c, ts: c.op === 'mr' ? clean(ts) : clean(ts), rs: x });
+      if (r.examples.length < 5) r.examples.push({ op: c.op, at: d.slice(0, 5), input: c, ts: clean(ts), rs: x });
     }
   });
   console.log(`${bidder}: ${r.cases} calls, TS vs Rust differ on ${r.differ}, TS threw on ${r.tsThrew}; reached ${JSON.stringify(r.cover)}`);

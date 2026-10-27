@@ -23,7 +23,7 @@ fn main() {
         let req = std::fs::read(format!("{dir}/pubmatic-lt-req.json")).unwrap();
         let end = Instant::now() + std::time::Duration::from_secs(secs.parse().unwrap());
         while Instant::now() < end {
-            for _ in 0..1000 { d.reset(); let r = d.parse(&req); std::hint::black_box(guest::frame_req(guest::pubmatic::make_requests(&mut d, r))); }
+            for _ in 0..1000 { d.reset(); let r = d.parse(&req); std::hint::black_box(guest::frame_req(guest::pubmatic::make_requests(&mut d, prebid_core_rt::ABSENT, r))); }
         }
         return;
     }
@@ -32,13 +32,13 @@ fn main() {
             let rd = |s: &str| std::fs::read(format!("{dir}/{b}-{name}-{s}.json")).unwrap();
             let (req, out, resp) = (rd("req"), rd("out"), rd("resp"));
             println!("{b} / {name}");
-            let (mr, mb): (fn(&mut Doc, u32) -> prebid_core_rt::ReqOut, fn(&mut Doc, u32, u32) -> prebid_core_rt::BidsOut) = match b {
+            let (mr, mb): (fn(&mut Doc, u32, u32) -> prebid_core_rt::Reqs, fn(&mut Doc, u32, u32, u32, u32) -> prebid_core_rt::BidsOut) = match b {
                 "openx" => (guest::openx::make_requests, guest::openx::make_bids),
                 _ => (guest::pubmatic::make_requests, guest::pubmatic::make_bids),
             };
             time("parse+skim request only", || { d.reset(); let r = d.parse(&req); let i = d.get(r, "imp"); std::hint::black_box(d.items(i)); });
-            time("make_requests (incl. parse, emit)", || { d.reset(); let r = d.parse(&req); std::hint::black_box(guest::frame_req(mr(&mut d, r))); });
-            time("make_bids (incl. parse)", || { d.reset(); let q = d.parse(&out); let s = d.parse(&resp); std::hint::black_box(guest::frame_bids(mb(&mut d, q, s))); });
+            time("make_requests (incl. parse, emit)", || { d.reset(); let r = d.parse(&req); std::hint::black_box(guest::frame_req(mr(&mut d, prebid_core_rt::ABSENT, r))); });
+            time("make_bids (incl. parse)", || { d.reset(); let q = d.parse(&out); let s = d.parse(&resp); std::hint::black_box(guest::frame_bids(mb(&mut d, prebid_core_rt::ABSENT, q, s, prebid_core_rt::ABSENT))); });
         }
     }
 }

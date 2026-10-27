@@ -8,10 +8,14 @@ package host
 import (
 	"context"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
+	"time"
 
 	"github.com/prebid/openrtb/v20/openrtb2"
 	"github.com/prebid/prebid-server/v4/adapters"
@@ -29,8 +33,41 @@ type Runtime struct {
 	cm wazero.CompiledModule
 }
 
+// callState is what the Host's functions answer during one guest call (#20: host.now, host.convertCurrency).
+type callState struct {
+	now  func() time.Time
+	info *adapters.ExtraRequestInfo
+}
+type stateKey struct{}
+
 func NewRuntime(wasm []byte) (*Runtime, error) {
 	rt := wazero.NewRuntimeWithConfig(ctx, wazero.NewRuntimeConfigCompiler())
+	// the Host's functions a guest may import
+	_, err := rt.NewHostModuleBuilder("prebid").
+		NewFunctionBuilder().WithFunc(func(c context.Context) float64 {
+		st, _ := c.Value(stateKey{}).(*callState)
+		if st == nil {
+			return float64(time.Now().UnixMilli())
+		}
+		return float64(st.now().UnixMilli())
+	}).Export("now_ms").
+		NewFunctionBuilder().WithFunc(func(c context.Context, m api.Module, amount float64, fp, fl, tp, tl uint32) float64 {
+		st, _ := c.Value(stateKey{}).(*callState)
+		from, _ := m.Memory().Read(fp, fl)
+		to, _ := m.Memory().Read(tp, tl)
+		if st == nil || st.info == nil {
+			return math.NaN()
+		}
+		v, err := st.info.ConvertCurrency(amount, string(from), string(to))
+		if err != nil {
+			return math.NaN()
+		}
+		return v
+	}).Export("convert_currency").
+		Instantiate(ctx)
+	if err != nil {
+		return nil, err
+	}
 	cm, err := rt.CompileModule(ctx, wasm)
 	if err != nil {
 		return nil, err
@@ -51,17 +88,19 @@ type instance struct {
 type Shared struct {
 	bidder, endpoint string
 	pool             sync.Pool
+	// Now is the Host's clock (host.now()); tests fix it
+	Now func() time.Time
 }
 
 func (r *Runtime) Bidder(bidder, endpoint string) *Shared {
-	s := &Shared{bidder: bidder, endpoint: endpoint}
+	s := &Shared{bidder: bidder, endpoint: endpoint, Now: time.Now}
 	s.pool.New = func() any {
 		m, err := r.rt.InstantiateModule(ctx, r.cm, wazero.NewModuleConfig().WithName(""))
 		if err != nil {
 			panic(err)
 		}
 		f := m.ExportedFunction
-		return &instance{mem: m.Memory(), inBuf: f("in_buf"), outPtr: f("out_ptr"), mr: f(bidder + "_mr"), mb: f(bidder + "_mb"), stack: make([]uint64, 2)}
+		return &instance{mem: m.Memory(), inBuf: f("in_buf"), outPtr: f("out_ptr"), mr: f(bidder + "_mr"), mb: f(bidder + "_mb"), stack: make([]uint64, 4)}
 	}
 	return s
 }
@@ -83,8 +122,14 @@ func (g *instance) write(parts ...[]byte) {
 }
 
 func (g *instance) call(fn api.Function, args ...uint64) []byte {
+	return g.callIn(ctx, fn, args...)
+}
+func (g *instance) callIn(c context.Context, fn api.Function, args ...uint64) []byte {
+	if len(g.stack) < len(args) {
+		g.stack = make([]uint64, len(args))
+	}
 	copy(g.stack, args)
-	if err := fn.CallWithStack(ctx, g.stack); err != nil {
+	if err := fn.CallWithStack(c, g.stack); err != nil {
 		panic(err)
 	}
 	n := uint32(g.stack[0])
@@ -111,6 +156,12 @@ func (f *frame) bytes() []byte {
 	f.p += n
 	return v
 }
+// strsAfterBids reads past an empty bid list's currency and paapi slots to the errors.
+func (f *frame) strsAfterBids() []string {
+	f.bytes()
+	f.bytes()
+	return f.strs()
+}
 func (f *frame) strs() []string {
 	n := f.u32()
 	out := make([]string, 0, n)
@@ -120,32 +171,41 @@ func (f *frame) strs() []string {
 	return out
 }
 
-func (s *Shared) MakeRequests(request *openrtb2.BidRequest, _ *adapters.ExtraRequestInfo) ([]*adapters.RequestData, []error) {
+// hostContext is what Phases see as `host` (besides the functions): the entry point.
+func hostContext(info *adapters.ExtraRequestInfo) []byte {
+	ep := "auction"
+	if info != nil && info.PbsEntryPoint != "" {
+		ep = string(info.PbsEntryPoint)
+	}
+	b, _ := json.Marshal(map[string]string{"entryPoint": ep})
+	return b
+}
+
+func (s *Shared) MakeRequests(request *openrtb2.BidRequest, info *adapters.ExtraRequestInfo) ([]*adapters.RequestData, []error) {
 	body, err := jsonutil.Marshal(request)
 	if err != nil {
 		return nil, []error{err}
 	}
 	g := s.pool.Get().(*instance)
 	defer s.pool.Put(g)
-	g.write(body)
-	f := frame{b: g.call(g.mr, uint64(len(body)))}
-	var rd *adapters.RequestData
-	if f.u32() == 1 {
+	hc := hostContext(info)
+	g.write(hc, body)
+	c := context.WithValue(ctx, stateKey{}, &callState{now: s.Now, info: info})
+	f := frame{b: g.callIn(c, g.mr, uint64(len(hc)), uint64(len(body)))}
+	var rds []*adapters.RequestData
+	for n := f.u32(); n > 0; n-- {
 		headers := http.Header{}
 		headers.Add("Content-Type", "application/json;charset=utf-8")
 		headers.Add("Accept", "application/json")
-		rd = &adapters.RequestData{Method: "POST", Uri: s.endpoint, Body: append([]byte(nil), f.bytes()...), Headers: headers}
+		rd := &adapters.RequestData{Method: "POST", Uri: s.endpoint, Body: append([]byte(nil), f.bytes()...), Headers: headers}
+		rd.ImpIDs = f.strs()
+		rds = append(rds, rd)
 	}
-	ids := f.strs()
 	var errs []error
 	for _, e := range f.strs() {
 		errs = append(errs, &errortypes.BadInput{Message: e})
 	}
-	if rd == nil {
-		return nil, errs
-	}
-	rd.ImpIDs = ids
-	return []*adapters.RequestData{rd}, errs
+	return rds, errs
 }
 
 func (s *Shared) MakeBids(_ *openrtb2.BidRequest, ext *adapters.RequestData, response *adapters.ResponseData) (*adapters.BidderResponse, []error) {
@@ -165,11 +225,29 @@ func (s *Shared) MakeBids(_ *openrtb2.BidRequest, ext *adapters.RequestData, res
 	}
 	g := s.pool.Get().(*instance)
 	defer s.pool.Put(g)
-	g.write(ext.Body, response.Body)
-	f := frame{b: g.call(g.mb, uint64(len(ext.Body)), uint64(len(response.Body)))}
+	hc := hostContext(nil)
+	// http: the status and the headers (first values, names lower-cased)
+	hd := map[string]string{}
+	for k, v := range response.Headers {
+		if len(v) > 0 {
+			hd[strings.ToLower(k)] = v[0]
+		}
+	}
+	hb, _ := json.Marshal(map[string]any{"status": response.StatusCode, "headers": hd})
+	g.write(hc, ext.Body, response.Body, hb)
+	c := context.WithValue(ctx, stateKey{}, &callState{now: s.Now})
+	f := frame{b: g.callIn(c, g.mb, uint64(len(hc)), uint64(len(ext.Body)), uint64(len(response.Body)), uint64(len(hb)))}
 
-	out := adapters.NewBidderResponseWithBidsCapacity(5)
 	var errs []error
+	if f.u32() == 1 {
+		// the response Phase rejected the response: no bids, as when a Hand-written MakeBids returns nil
+		f.u32()
+		for _, e := range f.strsAfterBids() {
+			errs = append(errs, &errortypes.BadServerResponse{Message: e})
+		}
+		return nil, errs
+	}
+	out := adapters.NewBidderResponseWithBidsCapacity(5)
 	n := int(f.u32())
 	i := 0
 	for si := range br.SeatBid {
@@ -192,7 +270,11 @@ func (s *Shared) MakeBids(_ *openrtb2.BidRequest, ext *adapters.RequestData, res
 				}
 				bid = &b
 			}
-			tb := &adapters.TypedBid{Bid: bid, BidType: openrtb_ext.BidType(typ), Seat: openrtb_ext.BidderName(seat), DealPriority: int(int32(dp)), BidVideo: &openrtb_ext.ExtBidPrebidVideo{}}
+			tb := &adapters.TypedBid{Bid: bid, BidType: openrtb_ext.BidType(typ), Seat: openrtb_ext.BidderName(seat), DealPriority: int(int32(dp))}
+			if len(video) > 0 {
+				// the Definition returned a video annotation (possibly with no defined members)
+				tb.BidVideo = &openrtb_ext.ExtBidPrebidVideo{}
+			}
 			for _, kv := range kvs(video) {
 				switch kv.key {
 				case "duration":
@@ -290,8 +372,9 @@ func decodeMeta(m []kv) *openrtb_ext.ExtBidPrebidMeta {
 func (s *Shared) GuestOnly(reqBody, outBody, resp []byte) {
 	g := s.pool.Get().(*instance)
 	defer s.pool.Put(g)
-	g.write(reqBody)
-	g.call(g.mr, uint64(len(reqBody)))
-	g.write(outBody, resp)
-	g.call(g.mb, uint64(len(outBody)), uint64(len(resp)))
+	hc, hb := []byte(`{"entryPoint":"auction"}`), []byte(`{"status":200,"headers":{}}`)
+	g.write(hc, reqBody)
+	g.call(g.mr, uint64(len(hc)), uint64(len(reqBody)))
+	g.write(hc, outBody, resp, hb)
+	g.call(g.mb, uint64(len(hc)), uint64(len(outBody)), uint64(len(resp)), uint64(len(hb)))
 }

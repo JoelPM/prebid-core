@@ -8,9 +8,10 @@ description = "PROTOTYPE: generated Shared Adapters behind the Host ABI, one was
 crate-type = ["cdylib", "rlib"]
 
 [features]
-default = ["openx", "pubmatic"]
+default = ["openx", "pubmatic", "smaato"]
 openx = []
 pubmatic = []
+smaato = []
 
 [dependencies]
 prebid_core_rt = { path = "../runtime/rs" }

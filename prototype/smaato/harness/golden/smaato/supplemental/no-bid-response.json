@@ -1,0 +1,141 @@
+{
+ "hostRequest": {
+  "id": "1C86242D-9535-47D6-9576-7B1FE87F282C",
+  "imp": [
+   {
+    "id": "1C86242D-9535-47D6-9576-7B1FE87F282C",
+    "banner": {
+     "format": [
+      {
+       "w": 320,
+       "h": 50
+      },
+      {
+       "w": 320,
+       "h": 250
+      }
+     ]
+    },
+    "ext": {
+     "bidder": {
+      "publisherId": "1100042525",
+      "adspaceId": "130563103"
+     }
+    }
+   }
+  ],
+  "site": {
+   "page": "http://localhost:3000/server.html?pbjs_debug=true\u0026endpoint=http://localhost:3000/bidder",
+   "publisher": {
+    "id": "1100042525"
+   },
+   "ext": {
+    "data": {
+     "keywords": "power tools",
+     "search": "drill",
+     "content": {
+      "userrating": 4
+     }
+    }
+   }
+  },
+  "device": {
+   "dnt": 0,
+   "ua": "test-user-agent",
+   "ip": "123.123.123.123",
+   "language": "en"
+  },
+  "user": {
+   "ext": {
+    "consent": "gdprConsentString",
+    "data": {
+     "keywords": "a,b",
+     "gender": "M",
+     "yob": 1984,
+     "geo": {
+      "country": "ca"
+     }
+    }
+   }
+  },
+  "regs": {
+   "coppa": 1,
+   "ext": {
+    "gdpr": 1,
+    "us_privacy": "uspConsentString"
+   }
+  }
+ },
+ "native": {
+  "requests": [
+   {
+    "method": "POST",
+    "uri": "https://prebid/bidder",
+    "body": {
+     "id": "1C86242D-9535-47D6-9576-7B1FE87F282C",
+     "imp": [
+      {
+       "id": "1C86242D-9535-47D6-9576-7B1FE87F282C",
+       "banner": {
+        "format": [
+         {
+          "w": 320,
+          "h": 50
+         },
+         {
+          "w": 320,
+          "h": 250
+         }
+        ]
+       },
+       "tagid": "130563103"
+      }
+     ],
+     "site": {
+      "page": "http://localhost:3000/server.html?pbjs_debug=true\u0026endpoint=http://localhost:3000/bidder",
+      "publisher": {
+       "id": "1100042525"
+      },
+      "keywords": "power tools"
+     },
+     "device": {
+      "dnt": 0,
+      "ua": "test-user-agent",
+      "ip": "123.123.123.123",
+      "language": "en"
+     },
+     "user": {
+      "yob": 1984,
+      "gender": "M",
+      "keywords": "a,b",
+      "ext": {
+       "consent": "gdprConsentString"
+      }
+     },
+     "regs": {
+      "coppa": 1,
+      "ext": {
+       "gdpr": 1,
+       "us_privacy": "uspConsentString"
+      }
+     },
+     "ext": {
+      "client": "prebid_server_1.3"
+     }
+    },
+    "impIDs": [
+     "1C86242D-9535-47D6-9576-7B1FE87F282C"
+    ]
+   }
+  ],
+  "requestErrs": [],
+  "responses": [
+   {
+    "currency": "",
+    "bids": [],
+    "paapi": null,
+    "errs": []
+   }
+  ]
+ }
+}

@@ -25,4 +25,8 @@ echo "OpenX Shared Adapter module, in context:     Δ $((oxs-rt))   ($(( (oxs-rt
 echo "PubMatic Hand-written Adapter, in context:   Δ $((pm-pmbase)) (+ its own libraries: $((pmbase-ortb)))"
 echo "PubMatic Shared Adapter module, in context:  Δ $((pms-rt))   ($(( (pms-rt)*100/(pm-pmbase) ))% of Hand-written; NOT like for like, see README)"
 echo "Second Shared Adapter on top of OpenX (PubMatic), marginal: Δ $((both-oxs))"
-for c in prebidCore sharedAdapter openxBidAdapter openxSharedBidAdapter pubmaticBidAdapter pubmaticSharedBidAdapter; do printf "  chunk %-28s raw %6d gz %5d\n" $c $(wc -c < $D/$c.js) $(gzip -9c $D/$c.js | wc -c); done
+sm=$(gz sm $CORE ortbConverter smaatoBidAdapter)
+sms=$(gz sms $CORE ortbConverter prebidCore sharedAdapter smaatoSharedBidAdapter)
+echo "Smaato Hand-written Adapter, in context:     Δ $((sm-ortb))"
+echo "Smaato Shared Adapter module, in context:    Δ $((sms-rt))   ($(( (sms-rt)*100/(sm-ortb) ))% of Hand-written; NOT like for like, see README)"
+for c in prebidCore sharedAdapter openxBidAdapter openxSharedBidAdapter pubmaticBidAdapter pubmaticSharedBidAdapter smaatoBidAdapter smaatoSharedBidAdapter; do printf "  chunk %-28s raw %6d gz %5d\n" $c $(wc -c < $D/$c.js) $(gzip -9c $D/$c.js | wc -c); done

@@ -1,2 +1,3 @@
-openx: 38740 calls, TS vs Rust differ on 0, TS threw on 0; reached {"body":19721,"impRejected":1250,"bidsKept":39279,"bidsRejected":0,"warnings":0,"paapi":7488,"meta":3466}
-pubmatic: 38323 calls, TS vs Rust differ on 0, TS threw on 0; reached {"body":14613,"impRejected":8498,"bidsKept":12695,"bidsRejected":6944,"warnings":720,"paapi":4551,"meta":10897}
+openx: 38047 calls, TS vs Rust differ on 0, TS threw on 0; reached {"requests":19351,"impRejected":1627,"bidsKept":43057,"bidsRejected":0,"warnings":0,"rejectedResponses":0,"paapi":6986,"meta":5030}
+pubmatic: 38514 calls, TS vs Rust differ on 0, TS threw on 0; reached {"requests":16484,"impRejected":5946,"bidsKept":12436,"bidsRejected":7699,"warnings":540,"rejectedResponses":0,"paapi":3784,"meta":10003}
+smaato: 34914 calls, TS vs Rust differ on 0, TS threw on 0; reached {"requests":8926,"impRejected":20579,"bidsKept":7128,"bidsRejected":6719,"warnings":3195,"rejectedResponses":3195,"paapi":0,"meta":0}

@@ -235,4 +235,80 @@ impl Doc {
         };
         self.num(r)
     }
+
+    /// Core `formEncode`: application/x-www-form-urlencoded (Go's url.QueryEscape): every UTF-8 byte
+    /// but A-Z a-z 0-9 - _ . ~ as %XX, a space as '+'.
+    pub fn form_encode(&mut self, v: V) -> V {
+        let Some(s) = self.string(v).map(|s| s.into_owned()) else { return ABSENT };
+        let mut out = String::with_capacity(s.len() * 3);
+        for b in s.bytes() {
+            match b {
+                b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => out.push(b as char),
+                b' ' => out.push('+'),
+                b => out.push_str(&format!("%{:02X}", b)),
+            }
+        }
+        self.new_str(&out)
+    }
+    /// `http.header(name)`: the Host passes `{status, headers}`, header names lower-cased.
+    pub fn header(&mut self, http: V, name: V) -> V {
+        let Some(n) = self.string(name).map(|s| s.to_lowercase()) else { return ABSENT };
+        let h = self.get(http, "headers");
+        self.get(h, &n)
+    }
+    /// `host.convertCurrency(amount, from, to)`: the Host's currency service; undefined without a rate.
+    pub fn convert_currency(&mut self, amount: V, from: V, to: V) -> V {
+        let (Some(a), Some(f), Some(t)) = (self.f64(amount), self.string(from).map(|s| s.into_owned()), self.string(to).map(|s| s.into_owned())) else { return ABSENT };
+        let r = host_convert(a, &f, &t);
+        if r.is_nan() { ABSENT } else { self.num(r) }
+    }
+}
+
+// ---------- the Host's functions (guest imports from "prebid"; native builds use a settable stand-in) ----------
+
+#[cfg(target_arch = "wasm32")]
+#[link(wasm_import_module = "prebid")]
+extern "C" {
+    fn now_ms() -> f64;
+    fn convert_currency(amount: f64, from: *const u8, from_len: u32, to: *const u8, to_len: u32) -> f64;
+}
+/// `host.now()`: milliseconds since the epoch, by the Host's clock.
+#[cfg(target_arch = "wasm32")]
+pub fn host_now() -> f64 {
+    unsafe { now_ms() }
+}
+#[cfg(target_arch = "wasm32")]
+fn host_convert(a: f64, f: &str, t: &str) -> f64 {
+    unsafe { convert_currency(a, f.as_ptr(), f.len() as u32, t.as_ptr(), t.len() as u32) }
+}
+#[cfg(not(target_arch = "wasm32"))]
+thread_local! {
+    static NOW: std::cell::Cell<f64> = const { std::cell::Cell::new(0.0) };
+    static RATES: std::cell::RefCell<Vec<(String, String, f64)>> = const { std::cell::RefCell::new(Vec::new()) };
+}
+/// Native builds (tests, fuzz): what `host.now()` and `host.convertCurrency` answer.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn set_host(now: f64, rates: Vec<(String, String, f64)>) {
+    NOW.with(|c| c.set(now));
+    RATES.with(|r| *r.borrow_mut() = rates);
+}
+#[cfg(not(target_arch = "wasm32"))]
+pub fn host_now() -> f64 {
+    NOW.with(|c| c.get())
+}
+#[cfg(not(target_arch = "wasm32"))]
+fn host_convert(a: f64, f: &str, t: &str) -> f64 {
+    if f == t {
+        return a;
+    }
+    RATES.with(|r| {
+        let r = r.borrow();
+        if let Some((_, _, x)) = r.iter().find(|(x, y, _)| x == f && y == t) {
+            return a * x;
+        }
+        if let Some((_, _, x)) = r.iter().find(|(x, y, _)| x == t && y == f) {
+            return a / x;
+        }
+        f64::NAN
+    })
 }

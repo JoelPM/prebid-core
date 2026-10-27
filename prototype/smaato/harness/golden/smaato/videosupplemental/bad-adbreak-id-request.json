@@ -1,0 +1,91 @@
+{
+ "hostRequest": {
+  "id": "447a0a1d-389d-4730-a418-3777e95de7bd",
+  "imp": [
+   {
+    "id": "1_1",
+    "video": {
+     "mimes": [
+      "video/mp4",
+      "video/3gpp"
+     ],
+     "minduration": 5,
+     "maxduration": 30,
+     "startdelay": 0,
+     "protocols": [
+      7
+     ],
+     "w": 1024,
+     "h": 768,
+     "linearity": 1,
+     "skip": 1,
+     "skipmin": 5,
+     "api": [
+      7
+     ]
+    },
+    "ext": {
+     "bidder": {
+      "publisherId": "1234567"
+     }
+    }
+   },
+   {
+    "id": "1_2",
+    "video": {
+     "mimes": [
+      "video/mp4",
+      "video/3gpp"
+     ],
+     "minduration": 5,
+     "maxduration": 30,
+     "startdelay": 0,
+     "protocols": [
+      7
+     ],
+     "w": 1024,
+     "h": 768,
+     "linearity": 1,
+     "skip": 1,
+     "skipmin": 5,
+     "api": [
+      7
+     ]
+    },
+    "ext": {
+     "bidder": {
+      "publisherId": "1234567"
+     }
+    }
+   }
+  ],
+  "site": {
+   "publisher": {
+    "id": "1100042525"
+   },
+   "content": {
+    "episode": 1,
+    "title": "a-title",
+    "series": "a-series",
+    "season": "a-season",
+    "livestream": 1,
+    "len": 900
+   }
+  },
+  "device": {
+   "ua": "test-user-agent"
+  },
+  "user": {
+   "ext": {
+    "data": {}
+   }
+  }
+ },
+ "native": {
+  "requests": [],
+  "requestErrs": [
+   "Missing adbreakId parameter."
+  ],
+  "responses": []
+ }
+}

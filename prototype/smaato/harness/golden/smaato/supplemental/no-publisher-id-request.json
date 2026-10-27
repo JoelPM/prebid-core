@@ -1,0 +1,29 @@
+{
+ "hostRequest": {
+  "id": "1C86242D-9535-47D6-9576-7B1FE87F282C",
+  "imp": [
+   {
+    "id": "1C86242D-9535-47D6-9576-7B1FE87F282C",
+    "banner": {
+     "format": [
+      {
+       "w": 320,
+       "h": 50
+      }
+     ]
+    },
+    "ext": {}
+   }
+  ],
+  "site": {
+   "page": "http://localhost:3000/server.html?pbjs_debug=true\u0026endpoint=http://localhost:3000/bidder"
+  }
+ },
+ "native": {
+  "requests": [],
+  "requestErrs": [
+   "Missing publisherId parameter."
+  ],
+  "responses": []
+ }
+}

@@ -29,7 +29,10 @@ const CASES = [
   ['++', `let i = 0; i++;`, 'only assignments may stand as statements'],
   ['new', `const d = new Date();`, 'is not in the subset'],
   ['local function', `const f = (x: string) => x;`, 'local functions are not in the subset'],
-  ['callback with index', `const l = [1].map((x, i) => i);`, 'callbacks take one parameter'],
+  ['ok: callback with an index (#20)', `const l = [1].map((x, i) => i);`, null],
+  ['callback with three parameters', `const l = [1].map((x, i, a) => i);`, 'callbacks take (element, index) at most'],
+  ['ok: the Host context (#20)', `out.bidfloor = host.now(); const c = host.convertCurrency(1, 'EUR', 'USD'); out.tagid = host.entryPoint;`, null],
+  ['a Host context method that does not exist', `const x = host.fetch('u');`, 'type error'],
   ['callback with a block body', `const l = [1].map((x) => { return x; });`, 'callbacks must have an expression body'],
   ['split on a non-literal separator', `const s = imp.id.split(imp.id);`, 'split takes one non-empty string literal'],
   ['split on the empty string', `const s = imp.id.split('');`, 'split takes one non-empty string literal'],
@@ -56,7 +59,7 @@ export default defineAdapter<{ unit: string }>({
   bidder: 'x',
   endpoint: 'https://x',
   core: {
-    imp(imp, p, req) { const out = { ...imp }; ${body}
+    imp(imp, p, req, host) { const out = { ...imp }; ${body}
       return out; },
     request: (req) => req,
     bid: (bid) => ({ type: 'banner' }),

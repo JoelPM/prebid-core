@@ -1,7 +1,7 @@
 //! PROTOTYPE: runs the transpiled Shared Adapters natively for harness/fuzz.mjs (TS vs Rust).
 //! stdin, one call per line: `<bidder>\tmr\t<request json>` or `<bidder>\tmb\t<request json>\t<response json>`.
 //! stdout, one JSON line per call, with the annotation slots decoded back to JSON.
-use prebid_core_rt::{BidsOut, Doc, ReqOut};
+use prebid_core_rt::{BidsOut, Doc, Reqs};
 use std::io::{BufRead, Write};
 
 fn esc(s: &str, out: &mut String) {
@@ -62,15 +62,19 @@ fn strs(v: &[String], out: &mut String) {
     }
     out.push(']');
 }
-fn req_out(r: ReqOut) -> String {
-    let mut o = String::from("{\"body\":");
-    match &r.body {
-        Some(b) => o.push_str(std::str::from_utf8(b).unwrap()),
-        None => o.push_str("null"),
+fn req_out(r: Reqs) -> String {
+    let mut o = String::from("{\"reqs\":[");
+    for (i, (body, ids)) in r.reqs.iter().enumerate() {
+        if i > 0 {
+            o.push(',');
+        }
+        o.push_str("{\"body\":");
+        o.push_str(std::str::from_utf8(body).unwrap());
+        o.push_str(",\"impIDs\":");
+        strs(ids, &mut o);
+        o.push('}');
     }
-    o.push_str(",\"impIDs\":");
-    strs(&r.imp_ids, &mut o);
-    o.push_str(",\"errs\":");
+    o.push_str("],\"errs\":");
     strs(&r.errs, &mut o);
     o.push('}');
     o
@@ -99,8 +103,25 @@ fn bids_out(r: BidsOut) -> String {
     json_or_null(&r.paapi, &mut o);
     o.push_str(",\"errs\":");
     strs(&r.errs, &mut o);
+    o.push_str(&format!(",\"rejected\":{}", r.rejected));
     o.push('}');
     o
+}
+
+/// The native stand-in for the Host's functions: `{"now": ms, "rates": [[from, to, rate], ...]}`.
+fn set_host(ctx: &str) {
+    let mut d = Doc::new();
+    let c = d.parse(ctx.as_bytes());
+    let now = { let n = d.get(c, "now"); d.f64(n).unwrap_or(0.0) };
+    let mut rates = Vec::new();
+    let rs = d.get(c, "rates");
+    for r in d.items(rs) {
+        let (f, t, x) = (d.at(r, 0), d.at(r, 1), d.at(r, 2));
+        if let (Some(f), Some(t), Some(x)) = (d.string(f).map(|s| s.into_owned()), d.string(t).map(|s| s.into_owned()), d.f64(x)) {
+            rates.push((f, t, x));
+        }
+    }
+    prebid_core_rt::set_host(now, rates);
 }
 
 fn main() {
@@ -111,11 +132,22 @@ fn main() {
         let line = line.unwrap();
         let f: Vec<&str> = line.split('\t').collect();
         d.reset();
-        let out = match (f[0], f[1]) {
-            ("openx", "mr") => { let r = d.parse(f[2].as_bytes()); req_out(guest::openx::make_requests(&mut d, r)) }
-            ("pubmatic", "mr") => { let r = d.parse(f[2].as_bytes()); req_out(guest::pubmatic::make_requests(&mut d, r)) }
-            ("openx", "mb") => { let q = d.parse(f[2].as_bytes()); let s = d.parse(f[3].as_bytes()); bids_out(guest::openx::make_bids(&mut d, q, s)) }
-            (_, _) => { let q = d.parse(f[2].as_bytes()); let s = d.parse(f[3].as_bytes()); bids_out(guest::pubmatic::make_bids(&mut d, q, s)) }
+        set_host(f[2]);
+        let c = d.parse(f[2].as_bytes());
+        let q = d.parse(f[3].as_bytes());
+        type Mr = fn(&mut Doc, u32, u32) -> Reqs;
+        type Mb = fn(&mut Doc, u32, u32, u32, u32) -> BidsOut;
+        let (mr, mb): (Mr, Mb) = match f[0] {
+            "openx" => (guest::openx::make_requests, guest::openx::make_bids),
+            "pubmatic" => (guest::pubmatic::make_requests, guest::pubmatic::make_bids),
+            _ => (guest::smaato::make_requests, guest::smaato::make_bids),
+        };
+        let out = if f[1] == "mr" {
+            req_out(mr(&mut d, c, q))
+        } else {
+            let s = d.parse(f[4].as_bytes());
+            let h = d.parse(f[5].as_bytes());
+            bids_out(mb(&mut d, c, q, s, h))
         };
         writeln!(w, "{out}").unwrap();
     }

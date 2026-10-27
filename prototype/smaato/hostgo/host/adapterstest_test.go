@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/prebid/prebid-server/v4/adapters/adapterstest"
 )
@@ -24,8 +25,9 @@ func TestAdapterstest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for name, ep := range map[string]string{"openx": "http://rtb.openx.net/prebid", "pubmatic": "https://hbopenbid.pubmatic.com/translator?source=prebid-server"} {
+	for name, ep := range map[string]string{"openx": "http://rtb.openx.net/prebid", "pubmatic": "https://hbopenbid.pubmatic.com/translator?source=prebid-server", "smaato": "https://prebid/bidder"} {
 		bidder := rt.Bidder(name, ep)
+		bidder.Now = func() time.Time { return time.Date(2021, 6, 25, 10, 0, 0, 0, time.UTC) } // smaato_test.go's clock
 		root := filepath.Join(os.Getenv("PBS"), "adapters", name, name+"test")
 		filepath.WalkDir(root, func(p string, d os.DirEntry, err error) error {
 			if err == nil && !d.IsDir() && strings.HasSuffix(p, ".json") {

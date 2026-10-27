@@ -1,0 +1,415 @@
+{
+ "hostRequest": {
+  "id": "1C86242D-9535-47D6-9576-7B1FE87F282C",
+  "imp": [
+   {
+    "id": "1C86242D-9535-47D6-9576-7B1FE87F282C",
+    "banner": {
+     "format": [
+      {
+       "w": 320,
+       "h": 50
+      },
+      {
+       "w": 320,
+       "h": 250
+      }
+     ]
+    },
+    "video": {
+     "mimes": [
+      "video/mp4",
+      "video/quicktime",
+      "video/3gpp",
+      "video/x-m4v"
+     ],
+     "minduration": 5,
+     "maxduration": 30,
+     "startdelay": 0,
+     "protocols": [
+      7
+     ],
+     "w": 1024,
+     "h": 768,
+     "linearity": 1,
+     "skip": 1,
+     "skipmin": 5,
+     "api": [
+      7
+     ],
+     "ext": {
+      "rewarded": 0
+     }
+    },
+    "bidfloor": 0.00123,
+    "ext": {
+     "bidder": {
+      "publisherId": "1100042525",
+      "adspaceId": "130563103"
+     },
+     "skadn": {
+      "versions": [
+       "2.0",
+       "2.1",
+       "2.2",
+       "3.0",
+       "4.0"
+      ],
+      "sourceapp": "880047117",
+      "productpage": 1,
+      "skadnetlist": {
+       "max": 306,
+       "excl": [
+        2,
+        8,
+        10,
+        55
+       ],
+       "addl": [
+        "cdkw7geqsh.skadnetwork",
+        "qyJfv329m4.skadnetwork"
+       ]
+      }
+     }
+    }
+   }
+  ],
+  "site": {
+   "page": "http://localhost:3000/server.html?pbjs_debug=true\u0026endpoint=http://localhost:3000/bidder",
+   "publisher": {
+    "id": "1100042525"
+   },
+   "ext": {
+    "data": {
+     "keywords": "power tools",
+     "search": "drill",
+     "content": {
+      "userrating": 4
+     }
+    }
+   }
+  },
+  "device": {
+   "dnt": 0,
+   "ua": "test-user-agent",
+   "ip": "123.123.123.123",
+   "language": "en"
+  },
+  "user": {
+   "ext": {
+    "consent": "gdprConsentString",
+    "data": {
+     "keywords": "a,b",
+     "gender": "M",
+     "yob": 1984,
+     "geo": {
+      "country": "ca"
+     }
+    }
+   }
+  },
+  "regs": {
+   "coppa": 1,
+   "ext": {
+    "gdpr": 1,
+    "us_privacy": "uspConsentString"
+   }
+  }
+ },
+ "native": {
+  "requests": [
+   {
+    "method": "POST",
+    "uri": "https://prebid/bidder",
+    "body": {
+     "id": "1C86242D-9535-47D6-9576-7B1FE87F282C",
+     "imp": [
+      {
+       "id": "1C86242D-9535-47D6-9576-7B1FE87F282C",
+       "banner": {
+        "format": [
+         {
+          "w": 320,
+          "h": 50
+         },
+         {
+          "w": 320,
+          "h": 250
+         }
+        ]
+       },
+       "tagid": "130563103",
+       "bidfloor": 0.00123,
+       "ext": {
+        "skadn": {
+         "versions": [
+          "2.0",
+          "2.1",
+          "2.2",
+          "3.0",
+          "4.0"
+         ],
+         "sourceapp": "880047117",
+         "productpage": 1,
+         "skadnetlist": {
+          "max": 306,
+          "excl": [
+           2,
+           8,
+           10,
+           55
+          ],
+          "addl": [
+           "cdkw7geqsh.skadnetwork",
+           "qyJfv329m4.skadnetwork"
+          ]
+         }
+        }
+       }
+      }
+     ],
+     "site": {
+      "page": "http://localhost:3000/server.html?pbjs_debug=true\u0026endpoint=http://localhost:3000/bidder",
+      "publisher": {
+       "id": "1100042525"
+      },
+      "keywords": "power tools"
+     },
+     "device": {
+      "dnt": 0,
+      "ua": "test-user-agent",
+      "ip": "123.123.123.123",
+      "language": "en"
+     },
+     "user": {
+      "yob": 1984,
+      "gender": "M",
+      "keywords": "a,b",
+      "ext": {
+       "consent": "gdprConsentString"
+      }
+     },
+     "regs": {
+      "coppa": 1,
+      "ext": {
+       "gdpr": 1,
+       "us_privacy": "uspConsentString"
+      }
+     },
+     "ext": {
+      "client": "prebid_server_1.3"
+     }
+    },
+    "impIDs": [
+     "1C86242D-9535-47D6-9576-7B1FE87F282C"
+    ]
+   },
+   {
+    "method": "POST",
+    "uri": "https://prebid/bidder",
+    "body": {
+     "id": "1C86242D-9535-47D6-9576-7B1FE87F282C",
+     "imp": [
+      {
+       "id": "1C86242D-9535-47D6-9576-7B1FE87F282C",
+       "video": {
+        "mimes": [
+         "video/mp4",
+         "video/quicktime",
+         "video/3gpp",
+         "video/x-m4v"
+        ],
+        "minduration": 5,
+        "maxduration": 30,
+        "startdelay": 0,
+        "protocols": [
+         7
+        ],
+        "w": 1024,
+        "h": 768,
+        "linearity": 1,
+        "skip": 1,
+        "skipmin": 5,
+        "api": [
+         7
+        ],
+        "ext": {
+         "rewarded": 0
+        }
+       },
+       "tagid": "130563103",
+       "bidfloor": 0.00123,
+       "ext": {
+        "skadn": {
+         "versions": [
+          "2.0",
+          "2.1",
+          "2.2",
+          "3.0",
+          "4.0"
+         ],
+         "sourceapp": "880047117",
+         "productpage": 1,
+         "skadnetlist": {
+          "max": 306,
+          "excl": [
+           2,
+           8,
+           10,
+           55
+          ],
+          "addl": [
+           "cdkw7geqsh.skadnetwork",
+           "qyJfv329m4.skadnetwork"
+          ]
+         }
+        }
+       }
+      }
+     ],
+     "site": {
+      "page": "http://localhost:3000/server.html?pbjs_debug=true\u0026endpoint=http://localhost:3000/bidder",
+      "publisher": {
+       "id": "1100042525"
+      },
+      "keywords": "power tools"
+     },
+     "device": {
+      "dnt": 0,
+      "ua": "test-user-agent",
+      "ip": "123.123.123.123",
+      "language": "en"
+     },
+     "user": {
+      "yob": 1984,
+      "gender": "M",
+      "keywords": "a,b",
+      "ext": {
+       "consent": "gdprConsentString"
+      }
+     },
+     "regs": {
+      "coppa": 1,
+      "ext": {
+       "gdpr": 1,
+       "us_privacy": "uspConsentString"
+      }
+     },
+     "ext": {
+      "client": "prebid_server_1.3"
+     }
+    },
+    "impIDs": [
+     "1C86242D-9535-47D6-9576-7B1FE87F282C"
+    ]
+   }
+  ],
+  "requestErrs": [],
+  "responses": [
+   {
+    "currency": "USD",
+    "bids": [
+     {
+      "bid": {
+       "id": "6906aae8-7f74-4edd-9a4f-f49379a3cadd",
+       "impid": "1C86242D-9535-47D6-9576-7B1FE87F282C",
+       "price": 0.01,
+       "nurl": "https://ets-eu-west-1.track.smaato.net/v1/view?sessionId=e4e17adb-9599-42b1-bb5f-a1f1b3bee572\u0026adSourceId=6906aae8-7f74-4edd-9a4f-f49379a3cadd\u0026originalRequestTime=1552310449698\u0026expires=1552311350698\u0026winurl=ama8JbpJVpFWxvEja5viE3cLXFu58qRI8dGUh23xtsOn3N2-5UU0IwkgNEmR82pI37fcMXejL5IWTNAoW6Cnsjf-Dxl_vx2dUqMrVEevX-Vdx2VVnf-D5f73gZhvi4t36iPL8Dsw4aACekoLvVOV7-eXDjz7GHy60QFqcwKf5g2AlKPOInyZ6vJg_fn4qA9argvCRgwVybXE9Ndm2W0v8La4uFYWpJBOUveDDUrSQfzal7RsYvLb_OyaMlPHdrd_bwA9qqZWuyJXd-L9lxr7RQ%3D%3D%7CMw3kt91KJR0Uy5L-oNztAg%3D%3D\u0026dpid=4XVofb_lH-__hr2JNGhKfg%3D%3D%7Cr9ciCU1cx3zmHXihItKO0g%3D%3D",
+       "adm": "\u003ca rel=\"nofollow\" href=\"https://prebid.net/click\"\u003e\u003cimg src=\"https://prebid.net/images/image.png\" alt=\"\" width=\"480\" height=\"320\" /\u003e\u003c/a\u003e",
+       "adomain": [
+        "smaato.com"
+       ],
+       "iurl": "https://bidstalkcreatives.s3.amazonaws.com/1x1.png",
+       "cid": "CM6523",
+       "crid": "CR69381",
+       "w": 350,
+       "h": 50,
+       "exp": 300,
+       "ext": {
+        "skadn": {
+         "version": "2.2",
+         "network": "cdkw7geqsh.skadnetwork",
+         "campaign": "45",
+         "itunesitem": "123456789",
+         "sourceapp": "880047117",
+         "productpageid": "45812c9b-c296-43d3-c6a0-c5a02f74bf6e",
+         "fidelities": [
+          {
+           "fidelity": 0,
+           "signature": "MEQCIEQlmZRNfYzKBSE8QnhLTIHZZZWCFgZpRqRxHss65KoFAiAJgJKjdrWdkLUOCCjuEx2RmFS7daRzSVZRVZ8RyMyUXg==",
+           "nonce": "473b1a16-b4ef-43ad-9591-fcf3aefa82a7",
+           "timestamp": "1594406341"
+          },
+          {
+           "fidelity": 1,
+           "signature": "GRlMDktMmE5Zi00ZGMzLWE0ZDEtNTQ0YzQwMmU5MDk1IiwKICAgICAgICAgICAgICAgICAgInRpbWVzdGTk0NDA2MzQyIg==",
+           "nonce": "e650de09-2a9f-4dc3-a4d1-544c402e9095",
+           "timestamp": "1594406342"
+          }
+         ]
+        }
+       }
+      },
+      "type": "banner"
+     }
+    ],
+    "paapi": null,
+    "errs": []
+   },
+   {
+    "currency": "USD",
+    "bids": [
+     {
+      "bid": {
+       "id": "6906aae8-7f74-4edd-9a4f-f49379a3cadd",
+       "impid": "1C86242D-9535-47D6-9576-7B1FE87F282C",
+       "price": 0.01,
+       "nurl": "https://nurl",
+       "adm": "\u003c?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?\u003e\u003cVAST version=\"2.0\"\u003e\u003c/VAST\u003e",
+       "adomain": [
+        "smaato.com"
+       ],
+       "iurl": "https://iurl",
+       "cid": "CM6523",
+       "crid": "CR69381",
+       "w": 1024,
+       "h": 768,
+       "exp": 300,
+       "ext": {
+        "skadn": {
+         "version": "2.2",
+         "network": "qyJfv329m4.skadnetwork",
+         "campaign": "45",
+         "itunesitem": "123456789",
+         "sourceapp": "880047117",
+         "productpageid": "45812c9b-c296-43d3-c6a0-c5a02f74bf6e",
+         "fidelities": [
+          {
+           "fidelity": 0,
+           "signature": "MEQCIEQlmZRNfYzKBSE8QnhLTIHZZZWCFgZpRqRxHss65KoFAiAJgJKjdrWdkLUOCCjuEx2RmFS7daRzSVZRVZ8RyMyUXg==",
+           "nonce": "473b1a16-b4ef-43ad-9591-fcf3aefa82a7",
+           "timestamp": "1594406341"
+          },
+          {
+           "fidelity": 1,
+           "signature": "GRlMDktMmE5Zi00ZGMzLWE0ZDEtNTQ0YzQwMmU5MDk1IiwKICAgICAgICAgICAgICAgICAgInRpbWVzdGTk0NDA2MzQyIg==",
+           "nonce": "e650de09-2a9f-4dc3-a4d1-544c402e9095",
+           "timestamp": "1594406342"
+          }
+         ]
+        }
+       }
+      },
+      "type": "video",
+      "video": {
+       "duration": 0,
+       "primary_category": ""
+      }
+     }
+    ],
+    "paapi": null,
+    "errs": []
+   }
+  ]
+ }
+}

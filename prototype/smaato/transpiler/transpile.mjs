@@ -10,13 +10,13 @@ const q = JSON.stringify;
 const rsStr = (s) => q(q(s).slice(1, -1)); // JSON-escaped content as a Rust string literal (d.lit takes escaped text)
 
 // Prebid Core helpers an Adapter may import, and the runtime call each becomes
-const CORE_FNS = { str: 'str_', num: 'num_', int: 'int', nonempty: 'nonempty', obj: 'obj_', parseJson: 'json' };
+const CORE_FNS = { str: 'str_', num: 'num_', int: 'int', nonempty: 'nonempty', obj: 'obj_', parseJson: 'json', formEncode: 'form_encode' };
 // Phase positions: the driver passes these arguments, by position
 const HOOKS = {
-  core: { imp: ['imp', 'p', 'req'], request: ['req', 'params'], bid: ['bid', 'imp', 'resp'], response: ['resp'] },
+  core: { imp: ['imp', 'p', 'req', 'host'], group: ['imp', 'p', 'host'], request: ['req', 'params', 'host'], bid: ['bid', 'imp', 'resp', 'http', 'host'], response: ['resp', 'http', 'host'] },
   ext: { imp: ['imp', 'p', 'req'], request: ['req', 'params'], bid: ['bid', 'imp'] },
 };
-const REJECTING = new Set(['core.imp', 'core.bid']);
+const REJECTING = new Set(['core.imp', 'core.bid', 'core.request', 'core.response']);
 
 export function transpile(file, side = 'server') {
   const configPath = ts.findConfigFile(path.dirname(file), ts.sys.fileExists);
@@ -47,7 +47,7 @@ export function transpile(file, side = 'server') {
   const isScalarish = (ty) => parts(ty).every((p) => p.flags & (ts.TypeFlags.StringLike | ts.TypeFlags.NumberLike | ts.TypeFlags.BooleanLike | ts.TypeFlags.Undefined | ts.TypeFlags.Null));
 
   // ---------- module scope: imports, lookup tables, helper functions ----------
-  const mod = { tables: {}, fns: {}, coreImports: new Set() };
+  const mod = { tables: {}, fns: {}, consts: {}, coreImports: new Set() };
   let defObj = null;
   const fnItems = [];
   for (const st of sf.statements) {
@@ -78,7 +78,9 @@ export function transpile(file, side = 'server') {
           fnItems.push([name, init]);
         } else if (init && ts.isObjectLiteralExpression(init) && init.properties.every((p) => ts.isPropertyAssignment(p) && ts.isStringLiteral(p.initializer))) {
           mod.tables[name] = init.properties.map((p) => [propName(p.name), p.initializer.text]);
-        } else fail(dcl, 'module-level consts must be helper functions (arrow) or lookup tables of string literals');
+        } else if (init && (ts.isStringLiteral(init) || ts.isNumericLiteral(init) || ts.isNoSubstitutionTemplateLiteral(init))) {
+          mod.consts[name] = init;
+        } else fail(dcl, 'module-level consts must be helper functions (arrow), lookup tables of string literals, or string/number literals');
       }
     } else fail(st, 'not allowed at module level');
   }
@@ -132,6 +134,7 @@ export function transpile(file, side = 'server') {
         if (n.text === 'undefined') return 'rt::ABSENT';
         const v = lookupVar(sc, n.text);
         if (v) { markEscape(n, v); return v.rs; }
+        if (mod.consts[n.text]) return ex(mod.consts[n.text], sc);
         if (mod.tables[n.text]) return fail(n, 'lookup tables can only be indexed');
         return fail(n, 'unknown name');
       }
@@ -309,7 +312,17 @@ export function transpile(file, side = 'server') {
         });
       } else fail(p0, 'object destructuring is not in the subset');
     }
-    if (fnNode.parameters.length > 1) fail(fnNode.parameters[1], 'callbacks take one parameter (no index)');
+    const p1 = fnNode.parameters[1];
+    if (p1) {
+      // the element's index, as JS passes it
+      if (!ts.isIdentifier(p1.name)) fail(p1, 'the index parameter must be a name');
+      else {
+        const rs = `v_${p1.name.text}_${tmp++}`;
+        isc.vars[p1.name.text] = { rs };
+        binds += ` let ${rs} = d.num(ix);`;
+      }
+    }
+    if (fnNode.parameters.length > 2) fail(fnNode.parameters[2], 'callbacks take (element, index) at most');
     return [binds, isc, fnNode.body];
   }
 
@@ -359,6 +372,18 @@ export function transpile(file, side = 'server') {
       return statics[`${recvText}.${m}`]();
     }
     if (['JSON', 'Object', 'Math', 'Array', 'Number', 'String'].includes(recvText)) return fail(n, `${recvText}.${m} is not in the subset`);
+    // the Host context and the bidder's HTTP response (Phase arguments)
+    const role = ts.isIdentifier(callee.expression) ? lookupVar(sc, callee.expression.text)?.role : undefined;
+    if (role === 'host' && m === 'now' && !args.length) return `{ let f = rt::host_now(); d.num(f) }`;
+    if (role === 'host' && m === 'convertCurrency' && args.length === 3) {
+      const [ns, bs] = bind(args);
+      return `{ ${bs} d.convert_currency(${ns.join(', ')}) }`;
+    }
+    if (role === 'http' && m === 'header' && args.length === 1) {
+      const a = t();
+      return `{ let ${a} = ${ex(args[0], sc)}; d.header(${lookupVar(sc, callee.expression.text).rs}, ${a}) }`;
+    }
+    if (role) return fail(n, `${role}.${m}() is not part of the Host context`);
     const rty = typeOf(callee.expression);
     const r = t();
     const recv = `let ${r} = ${ex(callee.expression, sc)};`;
@@ -376,7 +401,7 @@ export function transpile(file, side = 'server') {
         if (!(args.length === 1 && ts.isStringLiteral(args[0]))) return fail(n, 'join takes one string literal');
         return `{ ${recv} d.join_js(${r}, ${q(args[0].text)}) }`;
       }
-      const loop = (body) => `let mut it = d.first_item(${r}); while it != 0 { ${body} it = d.next_item(it); }`;
+      const loop = (body) => `let mut it = d.first_item(${r}); let mut ix = 0f64; while it != 0 { ${body} it = d.next_item(it); ix += 1.0; }`;
       if (['map', 'filter', 'some', 'every', 'find'].includes(m)) {
         const [binds, isc, body] = callback(args[0], sc, 'it');
         if (m === 'map') return `{ ${recv} let out = d.arr(); ${loop(`{ ${binds} let v = ${ex(body, isc)}; d.push_js(out, v); }`)} out }`;
@@ -468,6 +493,7 @@ export function transpile(file, side = 'server') {
       if (!ts.isIdentifier(p.name)) return fail(p, 'parameter destructuring is not in the subset');
       sc.vars[p.name.text] = { rs: `v_${p.name.text}` };
       used.push([params[i], `v_${p.name.text}`]);
+      if (params[i] === 'host' || params[i] === 'http') sc.vars[p.name.text].role = params[i];
     });
     const ok = kind === 'helper' ? (x) => x : (x) => `Ok(${x})`;
     const body = ts.isBlock(fnNode.body) ? `${stmts(fnNode.body.statements, sc)}\n${ok('rt::ABSENT')}` : ok(ex(fnNode.body, sc));
@@ -495,6 +521,7 @@ export function transpile(file, side = 'server') {
     if (!f) { errors.push(`core.${k} is required`); continue; }
     hooks[`core_${k}`] = hook('core', k, f);
   }
+  { const f = hookFn(coreObj, 'group'); if (f) hooks.core_group = hook('core', 'group', f); }
   for (const k of ['imp', 'request', 'bid']) {
     const f = hookFn(sideObj, k);
     if (f) hooks[`ext_${k}`] = hook('ext', k, f);
@@ -506,41 +533,53 @@ export function transpile(file, side = 'server') {
   const has = (k) => !!hooks[k];
   const unwrap = (x) => `match ${x} { Ok(v) => v, Err(_) => rt::ABSENT }`;
   let s = `// GENERATED by the PROTOTYPE transpiler from adapters/${path.basename(file)} (${side}) - do not edit.\n`;
-  s += `#![allow(unused_variables, unused_mut, unused_braces, unused_parens, unreachable_code, non_snake_case, clippy::all)]\n`;
-  s += `use prebid_core_rt::{self as rt, Doc, V, ReqOut, BidsOut, BidAnnot};\n\n`;
+  s += `#![allow(unused_variables, unused_mut, unused_assignments, unused_braces, unused_parens, unreachable_code, non_snake_case, clippy::all)]\n`;
+  s += `use prebid_core_rt::{self as rt, Doc, V, Reqs, BidsOut, BidAnnot};\n\n`;
   s += `pub const BIDDER: &str = ${q(bidder)};\npub const ENDPOINT: &str = ${q(endpoint)};\n\n${out}\n`;
   // the driver: the same steps as core/index.ts build()
-  s += `pub fn make_requests(d: &mut Doc, req: V) -> ReqOut {
-let mut errs: Vec<String> = Vec::new(); let imps = d.arr(); let params = d.arr(); let mut ids: Vec<String> = Vec::new();
+  s += `pub fn make_requests(d: &mut Doc, host: V, req: V) -> Reqs {
+let mut errs: Vec<String> = Vec::new();
+// outgoing imps grouped into requests (same key, same request; first-seen order)
+let mut groups: Vec<(String, V, V)> = Vec::new();
 let imp_list = { let a = d.get(req, "imp"); d.items(a) };
 for imp in imp_list {
 let p = { let a = d.get(imp, "ext"); d.get(a, "bidder") };
-let o = match core_imp(d, imp, p, req) { Ok(o) => o, Err(e) => { errs.push(e); continue; } };
+let r = match core_imp(d, imp, p, req, host) { Ok(o) => o, Err(e) => { errs.push(e); continue; } };
+let outs = if d.is_array(r) { d.items(r) } else { vec![r] };
+for o in outs {
 ${has('ext_imp') ? `let patch = ${unwrap('ext_imp(d, imp, p, req)')}; let o = d.fill(o, patch);` : ''}
-let id = d.get(o, "id"); ids.push(d.to_string(id)); d.push(imps, o); d.push(params, p);
+let key = ${has('core_group') ? `{ let k = ${unwrap('core_group(d, o, p, host)')}; d.to_string(k) }` : 'String::new()'};
+let gi = match groups.iter().position(|g| g.0 == key) { Some(i) => i, None => { let (a, b) = (d.arr(), d.arr()); groups.push((key, a, b)); groups.len() - 1 } };
+d.push(groups[gi].1, o); d.push(groups[gi].2, p);
 }
-if ids.is_empty() { return ReqOut { body: None, imp_ids: ids, errs }; }
+}
+let mut reqs = Vec::new();
+for (_, imps, params) in groups {
 let r = d.own(req); d.put_mut(r, &["imp"], imps);
-let o = ${unwrap('core_request(d, r, params)')};
+let o = match core_request(d, r, params, host) { Ok(o) => o, Err(e) => { errs.push(e); continue; } };
 ${has('ext_request') ? `let patch = ${unwrap('ext_request(d, r, params)')}; let o = d.fill(o, patch);` : ''}
-ReqOut { body: Some(d.to_json(o)), imp_ids: ids, errs }
+let ids: Vec<String> = { let l = d.items(imps); l.into_iter().map(|i| { let id = d.get(i, "id"); d.to_string(id) }).collect() };
+reqs.push((d.to_json(o), ids));
+}
+Reqs { reqs, errs }
 }
 
-pub fn make_bids(d: &mut Doc, req: V, resp: V) -> BidsOut {
+pub fn make_bids(d: &mut Doc, host: V, req: V, resp: V, http: V) -> BidsOut {
 let mut errs: Vec<String> = Vec::new(); let mut bids: Vec<BidAnnot> = Vec::new();
+// the response Phase first: rejecting it drops every bid
+let top = match core_response(d, resp, http, host) { Ok(r) => r, Err(e) => { return BidsOut { bids, currency: String::new(), paapi: vec![], errs: vec![e], rejected: true }; } };
 let seatbids = { let a = d.get(resp, "seatbid"); d.items(a) };
 for seatbid in seatbids { let bid_list = { let a = d.get(seatbid, "bid"); d.items(a) }; for bid in bid_list {
 let imp = ${hooks.core_bid.usesImp || hooks.ext_bid?.usesImp ? `{ let id = d.get(bid, "impid"); let l = { let a = d.get(req, "imp"); d.items(a) }; let mut f = rt::ABSENT; for i in l { let iid = d.get(i, "id"); if d.eq(iid, id) { f = i; break; } } f }` : 'rt::ABSENT'};
-let r = match core_bid(d, bid, imp, resp) { Ok(r) => r, Err(e) => { errs.push(e); bids.push(BidAnnot { keep: false, typ: String::new(), seat: String::new(), deal_priority: 0.0, video: vec![], meta: vec![], overrides: vec![] }); continue; } };
+let r = match core_bid(d, bid, imp, resp, http, host) { Ok(r) => r, Err(e) => { errs.push(e); bids.push(BidAnnot { keep: false, typ: String::new(), seat: String::new(), deal_priority: 0.0, video: vec![], meta: vec![], overrides: vec![] }); continue; } };
 let w = d.get(r, "warning"); if !d.is_undef(w) { errs.push(d.to_string(w)); }
 let ob = d.get(r, "bid"); let ov = d.overrides(bid, ob);
 let typ = d.get(r, "type"); let seat = d.get(r, "seat"); let dp = d.get(r, "dealPriority"); let video = d.get(r, "video"); let meta = d.get(r, "meta");
 ${has('ext_bid') ? `let patch = { let x = ${unwrap('ext_bid(d, bid, imp)')}; d.get(x, "meta") }; let base = if d.is_undef(meta) { d.obj() } else { meta }; let meta = d.fill(base, patch); let meta = d.nonempty(meta);` : ''}
 bids.push(BidAnnot { keep: true, typ: d.to_string(typ), seat: d.to_string(seat), deal_priority: d.f64(dp).unwrap_or(0.0), video: d.kv_slot(video), meta: d.kv_slot(meta), overrides: d.slot(ov) });
 }}
-let r = ${unwrap('core_response(d, resp)')};
-let cur = d.get(r, "currency"); let paapi = d.get(r, "paapi");
-BidsOut { bids, currency: d.to_string(cur), paapi: d.slot(paapi), errs }
+let cur = d.get(top, "currency"); let paapi = d.get(top, "paapi");
+BidsOut { bids, currency: d.to_string(cur), paapi: d.slot(paapi), errs, rejected: false }
 }
 `;
   return { rs: s, errors };

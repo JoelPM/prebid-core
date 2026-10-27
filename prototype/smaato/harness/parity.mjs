@@ -13,7 +13,8 @@ import YAML from 'yaml';
 const root = path.join(path.dirname(new URL(import.meta.url).pathname), '..');
 const pbs = process.argv[2] && !process.argv[2].startsWith('--') ? process.argv[2] : path.join(root, '../../../prebid-server');
 const jsonOut = process.argv.includes('--json') ? process.argv[process.argv.indexOf('--json') + 1] : null;
-const ENDPOINT = { openx: 'http://rtb.openx.net/prebid', pubmatic: 'https://hbopenbid.pubmatic.com/translator?source=prebid-server' };
+const ENDPOINT = { openx: 'http://rtb.openx.net/prebid', pubmatic: 'https://hbopenbid.pubmatic.com/translator?source=prebid-server', smaato: 'https://prebid/bidder' };
+export const BIDDERS = ['openx', 'pubmatic', 'smaato'];
 const KD = YAML.parse(fs.readFileSync(path.join(root, 'defs/known-differences.yaml'), 'utf8'));
 
 // ---- JSON semantics: key order irrelevant, absent == undefined, numbers by value ----
@@ -42,24 +43,52 @@ export function at(o, p) {
 }
 
 // ---- the PBS-Go Host shim: what hostgo/host/shared.go does around the guest ----
+// The PBS-Go Host's model of a bid: openrtb2.Bid's fields. Members outside it (e.g. Smaato's
+// "bidderName") never reach a PBS-Go Adapter, Hand-written or Shared (#26: bids are the Host's parsed bids).
+const BID_FIELDS = new Set('id impid price nurl burl lurl adm adid adomain bundle iurl cid crid tactic cattax cat attr apis api protocol qagmediarating language langb dealid w h wratio hratio exp dur mtype slotinview ext'.split(' '));
+// typed fields also follow #26's normalization (an optional typed 0 / "" / [] / null reads as absent: openrtb2's omitempty)
+const zero = (v) => v === 0 || v === '' || v === null || (Array.isArray(v) && !v.length);
+const hostBid = (b) => (b && typeof b === 'object' ? Object.fromEntries(Object.entries(b).filter(([k, v]) => BID_FIELDS.has(k) && (k === 'ext' || ['id', 'impid', 'price'].includes(k) || !zero(v)))) : b);
 const STATUS_ERR = (s) => `Unexpected status code: ${s}. Run with request.debug = 1 for more info`;
-export function runTs(mod, bidder, hostRequest, spec) {
+// What the Host provides, as adapterstest sets it up: the fixture's own currency rates
+// (request.ext.prebid.currency), the entry point from its directory, and smaato_test.go's clock.
+export function hostFor(hostRequest, file) {
+  const rates = hostRequest?.ext?.prebid?.currency?.rates ?? {};
+  const rate = (from, to) => {
+    if (from === to) return 1;
+    if (rates[from]?.[to] != null) return rates[from][to];
+    if (rates[to]?.[from] != null) return 1 / rates[to][from];
+    return undefined;
+  };
+  return {
+    entryPoint: file.startsWith('video') ? 'video' : file.startsWith('amp') ? 'amp' : 'auction',
+    now: () => Date.UTC(2021, 5, 25, 10, 0, 0),
+    convertCurrency: (amount, from, to) => { const r = rate(from, to); return r === undefined ? undefined : amount * r; },
+  };
+}
+export const httpFor = (mock) => {
+  const h = Object.fromEntries(Object.entries(mock.headers ?? {}).map(([k, v]) => [k.toLowerCase(), Array.isArray(v) ? v[0] : v]));
+  return { status: mock.status, header: (name) => h[name.toLowerCase()] };
+};
+export function runTs(mod, bidder, hostRequest, spec, file = '') {
   const res = { requests: [], requestErrs: [], responses: [] };
-  const mr = mod.makeRequests(hostRequest);
+  const host = hostFor(hostRequest, file);
+  const mr = mod.makeRequests(hostRequest, host);
   res.requestErrs = mr.errs;
-  if (mr.body) res.requests.push({ method: 'POST', uri: ENDPOINT[bidder], body: clean(mr.body), impIDs: mr.impIDs });
+  for (const r of mr.requests) res.requests.push({ method: 'POST', uri: ENDPOINT[bidder], body: clean(r.body), impIDs: r.impIDs });
   for (const call of spec.httpCalls || []) {
     const { status, body } = call.mockResponse;
     const out = { currency: '', bids: [], paapi: null, errs: [] };
     res.responses.push(out);
     if (status === 204) continue;
     if (status !== 200) { out.errs.push(STATUS_ERR(status)); continue; }
-    const mb = mod.makeBids(call.expectedRequest.body, body);
-    out.currency = mb.currency || 'USD';
+    const mb = mod.makeBids(call.expectedRequest.body, body, httpFor(call.mockResponse), host);
+    // a rejected response is no BidderResponse at all (no currency), as when a Hand-written MakeBids returns nil
+    out.currency = mb.rejected ? '' : mb.currency || 'USD';
     out.errs = mb.errs;
     for (const b of mb.bids) {
       out.bids.push(clean({
-        bid: b.bid, type: b.type, seat: b.seat || undefined, dealPriority: b.dealPriority || undefined,
+        bid: hostBid(b.bid), type: b.type, seat: b.seat || undefined, dealPriority: b.dealPriority || undefined,
         video: b.video && { duration: b.video.duration ?? 0, primary_category: b.video.primary_category ?? '' },
         meta: b.meta,
       }));
@@ -122,8 +151,9 @@ export function explain(bidder, file, against, diffs, res) {
 export async function main(runner, label) {
   const summary = [];
   let failed = 0;
-  for (const bidder of ['openx', 'pubmatic']) {
+  for (const bidder of BIDDERS) {
     const dir = path.join(root, 'harness/golden', bidder);
+    if (!fs.existsSync(path.join(root, `adapters/${bidder}.ts`))) continue;
     const files = fs.readdirSync(dir, { recursive: true }).filter((f) => f.endsWith('.json')).sort();
     for (const file of files) {
       const golden = JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8'));
@@ -152,15 +182,15 @@ export async function main(runner, label) {
 if (import.meta.url === `file://${process.argv[1]}`) {
   const mods = {};
   const { build } = await import(path.join(root, 'core/index.ts'));
-  for (const b of ['openx', 'pubmatic']) mods[b] = build((await import(path.join(root, `adapters/${b}.ts`))).default, 'server');
-  const ts = (bidder, req, spec) => runTs(mods[bidder], bidder, req, spec);
+  for (const b of BIDDERS) if (fs.existsSync(path.join(root, `adapters/${b}.ts`))) mods[b] = build((await import(path.join(root, `adapters/${b}.ts`))).default, 'server');
+  const ts = (bidder, req, spec, file) => runTs(mods[bidder], bidder, req, spec, file);
   if (process.argv.includes('--rs')) {
     // Rust results come from hostgo/cmd/sharedout (wasm under wazero, through the PBS-Go Host binding)
     const dir = process.argv[process.argv.indexOf('--rs') + 1];
     let tsVsRs = 0;
     const rs = (bidder, req, spec, file) => {
       const r = JSON.parse(fs.readFileSync(path.join(dir, bidder, file), 'utf8'));
-      const d = diff(clean(r), clean(ts(bidder, req, spec)));
+      const d = diff(clean(r), clean(ts(bidder, req, spec, file)));
       if (d.length) { tsVsRs++; console.log(`  TS != Rust on ${bidder}/${file}: ${d.join(', ')}`); }
       return r;
     };

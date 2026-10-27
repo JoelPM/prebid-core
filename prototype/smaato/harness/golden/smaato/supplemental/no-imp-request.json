@@ -1,0 +1,16 @@
+{
+ "hostRequest": {
+  "id": "1C86242D-9535-47D6-9576-7B1FE87F282C",
+  "imp": null,
+  "site": {
+   "page": "prebid.org"
+  }
+ },
+ "native": {
+  "requests": [],
+  "requestErrs": [
+   "No impressions in bid request."
+  ],
+  "responses": []
+ }
+}

@@ -6,6 +6,10 @@ import (
 	"encoding/json"
 	"net/http"
 	"os"
+	"strings"
+
+	"github.com/prebid/prebid-server/v4/currency"
+	"github.com/prebid/prebid-server/v4/openrtb_ext"
 
 	"github.com/prebid/openrtb/v20/openrtb2"
 	"github.com/prebid/prebid-server/v4/adapters"
@@ -22,8 +26,9 @@ type Spec struct {
 			ImpIDs []string        `json:"impIDs"`
 		} `json:"expectedRequest"`
 		Response struct {
-			Status int             `json:"status"`
-			Body   json.RawMessage `json:"body"`
+			Status  int             `json:"status"`
+			Body    json.RawMessage `json:"body"`
+			Headers http.Header     `json:"headers"`
 		} `json:"mockResponse"`
 	} `json:"httpCalls"`
 }
@@ -76,16 +81,48 @@ func errStrings(errs []error) []string {
 // Run drives a Bidder the way adapterstest does: MakeRequests on the fixture's request, then MakeBids
 // once per expected HTTP call with the fixture's own request and mock response.
 func Run(b adapters.Bidder, spec *Spec) Result {
+	return RunWith(b, spec, &adapters.ExtraRequestInfo{})
+}
+
+// ReqInfo builds the ExtraRequestInfo adapterstest would: currency rates from the request's own
+// ext.prebid.currency, and the entry point from the fixture's directory (video*/, amp*/).
+func ReqInfo(spec *Spec, rel string) *adapters.ExtraRequestInfo {
+	info := adapters.ExtraRequestInfo{}
+	var ext struct {
+		Prebid struct {
+			Currency *openrtb_ext.ExtRequestCurrency `json:"currency"`
+		} `json:"prebid"`
+	}
+	if len(spec.BidRequest.Ext) > 0 {
+		jsonutil.Unmarshal(spec.BidRequest.Ext, &ext)
+	}
+	if c := ext.Prebid.Currency; c != nil && len(c.ConversionRates) > 0 {
+		info = adapters.NewExtraRequestInfo(currency.NewRates(c.ConversionRates))
+	}
+	switch {
+	case strings.HasPrefix(rel, "video"):
+		info.PbsEntryPoint = "video"
+	case strings.HasPrefix(rel, "amp"):
+		info.PbsEntryPoint = "amp"
+	}
+	return &info
+}
+
+func RunWith(b adapters.Bidder, spec *Spec, info *adapters.ExtraRequestInfo) Result {
 	req := spec.BidRequest // shallow: like the exchange, adapters get their own top-level copy
 	req.Imp = append([]openrtb2.Imp(nil), spec.BidRequest.Imp...)
-	rs, errs := b.MakeRequests(&req, &adapters.ExtraRequestInfo{})
+	rs, errs := b.MakeRequests(&req, info)
 	res := Result{RequestErrs: errStrings(errs), Requests: []Req{}, Responses: []BidsResp{}}
 	for _, r := range rs {
 		res.Requests = append(res.Requests, Req{Method: r.Method, Uri: r.Uri, Body: r.Body, ImpIDs: r.ImpIDs})
 	}
 	for _, c := range spec.HttpCalls {
 		rd := &adapters.RequestData{Method: "POST", Uri: c.Request.Uri, Body: c.Request.Body, ImpIDs: c.Request.ImpIDs}
-		resp := &adapters.ResponseData{StatusCode: c.Response.Status, Body: c.Response.Body, Headers: http.Header{}}
+		hdr := c.Response.Headers
+		if hdr == nil {
+			hdr = http.Header{}
+		}
+		resp := &adapters.ResponseData{StatusCode: c.Response.Status, Body: c.Response.Body, Headers: hdr}
 		br, errs := b.MakeBids(&spec.BidRequest, rd, resp)
 		out := BidsResp{Errs: errStrings(errs), Bids: []Bid{}}
 		if br != nil {

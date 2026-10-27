@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# PROTOTYPE: rebuilds everything and reruns every check and measurement in README.md.
+# PROTOTYPE (#20, Smaato): rebuilds everything and reruns every check and measurement in README.md.
+# Server overhead is out of scope here (see prototype/typed-backend and prototype/abi).
 # Needs: Node 22.6+ (TS type stripping), Rust with wasm32-unknown-unknown, Go 1.25+, a prebid-server
 # checkout at ../../../prebid-server (a916b19ef measured). Optional: PBJS=<scratch Prebid.js clone
 # with node_modules> for the bundle sizes (it gets files added; never point it at a real checkout).
@@ -11,7 +12,7 @@ export PATH=$HOME/.cargo/bin:$PATH
 
 echo "== type-check the Shared Adapters (strict, noUncheckedIndexedAccess)"; npx tsc -p .
 echo "== subset checker: rejection cases"; node transpiler/rejects.test.mjs | tail -1
-echo "== transpile restricted TS -> Rust"; node transpiler/cli.mjs adapters/openx.ts adapters/pubmatic.ts
+echo "== transpile restricted TS -> Rust"; node transpiler/cli.mjs adapters/openx.ts adapters/pubmatic.ts adapters/smaato.ts
 
 echo "== wasm guests (one per Adapter, plus one with both for the parity runs)"
 mkdir -p out/wasm
@@ -34,12 +35,10 @@ echo "== differential fuzz: TS vs transpiled Rust (native) on mutated fixture in
 (cd guest && CARGO_TARGET_DIR=../out/target-native cargo build -q --release --bin fuzz)
 node harness/fuzz.mjs "$PBS" ${FUZZ:-20000} 7 | tee results/fuzz.txt
 
-echo "== native guest timing"; mkdir -p out/payload; (cd hostgo && go run ./cmd/dumppayload payload ../out/payload) && (cd guest && CARGO_TARGET_DIR=../out/target-native cargo run -q --release --bin native -- ../out/payload)
-echo "== PBS-Go / wazero vs Hand-written"; (cd hostgo && go run ./cmd/bench -wasm ../out/wasm -par ${PAR:-1,4,8} -dur ${DUR:-2s}) | tee results/wazero.txt
 
 if [ -n "${PBJS:-}" ]; then
   echo "== Prebid.js bundle"
   node pbjs/install.mjs "$PBJS"
-  (cd "$PBJS" && npx gulp build --modules=openxBidAdapter,openxSharedBidAdapter,pubmaticBidAdapter,pubmaticSharedBidAdapter >/dev/null)
+  (cd "$PBJS" && npx gulp build --modules=openxBidAdapter,openxSharedBidAdapter,pubmaticBidAdapter,pubmaticSharedBidAdapter,smaatoBidAdapter,smaatoSharedBidAdapter >/dev/null)
   pbjs/measure.sh "$PBJS" | tee results/pbjs.txt
 fi

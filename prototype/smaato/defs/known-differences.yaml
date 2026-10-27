@@ -37,3 +37,13 @@ pubmatic:
     shared: ~
     kind: bug
     why: same as above, as the fixture states it
+
+smaato:
+  # Host gap: PBS's exchange never calls a bidder with no imps, and the driver runs no Phase without one
+  - fixture: supplemental/no-imp-request.json
+    path: requestErrs
+    kind: host-gap
+  # drift: the Host answers non-200 statuses (fog: who handles HTTP status); Smaato's own message ends in "."
+  - fixture: supplemental/bad-status-code-response.json
+    path: responses
+    kind: drift
